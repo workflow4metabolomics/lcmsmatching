@@ -1,0 +1,15 @@
+[submodule "r-msdb"]
+	path = r-msdb
+	url = ../r-msdb
+[submodule "r-lib"]
+	path = r-lib
+	url = ../r-lib
+[submodule "r-biodb"]
+	path = r-biodb
+	url = ../r-biodb
+[submodule "tool-pandoc"]
+	path = tool-pandoc
+	url = ../tool-pandoc
+[submodule "tool-plantuml"]
+	path = tool-plantuml
+	url = ../tool-plantuml
