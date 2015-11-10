@@ -1,0 +1,6 @@
+dist
+*-output.tsv
+*-output-peaks.tsv
+*.html
+.swp
+.*.swp

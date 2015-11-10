@@ -1,0 +1,153 @@
+<project name="w4m.tool.lcmsmatching" default="all">
+
+	<dirname property="this.dir" file="${ant.file.w4m.tool.lcmsmatching}"/>
+
+	<tstamp/>
+	<property name="pkg.prefix" value="w4m-tool-lcmsmatching"/>
+	<property name="pkg.ext" value="tar.gz"/>
+	<property name="version" value="2.0"/>
+	<property name="dist.dir" value="dist"/>
+	<property name="pkg.name" value="${pkg.prefix}-${version}-${DSTAMP}-${TSTAMP}"/>
+
+	<!-- ALL -->
+	<target name="all"/>
+
+	<!-- UPDATE W4M -->
+	<target name="update.w4m" depends="clean,dist">
+
+		<property name="w4m.login" value="galaxy@w4m"/>
+		<property name="tool.path" value="galaxy-pfem/tools/metabolomics/annotation/lcmsmatching"/>
+
+		<!-- Stop Galaxy -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="/sbin/service galaxy stop"/>
+		</exec>
+
+		<!-- Remove current tool version -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="rm -rf ${tool.path}"/>
+		</exec>
+
+		<!-- Remove old packages on W4M instance -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="rm -f ${pkg.prefix}-*.${pkg.ext}"/>
+		</exec>
+
+		<!-- Copy new package on W4M instance -->
+		<exec executable="scp" failonerror="true">
+			<arg value="${dist.dir}/${pkg.name}.${pkg.ext}"/>
+			<arg value="${w4m.login}:."/>
+		</exec>
+
+		<!-- Make tool directory -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="mkdir -p ${tool.path}"/>
+		</exec>
+
+		<!-- Install new tool version -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="tar -xzf ${pkg.name}.${pkg.ext} -C ${tool.path}"/>
+		</exec>
+
+		<!-- Restart Galaxy -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="/sbin/service galaxy start"/>
+		</exec>
+
+	</target>
+
+	<!-- DIST -->
+	<target name="dist" depends="dist.code,w4m.filedb.code,dist.tar"/>
+
+	<!-- W4M FILE DB CODE -->
+	<target name="w4m.filedb.code">
+		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="input.fields">
+			<arg value="--print-input-col-names"/>
+		</exec>
+		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="output.fields">
+			<arg value="--print-output-col-names"/>
+		</exec>
+		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="pos.prec">
+			<arg value="--print-pos-prec"/>
+		</exec>
+		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="neg.prec">
+			<arg value="--print-neg-prec"/>
+		</exec>
+		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="db.fields">
+			<arg value="--print-db-fields"/>
+		</exec>
+		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="db.ms.modes">
+			<arg value="--print-db-ms-modes"/>
+		</exec>
+		<copy file="lcmsmatching-filedb.xml" tofile="${dist.dir}/lcmsmatching.xml">
+			<filterchain>
+				<tokenfilter>
+					<replacestring from="@INPUT_FIELDS@" to="${input.fields}"/>
+					<replacestring from="@OUTPUT_FIELDS@" to="${output.fields}"/>
+					<replacestring from="@POS_PREC@" to="${pos.prec}"/>
+					<replacestring from="@NEG_PREC@" to="${neg.prec}"/>
+					<replacestring from="@DB_FIELDS@" to="${db.fields}"/>
+					<replacestring from="@DB_MS_MODES@" to="${db.ms.modes}"/>
+				</tokenfilter>
+			</filterchain>
+		</copy>
+		<copy file="lcmsmatching-readme.md" tofile="${dist.dir}/README.md"/>
+	</target>
+
+	<!-- DIST CODE -->
+	<target name="dist.code">
+
+		<!-- Copy project code -->
+		<delete dir="${dist.dir}/code"/>
+		<mkdir dir="${dist.dir}/code"/>
+		<copy todir="${dist.dir}/code">
+			<fileset dir="r-msdb" includes="search-mz,*.R"/>
+			<fileset dir="r-lib" includes="*.R"/> <!-- dependency -->
+			<fileset dir="r-biodb" includes="*.R"/> <!-- dependency -->
+		</copy>
+
+		<!-- Update paths -->
+		<replace dir="${dist.dir}/code">
+			<replacefilter token="../r-lib/" value=""/>
+			<replacefilter token="../r-biodb/" value=""/>
+		</replace>
+
+	</target>
+
+	<!-- DIST TAR -->
+	<target name="dist.tar">
+
+		<!-- Build tar file -->
+		<tar destfile="${dist.dir}/${pkg.name}.tar.gz" compression="gzip">
+
+			<!-- Include Galaxy XML and README files -->
+			<tarfileset dir="${dist.dir}">
+				<include name="lcmsmatching.xml"/>
+				<include name="README.md"/>
+			</tarfileset>
+
+			<!-- Include script with execution rights -->
+			<tarfileset dir="${dist.dir}/code" filemode="755">
+				<include name="search-mz"/>
+			</tarfileset>
+
+			<!-- Include remaining R code -->
+			<tarfileset dir="${dist.dir}/code">
+				<include name="**"/>
+				<exclude name="search-mz"/>
+			</tarfileset>
+		</tar>
+	</target>
+
+	<!-- CLEAN -->
+	<target name="clean">
+		<delete dir="${dist.dir}"/>
+	</target>
+
+</project>
