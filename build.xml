@@ -70,11 +70,26 @@
 	<target name="dist.filedb.test">
 
 		<!-- Make temp dir -->
+		<delete dir="${dist.dest.dir}"/>
 		<mkdir dir="${dist.test.dir}"/>
 
 		<!-- Extract package in temp dir -->
+		<untar src="${dist.dir}/${pkg.name}.tar.gz" dest="${dist.test.dir}" compression="gzip"/>
+		<chmod file="${dist.test.dir}/search-mz" perm="u+x"/> <!-- This file should be already executable, since it has been put executable inside the tar. It seems the untar task of Ant does not handle the file permissions. -->
 
 		<!-- Run search-mz on sample input file -->
+		<exec executable="${dist.test.dir}/search-mz" failonerror="true">
+			<arg value="-d"/>
+			<arg value="file"/>
+			<arg value="--url"/>
+			<arg value="r-msdb/test/filedb.tsv"/>
+			<arg value="-m"/>
+			<arg value="pos"/>
+			<arg value="-i"/>
+			<arg value="r-msdb/test/mzrt-input.tsv"/>
+			<arg value="-o"/>
+			<arg value="mzrt-output.tsv"/>
+		</exec>
 
 	</target>
 
