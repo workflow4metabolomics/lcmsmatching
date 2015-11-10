@@ -7,6 +7,7 @@
 	<property name="pkg.ext" value="tar.gz"/>
 	<property name="version" value="2.0"/>
 	<property name="dist.dir" value="dist"/>
+	<property name="dist.test.dir" value="dist-test"/>
 	<property name="pkg.name" value="${pkg.prefix}-${version}-${DSTAMP}-${TSTAMP}"/>
 
 	<!-- ALL -->
@@ -63,7 +64,19 @@
 	</target>
 
 	<!-- DIST -->
-	<target name="dist" depends="dist.code,w4m.filedb.code,dist.tar"/>
+	<target name="dist" depends="dist.code,w4m.filedb.code,dist.tar,dist.filedb.test"/>
+
+	<!-- DIST FILE DB TEST -->
+	<target name="dist.filedb.test">
+
+		<!-- Make temp dir -->
+		<mkdir dir="${dist.test.dir}"/>
+
+		<!-- Extract package in temp dir -->
+
+		<!-- Run search-mz on sample input file -->
+
+	</target>
 
 	<!-- W4M FILE DB CODE -->
 	<target name="w4m.filedb.code">
@@ -116,6 +129,8 @@
 		<replace dir="${dist.dir}/code">
 			<replacefilter token="../r-lib/" value=""/>
 			<replacefilter token="../r-biodb/" value=""/>
+			<replacefilter token="'..', 'r-lib', " value=""/>
+			<replacefilter token="'..', 'r-biodb', " value=""/>
 		</replace>
 
 	</target>
@@ -148,6 +163,7 @@
 	<!-- CLEAN -->
 	<target name="clean">
 		<delete dir="${dist.dir}"/>
+		<delete dir="${dist.test.dir}"/>
 	</target>
 
 </project>
