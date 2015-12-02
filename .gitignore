@@ -5,3 +5,4 @@ dist
 .swp
 .*.swp
 dist-test
+.DS_Store

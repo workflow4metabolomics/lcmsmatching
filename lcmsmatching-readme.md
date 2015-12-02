@@ -9,17 +9,18 @@ Expanding the package
 R requirements
 ==============
 
-You need to install the following libraries for R:
+R version 3.1.0 or higher is required (because of package plyr).
 
- * stringr.
- * rJava.
- * xlsxjars.
- * xlsx.
- * getopt.
+Then you need to install some libraries for R:
 
 For this you need to run R as root:
 ``` {.bash}
 sudo R
+```
+
+First choose a CRAN mirror:
+``` {.r}
+chooseCRANmirror(graphics = FALSE)
 ```
 
 And then issue the following R commands:
@@ -29,6 +30,7 @@ install.packages('rJava')
 install.packages('xlsxjars')
 install.packages('xlsx')
 install.packages('getopt')
+install.packages('plyr')
 ```
 
 Adding the new tool to Galaxy
