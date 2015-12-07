@@ -13,3 +13,6 @@
 [submodule "tool-plantuml"]
 	path = tool-plantuml
 	url = ../tool-plantuml
+[submodule "java-msdb"]
+	path = java-msdb
+	url = ../java-msdb
