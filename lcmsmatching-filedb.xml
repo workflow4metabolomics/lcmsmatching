@@ -13,7 +13,7 @@
 		search-mz -i "$mzrtinput"
 
 		## Database
-		-d file --db-file "$dbfile"
+		-d file --url "$dbfile"
 
 		## M/Z matching
 		-m $mzmode -p $mzprec -s $mzshift
