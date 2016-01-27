@@ -3,68 +3,26 @@
 	<dirname property="this.dir" file="${ant.file.w4m.tool.lcmsmatching}"/>
 
 	<tstamp/>
+	<condition property="timestamp" value="" else="-${DSTAMP}-${TSTAMP}">
+		<isset property="NOTIMESTAMP"/>
+	</condition>
 	<property name="pkg.prefix" value="w4m-tool-lcmsmatching"/>
 	<property name="pkg.ext" value="tar.gz"/>
 	<property name="version" value="2.0"/>
 	<property name="dist.dir" value="dist"/>
 	<property name="dist.test.dir" value="dist-test"/>
-	<property name="pkg.name" value="${pkg.prefix}-${version}-${DSTAMP}-${TSTAMP}"/>
+	<property name="pkg.name" value="${pkg.prefix}-${version}${timestamp}"/>
 
-	<!-- ALL -->
+	<!--~~~
+	~ ALL ~
+	~~~~~-->
+
 	<target name="all"/>
 
-	<!-- UPDATE W4M -->
-	<target name="update.w4m" depends="clean,dist">
-
-		<property name="w4m.login" value="galaxy@w4m"/>
-		<property name="tool.path" value="galaxy-pfem/tools/metabolomics/annotation/lcmsmatching"/>
-
-		<!-- Stop Galaxy -->
-		<exec executable="ssh" failonerror="true">
-			<arg value="${w4m.login}"/>
-			<arg value="/sbin/service galaxy stop"/>
-		</exec>
-
-		<!-- Remove current tool version -->
-		<exec executable="ssh" failonerror="true">
-			<arg value="${w4m.login}"/>
-			<arg value="rm -rf ${tool.path}"/>
-		</exec>
-
-		<!-- Remove old packages on W4M instance -->
-		<exec executable="ssh" failonerror="true">
-			<arg value="${w4m.login}"/>
-			<arg value="rm -f ${pkg.prefix}-*.${pkg.ext}"/>
-		</exec>
-
-		<!-- Copy new package on W4M instance -->
-		<exec executable="scp" failonerror="true">
-			<arg value="${dist.dir}/${pkg.name}.${pkg.ext}"/>
-			<arg value="${w4m.login}:."/>
-		</exec>
-
-		<!-- Make tool directory -->
-		<exec executable="ssh" failonerror="true">
-			<arg value="${w4m.login}"/>
-			<arg value="mkdir -p ${tool.path}"/>
-		</exec>
-
-		<!-- Install new tool version -->
-		<exec executable="ssh" failonerror="true">
-			<arg value="${w4m.login}"/>
-			<arg value="tar -xzf ${pkg.name}.${pkg.ext} -C ${tool.path}"/>
-		</exec>
-
-		<!-- Restart Galaxy -->
-		<exec executable="ssh" failonerror="true">
-			<arg value="${w4m.login}"/>
-			<arg value="/sbin/service galaxy start"/>
-		</exec>
-
-	</target>
-
 	<!-- DIST -->
-	<target name="dist" depends="dist.code,w4m.filedb.code,dist.tar,dist.filedb.test"/>
+	<target name="dist" depends="dist.code,dist.tar,dist.filedb.test"/>
+
+	<target name="dist.w4m" depends="dist.code,w4m.filedb.code,dist.tar,dist.filedb.test"/>
 
 	<!-- DIST FILE DB TEST -->
 	<target name="dist.filedb.test">
@@ -128,6 +86,10 @@
 		<copy file="lcmsmatching-readme.md" tofile="${dist.dir}/README.md"/>
 	</target>
 
+	<!-- COPY CODE -->
+	<target name="copy.code">
+	</target>
+
 	<!-- DIST CODE -->
 	<target name="dist.code">
 
@@ -179,6 +141,60 @@
 	<target name="clean">
 		<delete dir="${dist.dir}"/>
 		<delete dir="${dist.test.dir}"/>
+	</target>
+
+	<!--~~~~~~~~~~~~~
+	~ UPDATE W4M VM ~
+	~~~~~~~~~~~~~~-->
+
+	<!-- This task is used when developping, for updating quickly the tool inside the local W4M virtual machine. -->
+	<target name="update.w4m.vm" depends="clean,dist">
+
+		<property name="w4m.login" value="galaxy@w4m"/>
+		<property name="tool.path" value="galaxy-pfem/tools/metabolomics/annotation/lcmsmatching"/>
+
+		<!-- Stop Galaxy -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="/sbin/service galaxy stop"/>
+		</exec>
+
+		<!-- Remove current tool version -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="rm -rf ${tool.path}"/>
+		</exec>
+
+		<!-- Remove old packages on W4M instance -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="rm -f ${pkg.prefix}-*.${pkg.ext}"/>
+		</exec>
+
+		<!-- Copy new package on W4M instance -->
+		<exec executable="scp" failonerror="true">
+			<arg value="${dist.dir}/${pkg.name}.${pkg.ext}"/>
+			<arg value="${w4m.login}:."/>
+		</exec>
+
+		<!-- Make tool directory -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="mkdir -p ${tool.path}"/>
+		</exec>
+
+		<!-- Install new tool version -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="tar -xzf ${pkg.name}.${pkg.ext} -C ${tool.path}"/>
+		</exec>
+
+		<!-- Restart Galaxy -->
+		<exec executable="ssh" failonerror="true">
+			<arg value="${w4m.login}"/>
+			<arg value="/sbin/service galaxy start"/>
+		</exec>
+
 	</target>
 
 </project>
