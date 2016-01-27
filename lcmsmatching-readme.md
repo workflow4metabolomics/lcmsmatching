@@ -25,12 +25,10 @@ chooseCRANmirror(graphics = FALSE)
 
 And then issue the following R commands:
 ``` {.r}
-install.packages('stringr')
-install.packages('rJava')
-install.packages('xlsxjars')
-install.packages('xlsx')
 install.packages('getopt')
+install.packages('stringr')
 install.packages('plyr')
+install.packages('XML')
 ```
 
 Adding the new tool to Galaxy
