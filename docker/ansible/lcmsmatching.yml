@@ -21,11 +21,11 @@
       apt: upgrade=dist
 
     - name: Install R
-      apt: pkg={{ item }} state=latest
-      when: ansible_os_family == 'Debian'
-      with_items:
-        - r-base
-
+      command: apt-get install -y r-base creates=/usr/bin/R # TODO The normal apt command does not work when called from Docker (issue of os version / ).
+#      apt: pkg=r-base state=present
+##      apt: pkg=r-base state=latest
+##      when: ansible_os_family == 'Debian'
+#
     - name: Install R package getopt
       command: R -e "install.packages('getopt', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/getopt
 

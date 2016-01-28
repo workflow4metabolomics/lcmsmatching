@@ -1,12 +1,23 @@
-FROM ansible/ubuntu14.04-ansible:stable
+FROM ubuntu:14.04
+#FROM ansible/ubuntu14.04-ansible:stable
 
 MAINTAINER Pierrick Roger (pierrick.roger@gmail.com)
+
+# Install Ansible
+RUN apt-get update
+RUN apt-get install -y ansible
+RUN echo '[local]\nlocalhost\n' > /etc/ansible/hosts
+RUN apt-get install -y python-apt
+#RUN apt-get update -f
+#RUN apt-get install -y aptitude
 
 ADD ansible /files/ansible
 
 # Run ansible role
 WORKDIR /files/ansible
 RUN ansible-playbook lcmsmatching.yml -c local
+
+#RUN apt-get install -y r-base
 
 ## Install R
 #RUN echo "deb http://mirrors.ebi.ac.uk/CRAN/bin/linux/ubuntu trusty/" >> /etc/apt/sources.list && \
@@ -17,7 +28,6 @@ RUN ansible-playbook lcmsmatching.yml -c local
 #RUN apt-get update && apt-get -y upgrade && apt-get install -y \
 #	r-base r-base-dev
 #RUN apt-get install -y libcurl4-openssl-dev
-#RUN apt-get install -y libcurl3
 
 ## Add automatic repo finder for R:
 ## TODO Replace the following call by a call to an installation script provided inside the sources
