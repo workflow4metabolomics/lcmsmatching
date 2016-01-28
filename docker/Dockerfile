@@ -39,11 +39,17 @@ RUN ansible-playbook lcmsmatching.yml -c local
 #RUN /scripts/installTool
 
 # Add script sources
-ADD w4m-tool-lcmsmatching-2.0.tar.gz /files/lcmsmatching/
+# TODO Make possible the two possibilities (either use local archive, or github repos)
+#ADD w4m-tool-lcmsmatching-2.0.tar.gz /files/lcmsmatching/
+RUN apt-get install -y git
+WORKDIR /files
+RUN git clone --recursive https://github.com/pierrickrogermele/lcmsmatching 
+RUN R -e "install.packages('RJSONIO', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')"
 
 # Clean up
 RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,log}/ /tmp/* /var/tmp/*
 
 # Define Entry point script
-RUN chmod +x /files/lcmsmatching/search-mz
-ENTRYPOINT ["/files/lcmsmatching/search-mz"]
+#RUN chmod +x /files/lcmsmatching/search-mz
+#ENTRYPOINT ["/files/lcmsmatching/search-mz"]
+ENTRYPOINT ["/files/lcmsmatching/r-msdb/search-mz"]
