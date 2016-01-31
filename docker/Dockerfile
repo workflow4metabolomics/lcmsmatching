@@ -3,17 +3,37 @@ FROM ubuntu:14.04
 
 MAINTAINER Pierrick Roger (pierrick.roger@gmail.com)
 
-# Install Ansible
+# Update package database
 RUN apt-get update
-RUN apt-get install -y ansible
-RUN echo '[local]\nlocalhost\n' > /etc/ansible/hosts
-RUN apt-get install -y python-apt
-#RUN apt-get update -f
-#RUN apt-get install -y aptitude
 
-ADD ansible /files/ansible
+# Add apt-add-repository tool
+#RUN apt-get install --no-install-recommends -y software-properties-common
+
+# Install Ansible
+#RUN apt-add-repository ppa:ansible/ansible
+#RUN apt-get update
+#RUN apt-get install -y ansible
+RUN apt-get install -y git
+RUN git clone git://github.com/ansible/ansible.git --recursive
+WORKDIR ./ansible
+RUN apt-get install -y python python-setuptools
+RUN apt-get install -y gcc
+RUN apt-get install -y python-dev
+RUN apt-get install -y libgmp-dev
+#RUN bash -c "source ./hacking/env-setup && easy_install pip && pip install paramiko PyYAML Jinja2 httplib2 six && make all install"
+RUN easy_install pip
+RUN pip install paramiko PyYAML Jinja2 httplib2 six
+RUN apt-get install -y libffi-dev
+RUN apt-get install -y libssl-dev
+RUN pip install 'requests[security]'
+RUN apt-get install -y make
+RUN make all install
+RUN ansible --version
+RUN mkdir /etc/ansible
+RUN echo '[local]\nlocalhost\n' > /etc/ansible/hosts
 
 # Run ansible role
+ADD ansible /files/ansible
 WORKDIR /files/ansible
 RUN ansible-playbook lcmsmatching.yml -c local
 
@@ -41,10 +61,10 @@ RUN ansible-playbook lcmsmatching.yml -c local
 # Add script sources
 # TODO Make possible the two possibilities (either use local archive, or github repos)
 #ADD w4m-tool-lcmsmatching-2.0.tar.gz /files/lcmsmatching/
-RUN apt-get install -y git
-WORKDIR /files
-RUN git clone --recursive https://github.com/pierrickrogermele/lcmsmatching 
-RUN R -e "install.packages('RJSONIO', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')"
+#RUN apt-get install -y git
+#WORKDIR /files
+#RUN git clone --recursive https://github.com/pierrickrogermele/lcmsmatching 
+#RUN R -e "install.packages('RJSONIO', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')"
 
 # Clean up
 RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,log}/ /tmp/* /var/tmp/*
@@ -52,4 +72,5 @@ RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,lo
 # Define Entry point script
 #RUN chmod +x /files/lcmsmatching/search-mz
 #ENTRYPOINT ["/files/lcmsmatching/search-mz"]
-ENTRYPOINT ["/files/lcmsmatching/r-msdb/search-mz"]
+#ENTRYPOINT ["/files/lcmsmatching/r-msdb/search-mz"]
+ENTRYPOINT ["/usr/bin/R"]

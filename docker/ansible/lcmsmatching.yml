@@ -1,46 +1,65 @@
 ---
 - hosts: all
   vars:
-    crandeb_repos: "http://mirrors.ebi.ac.uk/CRAN/bin/linux/ubuntu trusty/"
+    crandeb_repos: "deb http://mirrors.ebi.ac.uk/CRAN/bin/linux/ubuntu trusty/"
     crandeb_key: E084DAB9
 
   tasks:
-    - name: Add CRAN to package repositories
-      lineinfile: dest=/etc/apt/sources.list state=present line="deb {{crandeb_repos}}"
 
-    - name: Request CRAN key from Ubuntu
-      command: gpg --keyserver keyserver.ubuntu.com --recv-key {{crandeb_key}}
-
-    - name: Add CRAN key to apt keys
-      shell: gpg -a --export {{crandeb_key}} | apt-key add -
+    - name: Install Packages needed for package installation
+      apt: pkg={{item}} state=latest
+      with_items:
+        - aptitude # Needed by apt when using upgrade=yes
+        - python-pycurl # Needed by apt_repository command
 
     - name: Update package database
-      apt: update_cache=yes
+      apt: update_cache=yes 
 
     - name: Upgrade packages
-      apt: upgrade=dist
+      apt: upgrade=yes
 
-    - name: Install R
-      command: apt-get install -y r-base creates=/usr/bin/R # TODO The normal apt command does not work when called from Docker (issue of os version / ).
-#      apt: pkg=r-base state=present
-##      apt: pkg=r-base state=latest
-##      when: ansible_os_family == 'Debian'
-#
-    - name: Install R package getopt
-      command: R -e "install.packages('getopt', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/getopt
+    - name: Add CRAN to package repositories
+      command: gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
+#      apt_repository: repo="{{crandeb_repos}}" state=present
 
-    - name: Install R package stringr
-      command: R -e "install.packages('stringr', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/stringr
+    - name: Add CRAN key
+      shell: gpg -a --export E084DAB9 | sudo apt-key add -
+#      apt_key: keyserver=keyserver.ubuntu.com id={{crandeb_key}}
 
-    - name: Install R package plyr
-      command: R -e "install.packages('plyr', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/plyr
-
-    - name: Install library dependencies for XML CRAN package
-      apt: pkg={{ item }} state=latest
+    - name: Install packages
+      apt: pkg={{item}} state=latest
       when: ansible_os_family == 'Debian'
       with_items:
+        - r-base
         - libcurl4-openssl-dev
         - libxml2-dev
+        - git
 
-    - name: Install R package XML
-      command: R -e "install.packages('XML', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/XML
+#    - name: Install R
+#      apt: pkg=r-base state=latest
+#      when: ansible_os_family == 'Debian'
+#      command: apt-get install -y r-base creates=/usr/bin/R # TODO The normal apt command does not work when called from Docker (issue of os version / ).
+
+    - name: Install R packages
+      command: R -e "install.packages('{{item}}', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/{{item}}
+      with_items:
+        - getopt
+        - stringr
+        - plyr
+        - XML
+        - RJSONIO
+
+#    - name: Install R package stringr
+#      command: R -e "install.packages('stringr', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/stringr
+#
+#    - name: Install R package plyr
+#      command: R -e "install.packages('plyr', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/plyr
+#
+#    - name: Install R package XML
+#      command: R -e "install.packages('XML', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/XML
+#
+#    - name: Install R package RJSONIO
+#      command: R -e "install.packages('RJSONIO', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/RJSONIO
+
+    - name: Clone tool
+      git: repo=https://github.com/pierrickrogermele/lcmsmatching dest=/files/lcmsmatching
