@@ -19,11 +19,14 @@
       apt: upgrade=yes
 
     - name: Add CRAN to package repositories
-      command: gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
+      lineinfile: dest=/etc/apt/sources.list state=present line={{crandeb_repos}}
 #      apt_repository: repo="{{crandeb_repos}}" state=present
 
+    - name: Get CRAN key
+      command: gpg --keyserver keyserver.ubuntu.com --recv-key {{crandeb_key}}
+
     - name: Add CRAN key
-      shell: gpg -a --export E084DAB9 | sudo apt-key add -
+      shell: gpg -a --export {{crandeb_key}} | sudo apt-key add -
 #      apt_key: keyserver=keyserver.ubuntu.com id={{crandeb_key}}
 
     - name: Install packages

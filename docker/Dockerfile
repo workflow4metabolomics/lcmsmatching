@@ -67,6 +67,7 @@ RUN ansible-playbook lcmsmatching.yml -c local
 #RUN R -e "install.packages('RJSONIO', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')"
 
 # Clean up
+# TODO Remove also ansible stuff (ansible, Python, etc.)
 RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,log}/ /tmp/* /var/tmp/*
 
 # Define Entry point script
