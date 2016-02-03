@@ -11,13 +11,13 @@
 
   tasks:
 
-	# It is primordial to strictly respect the order of the steps below.
+    # It is primordial to strictly respect the order of the steps below.
 
     ###################################
     # 1. ANSIBLE PACKAGE DEPENDENCIES #
     ###################################
 
-	# In this primary step, we install some packages needed by Ansible to run apt commands.
+    # In this primary step, we install some packages needed by Ansible to run apt commands.
 
     - name: Install Packages needed for package installation
       apt: pkg={{item}} state=latest
@@ -45,9 +45,9 @@
     - name: Upgrade packages
       apt: upgrade=yes
 
-	########################
-	# 4. TOOL INSTALLATION #
-	########################
+    ########################
+    # 4. TOOL INSTALLATION #
+    ########################
 
     - name: Install packages
       apt: pkg={{item}} state=latest
