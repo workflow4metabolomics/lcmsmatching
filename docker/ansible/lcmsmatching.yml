@@ -12,12 +12,6 @@
         - aptitude # Needed by apt when using upgrade=yes
         - python-pycurl # Needed by apt_repository command
 
-    - name: Update package database
-      apt: update_cache=yes 
-
-    - name: Upgrade packages
-      apt: upgrade=yes
-
     - name: Add CRAN to package repositories
       lineinfile: dest=/etc/apt/sources.list state=present line={{crandeb_repos}}
 #      apt_repository: repo="{{crandeb_repos}}" state=present
@@ -28,6 +22,12 @@
     - name: Add CRAN key
       shell: gpg -a --export {{crandeb_key}} | sudo apt-key add -
 #      apt_key: keyserver=keyserver.ubuntu.com id={{crandeb_key}}
+
+    - name: Update package database
+      apt: update_cache=yes 
+
+    - name: Upgrade packages
+      apt: upgrade=yes
 
     - name: Install packages
       apt: pkg={{item}} state=latest
@@ -65,4 +65,4 @@
 #      command: R -e "install.packages('RJSONIO', lib='/usr/lib/R/library', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')" creates=/usr/lib/R/library/RJSONIO
 
     - name: Clone tool
-      git: repo=https://github.com/pierrickrogermele/lcmsmatching dest=/files/lcmsmatching
+      git: repo=https://github.com/pierrickrogermele/lcmsmatching dest=/files/lcmsmatching version=ansible

@@ -73,5 +73,5 @@ RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,lo
 # Define Entry point script
 #RUN chmod +x /files/lcmsmatching/search-mz
 #ENTRYPOINT ["/files/lcmsmatching/search-mz"]
-#ENTRYPOINT ["/files/lcmsmatching/r-msdb/search-mz"]
-ENTRYPOINT ["/usr/bin/R"]
+ENTRYPOINT ["/files/lcmsmatching/r-msdb/search-mz"]
+#ENTRYPOINT ["/usr/bin/R"]
