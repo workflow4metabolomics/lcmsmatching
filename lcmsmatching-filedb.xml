@@ -275,7 +275,7 @@ In this field, each column is identified with a tag, and the columns names are l
 The field *File database MS modes* allows you to personalize the MS mode identifiers. The value of the field is a comma separated list of mode/name couples (separated by character `=`)..
 For instance, if in your database file you use characters '+' and '-' to identify the modes, then you must set the field to `pos=+,neg=-`.
 
-Example of database file (totally fake):
+Example of database file (totally fake, no meaning):
 
 +-------+-------+------------+--------------------+-------------------------+-----------+-------+---------------+-----------+--------------+
 | molid | mode  | mz         | composition        | attribution             | col       | rt    | molcomp       | molmass   | molnames     |
