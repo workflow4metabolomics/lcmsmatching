@@ -8,7 +8,7 @@
 	</condition>
 	<property name="pkg.prefix" value="w4m-tool-lcmsmatching"/>
 	<property name="pkg.ext" value="tar.gz"/>
-	<property name="version" value="2.0"/>
+	<property name="version" value="2.1.1"/>
 	<property name="dist.dir" value="dist"/>
 	<property name="dist.test.dir" value="dist-test"/>
 	<property name="pkg.name" value="${pkg.prefix}-${version}${timestamp}"/>
