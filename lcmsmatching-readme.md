@@ -31,6 +31,12 @@ install.packages('plyr')
 install.packages('XML')
 ```
 
+For package XML, you first to install libcurl and libxml2. On Ubuntu:
+```bash
+sudo apt-get install libcurl4-openssl-dev
+sudo apt-get install libxml2-dev
+```
+
 Adding the new tool to Galaxy
 =============================
 
