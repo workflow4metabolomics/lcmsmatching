@@ -227,6 +227,8 @@ This tool performs LC/MS matching on an input list of MZ/RT values, using a prov
 Input files
 -----------
 
+Be careful to always provide UTF-8 encoded files, unless you do not use special characters at all. For instance, greek letters in molecule names give errors if the file is in latin1 (ISO 8859-1) or Windows 1252 (not distinguishable from latin1) encoding.
+
 Single file database
 ====================
 
