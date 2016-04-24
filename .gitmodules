@@ -16,3 +16,6 @@
 [submodule "java-msdb"]
 	path = java-msdb
 	url = ../java-msdb
+[submodule "ant-lib"]
+	path = ant-lib
+	url = git@github.com:pierrickrogermele/ant-lib.git
