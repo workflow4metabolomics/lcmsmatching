@@ -25,10 +25,10 @@ chooseCRANmirror(graphics = FALSE)
 
 And then issue the following R commands:
 ``` {.r}
-install.packages('getopt')
-install.packages('stringr')
-install.packages('plyr')
-install.packages('XML')
+install.packages('getopt', dependencies = TRUE)
+install.packages('stringr', dependencies = TRUE)
+install.packages('plyr', dependencies = TRUE)
+install.packages('XML', dependencies = TRUE)
 ```
 
 For package XML, you first to install libcurl and libxml2. On Ubuntu:
