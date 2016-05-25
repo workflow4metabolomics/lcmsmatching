@@ -1,20 +1,24 @@
-FROM ubuntu:latest
+FROM ubuntu:14.04
 
 MAINTAINER Pierrick Roger (pierrick.roger@gmail.com)
 
-# Install Ansible
-RUN apt-get update
-RUN apt-get -y install software-properties-common
-RUN apt-add-repository ppa:ansible/ansible
-RUN apt-get -y install ansible
+# Setup package repos
+RUN echo "deb http://mirrors.ebi.ac.uk/CRAN/bin/linux/ubuntu trusty/" >> /etc/apt/sources.list
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
 
-# Run ansible role
-ADD ansible /files/ansible
-WORKDIR /files/ansible
-RUN ansible-playbook lcmsmatching.yml -c local
+# Update and upgrade system
+RUN apt-get update
+RUN apt-get -y upgrade
+
+# Install R and other needed packages
+RUN apt-get -y install r-base libcurl4-openssl-dev libxml2-dev
+RUN R -e "install.packages(c('getopt', 'stringr', 'plyr', 'XML', 'RJSONIO'), lib='/usr/lib/R/library', dependencies = TRUE, repos='http://mirrors.ebi.ac.uk/CRAN')"
+
+# Clone tool
+RUN apt-get -y install git
+RUN git clone -b docker https://github.com/workflow4metabolomics/lcmsmatching /files/lcmsmatching
 
 # Clean up
-# TODO Remove also ansible stuff (ansible, Python, etc.)
 RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,log}/ /tmp/* /var/tmp/*
 
 # Define Entry point script
