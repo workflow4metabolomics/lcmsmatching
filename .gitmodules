@@ -1,21 +1,21 @@
 [submodule "r-msdb"]
 	path = r-msdb
-	url = ../r-msdb
+	url = git@github.com:pierrickrogermele/r-msdb
 [submodule "r-lib"]
 	path = r-lib
-	url = ../r-lib
+	url = git@github.com:pierrickrogermele/r-lib
 [submodule "r-biodb"]
 	path = r-biodb
-	url = ../r-biodb
+	url = git@github.com:pierrickrogermele/r-biodb
 [submodule "tool-pandoc"]
 	path = tool-pandoc
-	url = ../tool-pandoc
+	url = git@github.com:pierrickrogermele/tool-pandoc
 [submodule "tool-plantuml"]
 	path = tool-plantuml
-	url = ../tool-plantuml
+	url = git@github.com:pierrickrogermele/tool-plantuml
 [submodule "java-msdb"]
 	path = java-msdb
-	url = ../java-msdb
+	url = git@github.com:pierrickrogermele/java-msdb
 [submodule "ant-lib"]
 	path = ant-lib
-	url = git@github.com:pierrickrogermele/ant-lib.git
+	url = git@github.com:pierrickrogermele/ant-lib
