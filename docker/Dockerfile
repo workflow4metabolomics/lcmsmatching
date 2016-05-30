@@ -14,12 +14,11 @@ RUN apt-get -y upgrade
 RUN apt-get -y install r-base libcurl4-openssl-dev libxml2-dev
 RUN R -e "install.packages(c('getopt', 'stringr', 'plyr', 'XML', 'RJSONIO'), lib='/usr/lib/R/library', dependencies = TRUE, repos='http://mirrors.ebi.ac.uk/CRAN')"
 
-# Clone tool
-RUN apt-get -y install git
-RUN git clone -b docker https://github.com/workflow4metabolomics/lcmsmatching /files/lcmsmatching
+# Install tool
+ADD tool.tar.gz /files/lcmsmatching/
 
 # Clean up
 RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,log}/ /tmp/* /var/tmp/*
 
 # Define Entry point script
-ENTRYPOINT ["/files/lcmsmatching/r-msdb/search-mz"]
+ENTRYPOINT ["/files/lcmsmatching/search-mz"]

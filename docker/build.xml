@@ -1,0 +1,35 @@
+<project name="w4m.tool.lcmsmatching.docker" default="all">
+
+	<!--~~~
+	~ ALL ~
+	~~~~-->
+
+	<target name="all" depends="docker"/>
+
+	<!--~~~~~~
+	~ DOCKER ~
+	~~~~~~~-->
+
+	<target name="docker" depends="tool.pkg">
+		<exec executable="docker">
+			<arg value="build"/>
+			<arg value="-t"/>
+			<arg value="lcmsmatching"/>
+			<arg value="."/>
+		</exec>
+	</target>
+
+	<!--~~~~~~~~
+	~ TOOL PKG ~
+	~~~~~~~~~-->
+
+	<target name="tool.pkg">
+		<ant dir=".." target="dist" inheritAll="false">
+			<property name="TIMESTAMP" value="false"/>
+			<property name="VERSION" value="false"/>
+			<property name="PKG.PREFIX" value="tool"/>
+		</ant>
+		<copy file="../dist/tool.tar.gz" todir="."/>
+	</target>
+
+</project>
