@@ -5,6 +5,7 @@
 	<tstamp/>
 	<property name="TIMESTAMP" value="true"/>
 	<property name="VERSION" value="true"/>
+	<property name="DIST.TEST" value="true"/>
 	<property name="timestamp" value="${DSTAMP}-${TSTAMP}"/>
 	<property name="PKG.PREFIX" value="w4m-tool-lcmsmatching"/>
 	<property name="pkg.ext" value="tar.gz"/>
@@ -20,7 +21,6 @@
 		<isfalse value="${VERSION}"/>
 	</condition>
 	<property name="pkg.name" value="${PKG.PREFIX}${version.suffix}${timestamp.suffix}"/>
-	<echo>PROPERTY PKG.NAME = ${pkg.name}</echo>
 
 	<!--~~~
 	~ ALL ~
@@ -34,7 +34,7 @@
 	<target name="dist.w4m" depends="dist.code,w4m.filedb.code,dist.tar,dist.filedb.test"/>
 
 	<!-- DIST FILE DB TEST -->
-	<target name="dist.filedb.test">
+	<target name="dist.filedb.test" if="${DIST.TEST}">
 
 		<!-- Make temp dir -->
 		<delete dir="${dist.dest.dir}"/>
