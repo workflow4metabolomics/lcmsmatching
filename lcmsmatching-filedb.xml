@@ -10,7 +10,7 @@
 	~ COMMAND ~
 	~~~~~~~~-->
 
-	<command interpreter="Rscript"><![CDATA[
+	<command><![CDATA[
 		search-mz -i "$mzrtinput"
 
 		## Database
