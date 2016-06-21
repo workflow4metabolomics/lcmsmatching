@@ -3,7 +3,7 @@
 	<description>Matching of mz/rt values onto local reference compound database.</description>
 
 	<requirements>
-		<requirement type="binary">Rscript</requirement>
+		<requirement type="package" version="3.2.3">R</requirement>
 	</requirements>
 
 	<!--~~~~~~~
