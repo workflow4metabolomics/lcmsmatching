@@ -154,18 +154,26 @@
 	</target>
 
 	<!-- TEST -->
-	<target name="test" depends="planemo"/>
+	<target name="test" depends="planemo.lint,planemo.test"/>
 
-	<!-- PLANEMO -->
-	<target name="planemo" depends="test.data">
+	<!-- PLANEMO LINT -->
+	<target name="planemo.lint" depends="test.data">
 		<exec executable="planemo" failonerror="true">
 			<arg value="lint"/>
 			<arg value="${tool.xml}"/>
 		</exec>
 	</target>
 
+	<!-- PLANEMO TEST -->
+	<target name="planemo.test" depends="test.data">
+		<exec executable="planemo" failonerror="true">
+			<arg value="test"/>
+			<arg value="${tool.xml}"/>
+		</exec>
+	</target>
+
 	<!-- TEST DATA FOLDER -->
-	<!-- Create test-data folder that is needed by Galaxy functional tests -->
+	<!-- Create test-data folder that is needed by Galaxy/Planemo functional tests -->
 	<target name="test.data">
 		<mkdir dir="test-data"/>
 		<copy todir="test-data">
