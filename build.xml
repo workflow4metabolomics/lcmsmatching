@@ -157,11 +157,22 @@
 	<target name="test" depends="planemo"/>
 
 	<!-- PLANEMO -->
-	<target name="planemo">
+	<target name="planemo" depends="test.data">
 		<exec executable="planemo" failonerror="true">
 			<arg value="lint"/>
 			<arg value="${tool.xml}"/>
 		</exec>
+	</target>
+
+	<!-- TEST DATA FOLDER -->
+	<!-- Create test-data folder that is needed by Galaxy functional tests -->
+	<target name="test.data">
+		<mkdir dir="test-data"/>
+		<copy todir="test-data">
+			<fileset dir="r-msdb/test" includes="filedb.tsv"/>
+			<fileset dir="r-msdb/test" includes="mzrt-input-small.tsv"/>
+			<fileset dir="r-msdb/test/res" includes="filedb-small-mz-match-*"/>
+		</copy>
 	</target>
 
 	<!--~~~~~~~~~~~~~

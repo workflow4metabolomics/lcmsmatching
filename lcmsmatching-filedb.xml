@@ -1,8 +1,9 @@
 <tool id="lcmsmatching" name="LC/MS matching" version="2.1.3">
+
 	<description>Matching of mz/rt values onto local reference compound database.</description>
-	<parallelism method="basic"/>
+
 	<requirements>
-		<requirement type="binary">R</requirement>
+		<requirement type="binary">Rscript</requirement>
 	</requirements>
 
 	<!--~~~~~~~
@@ -210,12 +211,30 @@
 
 	</outputs>
 
+	<!--~~~~~
+	~ TESTS ~
+	~~~~~~-->
+
+	<tests>
+
+		<!-- Simple quick test -->
+		<test>
+			<param name="dbfile" value="filedb.tsv"/>
+			<param name="mzrtinput" value="mzrt-input-small.tsv"/>
+			<param name="inputfields" value=""/>
+			<param name="mzmode" value="pos"/>
+			<output name="mainoutput" file="filedb-small-mz-match-output.tsv"/>
+			<output name="peaksoutput" file="filedb-small-mz-match-peaks-output.tsv"/>
+			<output name="htmloutput" file="filedb-small-mz-match-html-output.html"/>
+		</test>
+	</tests>
+
 	<!--~~~~
 	~ HELP ~
 	~~~~~-->
 
-	<help>	
-	<!-- @@@BEGIN_RST@@@ -->
+	<help>
+<!-- @@@BEGIN_RST@@@ -->
 
 ==============
 LC/MS matching
@@ -484,6 +503,6 @@ About
 **Please cite**
 	R Core Team (2013). R: A language and Environment for Statistical Computing. http://www.r-project.org
 
-	<!-- @@@END_RST@@@ -->
+<!-- @@@END_RST@@@ -->
 	</help>
 </tool>
