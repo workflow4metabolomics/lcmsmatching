@@ -12,6 +12,7 @@
 	<property name="version" value="2.1.3"/>
 	<property name="dist.dir" value="dist"/>
 	<property name="dist.test.dir" value="dist-test"/>
+	<property name="tool.xml" value="lcmsmatching-filedb.xml"/>
 
 	<!-- Define package name -->
 	<condition property="timestamp.suffix" value="" else="-${timestamp}">
@@ -80,7 +81,7 @@
 		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="db.ms.modes">
 			<arg value="--print-db-ms-modes"/>
 		</exec>
-		<copy file="lcmsmatching-filedb.xml" tofile="${dist.dir}/lcmsmatching.xml">
+		<copy file="${tool.xml}" tofile="${dist.dir}/lcmsmatching.xml">
 			<filterchain>
 				<tokenfilter>
 					<replacestring from="@INPUT_FIELDS@" to="${input.fields}"/>
@@ -150,6 +151,17 @@
 	<target name="clean">
 		<delete dir="${dist.dir}"/>
 		<delete dir="${dist.test.dir}"/>
+	</target>
+
+	<!-- TEST -->
+	<target name="test" depends="planemo"/>
+
+	<!-- PLANEMO -->
+	<target name="planemo">
+		<exec executable="planemo" failonerror="true">
+			<arg value="lint"/>
+			<arg value="${tool.xml}"/>
+		</exec>
 	</target>
 
 	<!--~~~~~~~~~~~~~
