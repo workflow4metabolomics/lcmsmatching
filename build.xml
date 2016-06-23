@@ -175,6 +175,7 @@
 	<!-- TEST DATA FOLDER -->
 	<!-- Create test-data folder that is needed by Galaxy/Planemo functional tests -->
 	<target name="test.data">
+		<ant dir="r-msdb/test" target="input.files"/>
 		<mkdir dir="test-data"/>
 		<copy todir="test-data">
 			<fileset dir="r-msdb/test" includes="filedb.tsv"/>
