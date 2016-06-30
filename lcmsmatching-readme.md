@@ -27,7 +27,7 @@ And then issue the following R commands:
 ``` {.r}
 install.packages('getopt', dependencies = TRUE)     # version >= 1.20.0
 install.packages('stringr', dependencies = TRUE)    # version >= 1.0.0
-install.packages('plyr', dependencies = TRUE)       # version >= 1.8.4
+install.packages('plyr', dependencies = TRUE)       # version >= 1.8.3
 install.packages('XML', dependencies = TRUE)        # version >= 3.98-1.4
 ```
 

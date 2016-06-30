@@ -4,7 +4,10 @@
 
 	<requirements>
 		<requirement type="package" version="3.2.2">R</requirement>
-		<requirement type="package">r-getopt</requirement>
+		<requirement type="package" version="1.20.0">r-getopt</requirement>
+		<requirement type="package" version="1.0.0">r-stringr</requirement>
+		<requirement type="package" version="1.8.3">r-plyr</requirement>
+		<requirement type="package" version="3.98">r-xml</requirement>
 	</requirements>
 
 	<!--~~~~~~~
@@ -221,8 +224,10 @@
 		<!-- Simple quick test -->
 		<test>
 			<param name="dbfile" value="filedb.tsv"/>
-			<param name="mzrtinput" value="mzrt-input-small.tsv"/>
+			<param name="mzrtinput" value="mz-input-small.tsv"/>
 			<param name="inputfields" value=""/>
+			<param name="dbfields" value=""/>
+			<param name="dbmsmodes" value=""/>
 			<param name="mzmode" value="pos"/>
 			<output name="mainoutput" file="filedb-small-mz-match-output.tsv"/>
 			<output name="peaksoutput" file="filedb-small-mz-match-peaks-output.tsv"/>

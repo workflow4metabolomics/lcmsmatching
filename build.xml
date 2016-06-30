@@ -184,7 +184,7 @@
 		<mkdir dir="${dist.dir}/code/test-data"/>
 		<copy todir="${dist.dir}/code/test-data">
 			<fileset dir="r-msdb/test" includes="filedb.tsv"/>
-			<fileset dir="r-msdb/test" includes="mzrt-input-small.tsv"/>
+			<fileset dir="r-msdb/test" includes="mz-input-small.tsv"/>
 			<fileset dir="r-msdb/test/res" includes="filedb-small-mz-match-*"/>
 		</copy>
 	</target>
