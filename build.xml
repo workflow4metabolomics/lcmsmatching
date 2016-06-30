@@ -96,10 +96,6 @@
 		<copy file="lcmsmatching-readme.md" tofile="${dist.dir}/README.md"/>
 	</target>
 
-	<!-- COPY CODE -->
-	<target name="copy.code">
-	</target>
-
 	<!-- DIST CODE -->
 	<target name="dist.code">
 
@@ -157,26 +153,36 @@
 	<target name="test" depends="planemo.lint,planemo.test"/>
 
 	<!-- PLANEMO LINT -->
-	<target name="planemo.lint" depends="test.data">
-		<exec executable="planemo" failonerror="true">
+	<target name="planemo.lint" depends="planemo.env">
+		<exec executable="planemo" dir="${dist.dir}/code" failonerror="true">
 			<arg value="lint"/>
 			<arg value="${tool.xml}"/>
 		</exec>
 	</target>
 
 	<!-- PLANEMO TEST -->
-	<target name="planemo.test" depends="test.data">
-		<exec executable="planemo" failonerror="true">
+	<target name="planemo.test" depends="planemo.env">
+
+		<exec executable="planemo" dir="${dist.dir}/code" failonerror="true">
+			<arg value="conda_install"/>
+			<arg value="${tool.xml}"/>
+		</exec>
+
+		<exec executable="planemo" dir="${dist.dir}/code" failonerror="true">
 			<arg value="test"/>
+			<arg value="--galaxy_branch"/>
+			<arg value="release_16.01"/>
+			<arg value="--conda_dependency_resolution"/>
 			<arg value="${tool.xml}"/>
 		</exec>
 	</target>
 
-	<!-- TEST DATA FOLDER -->
-	<!-- Create test-data folder that is needed by Galaxy/Planemo functional tests -->
-	<target name="test.data">
-		<mkdir dir="test-data"/>
-		<copy todir="test-data">
+	<target name="planemo.env" depends="dist.code">
+		<chmod file="${dist.dir}/code/search-mz" perm="u+x"/>
+		<copy file="${tool.xml}" todir="${dist.dir}/code"/>
+		<ant dir="r-msdb/test" target="input.files"/>
+		<mkdir dir="${dist.dir}/code/test-data"/>
+		<copy todir="${dist.dir}/code/test-data">
 			<fileset dir="r-msdb/test" includes="filedb.tsv"/>
 			<fileset dir="r-msdb/test" includes="mzrt-input-small.tsv"/>
 			<fileset dir="r-msdb/test/res" includes="filedb-small-mz-match-*"/>
