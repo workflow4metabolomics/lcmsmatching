@@ -17,6 +17,9 @@ RUN R -e "install.packages(c('getopt', 'stringr', 'plyr', 'XML', 'RJSONIO'), lib
 # Install tool
 ADD tool.tar.gz /files/lcmsmatching/
 
+# Make tool accessible through PATH (for PhenoMeNal project)
+ENV PATH=$PATH:/files/lcmsmatching/
+
 # Clean up
 RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,log}/ /tmp/* /var/tmp/*
 
