@@ -15,7 +15,7 @@
 	~~~~~~~~-->
 
 	<command><![CDATA[
-		$__tool_directory__/search-mz -i "$mzrtinput"
+		@TOOL_PREFIX@search-mz -i "$mzrtinput"
 
 		## Database
 		-d file --url "$dbfile"

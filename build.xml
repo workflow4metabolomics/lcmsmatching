@@ -6,13 +6,14 @@
 	<property name="TIMESTAMP" value="true"/>
 	<property name="VERSION" value="true"/>
 	<property name="DIST.TEST" value="true"/>
+	<property name="TOOL.PREFIX" value="$__tool_directory__/"/>
 	<property name="timestamp" value="${DSTAMP}-${TSTAMP}"/>
 	<property name="PKG.PREFIX" value="w4m-tool-lcmsmatching"/>
 	<property name="pkg.ext" value="tar.gz"/>
 	<property name="version" value="2.1.3"/>
 	<property name="dist.dir" value="dist"/>
 	<property name="dist.test.dir" value="dist-test"/>
-	<property name="tool.xml" value="lcmsmatching-filedb.xml"/>
+	<property name="tool.xml" value="galaxy/lcmsmatching.xml"/>
 
 	<!-- Define package name -->
 	<condition property="timestamp.suffix" value="" else="-${timestamp}">
@@ -83,17 +84,17 @@
 		</exec>
 		<copy file="${tool.xml}" tofile="${dist.dir}/lcmsmatching.xml">
 			<filterchain>
-				<tokenfilter>
-					<replacestring from="@INPUT_FIELDS@" to="${input.fields}"/>
-					<replacestring from="@OUTPUT_FIELDS@" to="${output.fields}"/>
-					<replacestring from="@POS_PREC@" to="${pos.prec}"/>
-					<replacestring from="@NEG_PREC@" to="${neg.prec}"/>
-					<replacestring from="@DB_FIELDS@" to="${db.fields}"/>
-					<replacestring from="@DB_MS_MODES@" to="${db.ms.modes}"/>
-				</tokenfilter>
+				<replacetokens>
+					<token key="TOOL_PREFIX" value="${TOOL.PREFIX}"/>
+					<token key="INPUT_FIELDS" value="${input.fields}"/>
+					<token key="OUTPUT_FIELDS" value="${output.fields}"/>
+					<token key="POS_PREC" value="${pos.prec}"/>
+					<token key="NEG_PREC" value="${neg.prec}"/>
+					<token key="DB_FIELDS" value="${db.fields}"/>
+					<token key="DB_MS_MODES" value="${db.ms.modes}"/>
+				</replacetokens>
 			</filterchain>
 		</copy>
-		<copy file="lcmsmatching-readme.md" tofile="${dist.dir}/README.md"/>
 	</target>
 
 	<!-- DIST CODE -->

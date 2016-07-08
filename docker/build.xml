@@ -45,6 +45,7 @@
 			<property name="TIMESTAMP" value="false"/>
 			<property name="VERSION" value="false"/>
 			<property name="PKG.PREFIX" value="tool"/>
+			<property name="TOOL.PREFIX" value=""/>
 		</ant>
 		<copy file="../dist/tool.tar.gz" todir="."/>
 	</target>
