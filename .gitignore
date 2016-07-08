@@ -6,3 +6,5 @@ dist
 .*.swp
 dist-test
 .DS_Store
+test-data
+tool_test_output.*

@@ -1,16 +1,21 @@
 <tool id="lcmsmatching" name="LC/MS matching" version="2.1.3">
+
 	<description>Matching of mz/rt values onto local reference compound database.</description>
+
 	<requirements>
-		<requirement type="binary">R</requirement>
+		<requirement type="package" version="3.2.2">R</requirement>
+		<requirement type="package" version="1.20.0">r-getopt</requirement>
+		<requirement type="package" version="1.0.0">r-stringr</requirement>
+		<requirement type="package" version="1.8.3">r-plyr</requirement>
+		<requirement type="package" version="3.98">r-xml</requirement>
 	</requirements>
-	<parallelism method="basic"/>
 
 	<!--~~~~~~~
 	~ COMMAND ~
 	~~~~~~~~-->
 
-	<command interpreter="Rscript"><![CDATA[
-		search-mz -i "$mzrtinput"
+	<command><![CDATA[
+		$__tool_directory__/search-mz -i "$mzrtinput"
 
 		## Database
 		-d file --url "$dbfile"
@@ -210,12 +215,32 @@
 
 	</outputs>
 
+	<!--~~~~~
+	~ TESTS ~
+	~~~~~~-->
+
+	<tests>
+
+		<!-- Simple quick test -->
+		<test>
+			<param name="dbfile" value="filedb.tsv"/>
+			<param name="mzrtinput" value="mz-input-small.tsv"/>
+			<param name="inputfields" value=""/>
+			<param name="dbfields" value=""/>
+			<param name="dbmsmodes" value=""/>
+			<param name="mzmode" value="pos"/>
+			<output name="mainoutput" file="filedb-small-mz-match-output.tsv"/>
+			<output name="peaksoutput" file="filedb-small-mz-match-peaks-output.tsv"/>
+			<output name="htmloutput" file="filedb-small-mz-match-html-output.html"/>
+		</test>
+	</tests>
+
 	<!--~~~~
 	~ HELP ~
 	~~~~~-->
 
-	<help>	
-	<!-- @@@BEGIN_RST@@@ -->
+	<help>
+<!-- @@@BEGIN_RST@@@ -->
 
 ==============
 LC/MS matching
@@ -484,6 +509,13 @@ About
 **Please cite**
 	R Core Team (2013). R: A language and Environment for Statistical Computing. http://www.r-project.org
 
-	<!-- @@@END_RST@@@ -->
+<!-- @@@END_RST@@@ -->
 	</help>
+
+	<!--~~~~~~~~~
+	~ CITATIONS ~
+	~~~~~~~~~~-->
+
+	<citations/>
+
 </tool>
