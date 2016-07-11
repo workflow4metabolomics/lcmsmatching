@@ -230,6 +230,68 @@
 		</exec>
 	</target>
 
+	<!--~~~~~~~~~~~~~~~~~
+	~ PLANEMO SHED LINT ~
+	~~~~~~~~~~~~~~~~~~-->
+
+	<target name="planemo.shed.lint" depends="planemo.env">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
+			<arg value="shed_lint"/>
+			<arg value="--tools"/>
+		</exec>
+	</target>
+
+	<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	~ PLANEMO TEST TOOLSHED CREATE ~
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+	<target name="planemo.testtoolshed.create" depends="planemo.env">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
+			<arg value="shed_create"/>
+			<arg value="--shed_target"/>
+			<arg value="testtoolshed"/>
+		</exec>
+	</target>
+
+	<!--~~~~~~~~~~~~~~~~~~~~~~~~~~
+	~ PLANEMO TEST TOOLSHED DIFF ~
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+	<target name="planemo.testtoolshed.diff" depends="planemo.env">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
+			<arg value="shed_diff"/>
+			<arg value="--shed_target"/>
+			<arg value="testtoolshed"/>
+		</exec>
+	</target>
+
+	<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	~ PLANEMO TEST TOOLSHED UPDATE ~
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+	<target name="planemo.testtoolshed.update" depends="planemo.env">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
+			<arg value="shed_update"/>
+			<arg value="--check_diff"/>
+			<arg value="--shed_target"/>
+			<arg value="testtoolshed"/>
+		</exec>
+	</target>
+
+	<!--~~~~~~~~~~~~~~~~~~~~~~~~~~
+	~ PLANEMO TEST TOOLSHED TEST ~
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+	<target name="planemo.testtoolshed.test" depends="planemo.env">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
+			<arg value="shed_test"/>
+			<arg value="--shed_target"/>
+			<arg value="testtoolshed"/>
+			<arg value="--galaxy_branch"/>
+			<arg value="release_16.01"/>
+		</exec>
+	</target>
+
 	<!--~~~~~~~~~~~
 	~ PLANEMO ENV ~
 	~~~~~~~~~~~~-->
@@ -243,6 +305,7 @@
 			<fileset dir="r-msdb/test" includes="mz-input-small.tsv"/>
 			<fileset dir="r-msdb/test/res" includes="filedb-small-mz-match-*"/>
 		</copy>
+		<copy file="shed.yml" tofile="${dist.code.dir}/.shed.yml"/>
 	</target>
 
 	<!--************************************************
