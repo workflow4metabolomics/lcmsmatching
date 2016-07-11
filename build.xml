@@ -2,27 +2,49 @@
 
 	<dirname property="this.dir" file="${ant.file.w4m.tool.lcmsmatching}"/>
 
-	<tstamp/>
+	<!--~~~~~~~~~~~~~~~~~
+	~ PUBLIC PROPERTIES ~
+	~~~~~~~~~~~~~~~~~~-->
+
+	<!-- These properties can be set when calling Ant: `ant -DPROP=value ...`. -->
+
 	<property name="TIMESTAMP" value="true"/>
 	<property name="VERSION" value="true"/>
 	<property name="DIST.TEST" value="true"/>
 	<property name="TOOL.PREFIX" value="$__tool_directory__/"/>
-	<property name="timestamp" value="${DSTAMP}-${TSTAMP}"/>
 	<property name="PKG.PREFIX" value="w4m-tool-lcmsmatching"/>
-	<property name="pkg.ext" value="tar.gz"/>
-	<property name="version" value="2.1.3"/>
-	<property name="dist.dir" value="dist"/>
-	<property name="dist.test.dir" value="dist-test"/>
-	<property name="tool.xml" value="galaxy/lcmsmatching.xml"/>
 
-	<!-- Define package name -->
-	<condition property="timestamp.suffix" value="" else="-${timestamp}">
-		<isfalse value="${TIMESTAMP}"/>
-	</condition>
+	<!--~~~~~~~~~~~~~~~~~~~
+	~ INTERNAL PROPERTIES ~
+	~~~~~~~~~~~~~~~~~~~~-->
+
+	<!-- Version -->
+	<property name="version" value="2.1.3"/>
 	<condition property="version.suffix" value="" else="-${version}">
 		<isfalse value="${VERSION}"/>
 	</condition>
+
+	<!-- Distribution directories -->
+	<property name="dist.dir" value="dist"/>
+	<property name="dist.code.dir" value="${dist.dir}/code"/>
+	<property name="dist.test.dir" value="${dist.dir}/test"/>
+
+	<!-- Tool XML paths -->
+	<property name="tool.xml" value="lcmsmatching.xml"/>
+	<property name="orig.tool.xml" value="galaxy/${tool.xml}"/>
+	<property name="dest.tool.xml" value="${dist.code.dir}/${tool.xml}"/>
+
+	<!-- Time stamp -->
+	<tstamp/>
+	<property name="timestamp" value="${DSTAMP}-${TSTAMP}"/>
+	<condition property="timestamp.suffix" value="" else="-${timestamp}">
+		<isfalse value="${TIMESTAMP}"/>
+	</condition>
+
+	<!-- Package -->
+	<property name="pkg.ext" value="tar.gz"/>
 	<property name="pkg.name" value="${PKG.PREFIX}${version.suffix}${timestamp.suffix}"/>
+	<property name="pkg.path" value="${dist.dir}/${pkg.name}.${pkg.ext}"/>
 
 	<!--~~~
 	~ ALL ~
@@ -30,20 +52,30 @@
 
 	<target name="all"/>
 
-	<!-- DIST -->
-	<target name="dist" depends="dist.code,dist.tar,dist.filedb.test"/>
+	<!--~~~~
+	~ DIST ~
+	~~~~~-->
 
-	<target name="dist.w4m" depends="dist.code,w4m.filedb.code,dist.tar,dist.filedb.test"/>
+	<target name="dist" depends="dist.code,dist.tar,dist.test"/>
 
-	<!-- DIST FILE DB TEST -->
-	<target name="dist.filedb.test" if="${DIST.TEST}">
+	<!--~~~~~~~~
+	~ DIST W4M ~
+	~~~~~~~~~-->
+
+	<target name="dist.w4m" depends="w4m.code,dist.tar,dist.test"/>
+
+	<!--~~~~~~~~~
+	~ DIST TEST ~
+	~~~~~~~~~~-->
+
+	<target name="dist.test" if="${DIST.TEST}">
 
 		<!-- Make temp dir -->
-		<delete dir="${dist.dest.dir}"/>
+		<delete dir="${dist.test.dir}"/>
 		<mkdir dir="${dist.test.dir}"/>
 
 		<!-- Extract package in temp dir -->
-		<untar src="${dist.dir}/${pkg.name}.tar.gz" dest="${dist.test.dir}" compression="gzip"/>
+		<untar src="${pkg.path}" dest="${dist.test.dir}" compression="gzip"/>
 		<chmod file="${dist.test.dir}/search-mz" perm="u+x"/> <!-- This file should be already executable, since it has been put executable inside the tar. It seems the untar task of Ant does not handle the file permissions. -->
 
 		<!-- Run search-mz on sample input file -->
@@ -62,8 +94,13 @@
 
 	</target>
 
-	<!-- W4M FILE DB CODE -->
-	<target name="w4m.filedb.code">
+	<!--~~~~~~~~
+	~ W4M CODE ~
+	~~~~~~~~~-->
+
+	<target name="w4m.code" depends="dist.code">
+
+		<!-- Get all needed values for completing tool XML file. -->
 		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="input.fields">
 			<arg value="--print-input-col-names"/>
 		</exec>
@@ -82,7 +119,9 @@
 		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="db.ms.modes">
 			<arg value="--print-db-ms-modes"/>
 		</exec>
-		<copy file="${tool.xml}" tofile="${dist.dir}/lcmsmatching.xml">
+
+		<!-- Copy and transform tool XML file. -->
+		<copy file="${orig.tool.xml}" tofile="${dest.tool.xml}">
 			<filterchain>
 				<replacetokens>
 					<token key="TOOL_PREFIX" value="${TOOL.PREFIX}"/>
@@ -97,20 +136,25 @@
 		</copy>
 	</target>
 
-	<!-- DIST CODE -->
+	<!--~~~~~~~~~
+	~ DIST CODE ~
+	~~~~~~~~~~-->
+
 	<target name="dist.code">
 
-		<!-- Copy project code -->
-		<delete dir="${dist.dir}/code"/>
-		<mkdir dir="${dist.dir}/code"/>
-		<copy todir="${dist.dir}/code">
+		<!-- Clean directory -->
+		<delete dir="${dist.code.dir}"/>
+		<mkdir dir="${dist.code.dir}"/>
+
+		<!-- Copy R code -->
+		<copy todir="${dist.code.dir}">
 			<fileset dir="r-msdb" includes="search-mz,*.R"/>
 			<fileset dir="r-lib" includes="*.R"/> <!-- dependency -->
 			<fileset dir="r-biodb" includes="*.R"/> <!-- dependency -->
 		</copy>
 
-		<!-- Update paths -->
-		<replace dir="${dist.dir}/code">
+		<!-- Update paths in `source()` function calls. -->
+		<replace dir="${dist.code.dir}">
 			<replacefilter token="../r-lib/" value=""/>
 			<replacefilter token="../r-biodb/" value=""/>
 			<replacefilter token="'..', 'r-lib', " value=""/>
@@ -119,57 +163,65 @@
 
 	</target>
 
-	<!-- DIST TAR -->
+	<!--~~~~~~~~
+	~ DIST TAR ~
+	~~~~~~~~~-->
+
 	<target name="dist.tar">
 
 		<!-- Build tar file -->
-		<tar destfile="${dist.dir}/${pkg.name}.tar.gz" compression="gzip">
-
-			<!-- Include Galaxy XML and README files -->
-			<tarfileset dir="${dist.dir}">
-				<include name="lcmsmatching.xml"/>
-				<include name="README.md"/>
-			</tarfileset>
+		<tar destfile="${pkg.path}" compression="gzip">
 
 			<!-- Include script with execution rights -->
-			<tarfileset dir="${dist.dir}/code" filemode="755">
+			<tarfileset dir="${dist.code.dir}" filemode="755">
 				<include name="search-mz"/>
 			</tarfileset>
 
-			<!-- Include remaining R code -->
-			<tarfileset dir="${dist.dir}/code">
+			<!-- Include remaining code and data files -->
+			<tarfileset dir="${dist.code.dir}">
 				<include name="**"/>
 				<exclude name="search-mz"/>
 			</tarfileset>
 		</tar>
 	</target>
 
-	<!-- CLEAN -->
+	<!--~~~~~
+	~ CLEAN ~
+	~~~~~~-->
+
 	<target name="clean">
 		<delete dir="${dist.dir}"/>
-		<delete dir="${dist.test.dir}"/>
 	</target>
 
-	<!-- TEST -->
-	<target name="test" depends="planemo.lint,planemo.test"/>
+	<!--~~~~~~~~~~~
+	~ GALAXY TEST ~
+	~~~~~~~~~~~~-->
 
-	<!-- PLANEMO LINT -->
+	<target name="galaxy.test" depends="planemo.lint,planemo.test"/>
+
+	<!--~~~~~~~~~~~~
+	~ PLANEMO LINT ~
+	~~~~~~~~~~~~~-->
+
 	<target name="planemo.lint" depends="planemo.env">
-		<exec executable="planemo" dir="${dist.dir}/code" failonerror="true">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
 			<arg value="lint"/>
 			<arg value="${tool.xml}"/>
 		</exec>
 	</target>
 
-	<!-- PLANEMO TEST -->
+	<!--~~~~~~~~~~~~
+	~ PLANEMO TEST ~
+	~~~~~~~~~~~~~-->
+
 	<target name="planemo.test" depends="planemo.env">
 
-		<exec executable="planemo" dir="${dist.dir}/code" failonerror="true">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
 			<arg value="conda_install"/>
 			<arg value="${tool.xml}"/>
 		</exec>
 
-		<exec executable="planemo" dir="${dist.dir}/code" failonerror="true">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
 			<arg value="test"/>
 			<arg value="--galaxy_branch"/>
 			<arg value="release_16.01"/>
@@ -178,17 +230,24 @@
 		</exec>
 	</target>
 
-	<target name="planemo.env" depends="dist.code">
-		<chmod file="${dist.dir}/code/search-mz" perm="u+x"/>
-		<copy file="${tool.xml}" todir="${dist.dir}/code"/>
+	<!--~~~~~~~~~~~
+	~ PLANEMO ENV ~
+	~~~~~~~~~~~~-->
+
+	<target name="planemo.env" depends="w4m.code">
+		<chmod file="${dist.code.dir}/search-mz" perm="u+x"/>
 		<ant dir="r-msdb/test" target="input.files"/>
-		<mkdir dir="${dist.dir}/code/test-data"/>
-		<copy todir="${dist.dir}/code/test-data">
+		<mkdir dir="${dist.code.dir}/test-data"/>
+		<copy todir="${dist.code.dir}/test-data">
 			<fileset dir="r-msdb/test" includes="filedb.tsv"/>
 			<fileset dir="r-msdb/test" includes="mz-input-small.tsv"/>
 			<fileset dir="r-msdb/test/res" includes="filedb-small-mz-match-*"/>
 		</copy>
 	</target>
+
+	<!--************************************************
+	******************** DEPRECATED ********************
+	*************************************************-->
 
 	<!--~~~~~~~~~~~~~
 	~ UPDATE W4M VM ~
