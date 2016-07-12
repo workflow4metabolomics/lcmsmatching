@@ -287,8 +287,46 @@
 			<arg value="shed_test"/>
 			<arg value="--shed_target"/>
 			<arg value="testtoolshed"/>
+			<arg value="--install_galaxy"/>
 			<arg value="--galaxy_branch"/>
 			<arg value="release_16.01"/>
+		</exec>
+	</target>
+
+	<!--~~~~~~~~~~~~~~~~~~~~~~~
+	~ PLANEMO TOOLSHED CREATE ~
+	~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+	<target name="planemo.toolshed.create" depends="planemo.env">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
+			<arg value="shed_create"/>
+			<arg value="--shed_target"/>
+			<arg value="toolshed"/>
+		</exec>
+	</target>
+
+	<!--~~~~~~~~~~~~~~~~~~~~~
+	~ PLANEMO TOOLSHED DIFF ~
+	~~~~~~~~~~~~~~~~~~~~~~-->
+
+	<target name="planemo.toolshed.diff" depends="planemo.env">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
+			<arg value="shed_diff"/>
+			<arg value="--shed_target"/>
+			<arg value="toolshed"/>
+		</exec>
+	</target>
+
+	<!--~~~~~~~~~~~~~~~~~~~~~~~
+	~ PLANEMO TOOLSHED UPDATE ~
+	~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+	<target name="planemo.toolshed.update" depends="planemo.env">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
+			<arg value="shed_update"/>
+			<arg value="--check_diff"/>
+			<arg value="--shed_target"/>
+			<arg value="toolshed"/>
 		</exec>
 	</target>
 
