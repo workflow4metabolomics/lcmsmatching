@@ -197,7 +197,7 @@
 	~ GALAXY TEST ~
 	~~~~~~~~~~~~-->
 
-	<target name="galaxy.test" depends="planemo.lint,planemo.test"/>
+	<target name="test" depends="planemo.lint,planemo.test"/>
 
 	<!--~~~~~~~~~~~~
 	~ PLANEMO LINT ~
