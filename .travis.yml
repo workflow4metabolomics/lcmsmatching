@@ -9,6 +9,4 @@ before_install:
  - pip install planemo
 
 script:
- - ant clean
- - r-msdb/search-mz --print-input-col-names
  - ant galaxy.test
