@@ -8,4 +8,5 @@ before_install:
 
 script:
  - ant clean
+ - ls -l r-msdb
  - ant galaxy.test
