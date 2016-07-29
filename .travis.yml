@@ -1,6 +1,8 @@
 before_install:
  - sudo apt-get install -y python-virtualenv
  - sudo apt-get install -y ant
+ - sudo apt-get install -y r-base
+ - sudo R -e "install.packages('getopt', dependencies = TRUE, repos='http://lib.ugent.be/CRAN/')"
  - virtualenv planemo-venv
  - . planemo-venv/bin/activate
  - pip install --upgrade pip setuptools
