@@ -234,7 +234,7 @@
 	~~~~~~~~~~~~~~~~~~~~~~-->
 
 	<target name="planemo.conda.install" depends="planemo.conda.init,planemo.env">
-		<exec executable="planemo" failonerror="true">
+		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
 			<arg value="conda_install"/>
 			<arg value="--conda_prefix"/>
 			<arg value="${conda.dir}"/>
