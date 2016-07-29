@@ -9,4 +9,5 @@ before_install:
 script:
  - ant clean
  - ls -l r-msdb
+ - r-msdb/search-mz --print-input-col-names
  - ant galaxy.test
