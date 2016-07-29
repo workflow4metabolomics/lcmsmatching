@@ -5,7 +5,7 @@ before_install:
  - . planemo-venv/bin/activate
  - pip install --upgrade pip setuptools
  - pip install planemo
- - planemo conda_init
 
 script:
+ - ant clean
  - ant galaxy.test
