@@ -26,7 +26,7 @@ read.args <-  function() {
 
 opt <- read.args()
 
-spectra.ids <- read.table(opt$input)[[1]]
+spectra.ids <- read.table(opt$input, stringsAsFactors = FALSE)[[1]]
 fact <- BiodbFactory$new(useragent = 'get-massbank-peaks ; pierrick.roger@gmail.com')
 entries <- fact$createEntry(BIODB.MASSBANK, BIODB.SPECTRUM, id = spectra.ids)
 entries.df <- NULL
