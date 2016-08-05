@@ -1,0 +1,42 @@
+#!/usr/bin/env Rscript
+# vi: ft=R
+args <- commandArgs(trailingOnly = F)
+script.path <- sub("--file=","",args[grep("--file=",args)])
+library(getopt)
+library(plyr)
+source(file.path(dirname(script.path), '..', 'r-biodb', 'BiodbFactory.R'), chdir = TRUE)
+
+#############
+# READ ARGS #
+#############
+
+read.args <-  function() {
+	spec = c(
+		'input',       'i',            1,  'character',    'The path to the input file. The file must be a text file containing a list of Massbank spectra IDs.',
+		'output',      'o',            1,  'character',    'The path to the output file.'
+		)
+	spec <- matrix(spec, byrow = TRUE, ncol = 5)
+	opt <- getopt(spec)
+	return(opt)
+}
+
+########
+# MAIN #
+########
+
+opt <- read.args()
+
+spectra.ids <- read.table(opt$input)[[1]]
+fact <- BiodbFactory$new(useragent = 'get-massbank-peaks ; pierrick.roger@gmail.com')
+entries <- fact$createEntry(BIODB.MASSBANK, BIODB.SPECTRUM, id = spectra.ids)
+entries.df <- NULL
+for (e in entries) {
+	e.df <- e$getFieldsAsDataFrame()
+	peaks <- e$getField(BIODB.PEAKS)
+	if ( ! is.null(peaks)) {
+		# Merge peaks with entry fields
+		e.df <- merge(e.df, peaks)
+	}
+	entries.df <- rbind.fill(entries.df, e.df)
+}
+write.table(entries.df, file = opt$output, sep = "\t", row.names = FALSE)
