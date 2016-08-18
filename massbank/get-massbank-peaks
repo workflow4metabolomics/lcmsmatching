@@ -26,17 +26,44 @@ read.args <-  function() {
 
 opt <- read.args()
 
+# Get spectra IDs
 spectra.ids <- read.table(opt$input, stringsAsFactors = FALSE)[[1]]
-fact <- BiodbFactory$new(useragent = 'get-massbank-peaks ; pierrick.roger@gmail.com')
-entries <- fact$createEntry(BIODB.MASSBANK, BIODB.SPECTRUM, id = spectra.ids)
+
+# Create factory
+fact <- BiodbFactory$new(useragent = 'get-massbank-peaks ; pierrick.roger@gmail.com', cache.dir = 'cache', debug = TRUE)
+
+# Get all entries
+cat("Get all entry contents...\n")
+entry.contents <- fact$getEntryContent(BIODB.MASSBANK, BIODB.SPECTRUM, id = spectra.ids, chunk.size = 500)
+
+# Create data frame from entries
+cat("Create data frame from entry contents...\n")
 entries.df <- NULL
-for (e in entries) {
+n <- 0
+for (ec in entry.contents) {
+
+	n <- n + 1
+	cat(paste0("Processing entry n°", n, " / ", length(entry.contents), ".\n"))
+
+	# Get entry
+	e <- fact$createEntry(BIODB.MASSBANK, BIODB.SPECTRUM, content = ec)
+
+	# Transform entry in data frame
 	e.df <- e$getFieldsAsDataFrame()
+
+	# Merge peaks
 	peaks <- e$getField(BIODB.PEAKS)
-	if ( ! is.null(peaks)) {
-		# Merge peaks with entry fields
-		e.df <- merge(e.df, peaks)
-	}
+	( ! is.null(peaks) && (BIODB.FORMULA %in% colnames(peaks))) || next
+	e.df <- merge(e.df, peaks)
+
+	# Merge compound info
+	compound <- e$getField(BIODB.COMPOUND)
+	( ! is.null(peaks) && (BIODB.INCHI %in% colnames(peaks))) || next
+	e.df <- merge(e.df, compound)
+
+	# Append entry to final data frame
 	entries.df <- rbind.fill(entries.df, e.df)
 }
+
+# Export peaks data frame
 write.table(entries.df, file = opt$output, sep = "\t", row.names = FALSE)
