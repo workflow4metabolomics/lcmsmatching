@@ -18,7 +18,17 @@
 		@TOOL_PREFIX@search-mz -i "$mzrtinput"
 
 		## Database
-		-d file --url "$dbfile"
+		#if $db.dbtype == "inhouse"
+			-d file
+			--url "$db.dbfile"
+			--db-fields "$db.dbfields"
+			--db-ms-modes "$db.dbmsmodes"
+		#end if
+		#if $db.dbtype == "peakforest"
+			-d peakforest
+			--url "https://rest.peakforest.org/"
+			--db-token "$db.dbtoken"
+		#end if
 
 		## M/Z matching
 		-m $mzmode -p $mzprec -s $mzshift
@@ -45,10 +55,8 @@
 		## HTML output 
 		--html-output-file "$htmloutput" --no-main-table-in-html-output
 
-		## Fields 
+		## Fields of input file
 		--input-col-names "$inputfields"
-		--db-fields "$dbfields"
-		--db-ms-modes "$dbmsmodes"
 
 		## Ouput setting
 		#if $out.enabled == "true"
@@ -68,14 +76,28 @@
 
 		<!-- DATABASE -->
 
-			<!-- Database file -->
-			<param name="dbfile" label="Database file" type="data" format="tabular" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
+		<conditional name="db">
 
-			<!-- File database field names -->
-			<param name="dbfields" label="File database column names" type="text" size="256" value="@DB_FIELDS@" help=""/>
+			<param name="dbtype" label="Database" type="select">
+				<option value="inhouse">In-house</option>
+				<option value="peakforest">Peakforest</option>
+			</param>
 
-			<!-- File database MS modes -->
-			<param name="dbmsmodes" label="File database MS modes" type="text" size="32" value="@DB_MS_MODES@" help=""/>
+			<when value="inhouse">
+				<!-- Database file -->
+				<param name="dbfile" label="Database file" type="data" format="tabular" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
+
+				<!-- File database field names -->
+				<param name="dbfields" label="File database column names" type="text" size="256" value="@DB_FIELDS@" help=""/>
+
+				<!-- File database MS modes -->
+				<param name="dbmsmodes" label="File database MS modes" type="text" size="32" value="@DB_MS_MODES@" help=""/>
+			</when>
+
+			<when value="peakforest">
+				<param name="dbtoken" label="Peakforest security token" type="text" size="32" value="" help="If you do not have yet a Peakforest token, go to Peakforest website and request one from your account."/>
+			</when>
+		</conditional>
 
 		<!-- INPUT -->
 
@@ -86,14 +108,7 @@
 			<param name="inputfields" label="Input file column names" type="text" size="32" value="mz=mzmed,rt=rtmed" help=""/>
 
 		<!-- M/Z MATCHING -->
-<!--		<conditional name="mz">
 
-			<param name="enabled" label="M/Z matching" type="select">
-				<option value="true">Show</option>
-				<option value="false">Hide</option>
-			</param>
-
-			<when value="true">-->
 				<!-- Mode -->
 				<param name="mzmode" label="MS mode" type="select" display="radio" multiple="false" help="">
 					<option value="pos">Positive</option>
@@ -103,9 +118,6 @@
 				<!-- MZ matching parameters -->
 				<param name="mzprec" label="M/Z precision (in ppm)" type="float" help="" value="5"/>
 				<param name="mzshift" label="M/Z shift (in ppm)" type="float" help="" value="0"/>
-			<!--</when>
-			<when value="false"></when>
-		</conditional>-->
 
 		<!-- RETENTION TIME PARAMETERS -->
 		<conditional name="rt">
@@ -118,16 +130,16 @@
 			<when value="false"></when>
 			<when value="true">
 				<!-- Columns -->
-		<conditional name="cols">
-			<param name="all" label="All chromatographic columns" type="select">
-				<option value="true">Yes</option>
-				<option value="false">No</option>
-			</param>
-			<when value="true"></when>
-			<when value="false">
-				<param name="list" label="Chromatographic columns" type="text" size="64" value="" help="Set here the list of chromatographic columns against which the retention time matching will be run. This is a comma separated list of the column names as used instead the database file."/>
-			</when>
-		</conditional>
+				<conditional name="cols">
+					<param name="all" label="All chromatographic columns" type="select">
+						<option value="true">Yes</option>
+						<option value="false">No</option>
+					</param>
+					<when value="true"></when>
+					<when value="false">
+						<param name="list" label="Chromatographic columns" type="text" size="64" value="" help="Set here the list of chromatographic columns against which the retention time matching will be run. This is a comma separated list of the column names as used instead the database file."/>
+					</when>
+				</conditional>
 
 				<!-- Tolerances -->
 				<param name="tolx" label="RTX retention time tolerance, parameter x (in seconds)" type="float" help="" value="5"/>
@@ -223,11 +235,12 @@
 
 		<!-- Simple quick test -->
 		<test>
+			<param name="dbtype" value="inhouse"/>
 			<param name="dbfile" value="filedb.tsv"/>
-			<param name="mzrtinput" value="mz-input-small.tsv"/>
-			<param name="inputfields" value=""/>
 			<param name="dbfields" value=""/>
 			<param name="dbmsmodes" value=""/>
+			<param name="mzrtinput" value="mz-input-small.tsv"/>
+			<param name="inputfields" value=""/>
 			<param name="mzmode" value="pos"/>
 			<output name="mainoutput" file="filedb-small-mz-match-output.tsv"/>
 			<output name="peaksoutput" file="filedb-small-mz-match-peaks-output.tsv"/>

@@ -105,7 +105,6 @@
 		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="input.fields">
 			<arg value="--print-input-col-names"/>
 		</exec>
-		<echo>INPUT.FIELDS = ${input.fields}</echo>
 		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="output.fields">
 			<arg value="--print-output-col-names"/>
 		</exec>
