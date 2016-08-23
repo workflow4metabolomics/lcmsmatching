@@ -10,7 +10,10 @@ spectra.txt: spectra.xml
 peaks.tsv: spectra.txt
 	./get-massbank-peaks -i $< -o $@
 
+search-output.tsv: peaks.tsv
+	../r-msdb/search-mz -d file --url $< --db-fields mztheo=mz,molid=accession,mode=msmode,molmass=mass,chebi=chebiid,kegg=keggid --db-ms-modes pos=pos,neg=neg -i ../r-msdb/test/mz-input.tsv -m pos -o $@
+
 clean:
-	$(RM) spectra.xml spectra.txt peaks.tsv
+	$(RM) spectra.xml spectra.txt peaks.tsv search-output.tsv
 
 .PHONY: all clean

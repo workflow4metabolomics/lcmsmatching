@@ -50,6 +50,12 @@ for (ec in entry.contents) {
 	# Get entry
 	e <- fact$createEntry(BIODB.MASSBANK, BIODB.SPECTRUM, content = ec)
 
+	# Reject if not MS or MS1
+	if ( ! e$getField(BIODB.MSTYPE) %in% c('MS', 'MS1')) {
+		cat(paste0("Entry n°", n, " (accession ", e$getField(BIODB.ACCESSION), ")", " rejected because MS TYPE is ", e$getField(BIODB.MSTYPE), ".\n"))
+		next
+	}
+
 	# Transform entry in data frame
 	e.df <- e$getFieldsAsDataFrame()
 
