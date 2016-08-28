@@ -13,6 +13,8 @@
 		<requirement type="package" version="1.3">r-rjsonio</requirement>
 	</requirements>
 
+	<code file="list-chrom-cols.py"/>
+
 	<!--~~~~~~~
 	~ COMMAND ~
 	~~~~~~~~-->
@@ -23,15 +25,14 @@
 		## Database
 		#if $db.dbtype == "inhouse"
 			-d file
-			--url "$db.dbfile"
 			--db-fields "$db.dbfields"
 			--db-ms-modes "$db.dbmsmodes"
 		#end if
 		#if $db.dbtype == "peakforest"
 			-d peakforest
-			--url "https://rest.peakforest.org/"
 			--db-token "$db.dbtoken"
 		#end if
+			--url "$db.dburl"
 
 		## M/Z matching
 		-m $mzmode -p $mzprec -s $mzshift
@@ -88,7 +89,7 @@
 
 			<when value="inhouse">
 				<!-- Database file -->
-				<param name="dbfile" label="Database file" type="data" format="tabular" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
+				<param name="dburl" label="Database file" type="data" format="tabular" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
 
 				<!-- File database field names -->
 				<param name="dbfields" label="File database column names" type="text" size="256" value="@DB_FIELDS@" help=""/>
@@ -98,6 +99,8 @@
 			</when>
 
 			<when value="peakforest">
+				<param name="dburl" type="hidden" value="https://rest.peakforest.org/"/>
+
 				<param name="dbtoken" label="Peakforest security token" type="text" size="32" value="" help="If you do not have yet a Peakforest token, go to Peakforest website and request one from your account."/>
 			</when>
 		</conditional>
@@ -141,6 +144,7 @@
 					<when value="true"></when>
 					<when value="false">
 						<param name="list" label="Chromatographic columns" type="text" size="64" value="" help="Set here the list of chromatographic columns against which the retention time matching will be run. This is a comma separated list of the column names as used instead the database file."/>
+						<!--					<param name="list" type="select" label="Chromatographic columns" dynamic_options="get_chrom_cols(dbtype = dbtype, dburl = dburl, field_name=field_name)" help="Color will be applied to the selected field's component associated with this index." />-->
 					</when>
 				</conditional>
 
@@ -239,7 +243,7 @@
 		<!-- File database test -->
 		<test>
 			<param name="dbtype" value="inhouse"/>
-			<param name="dbfile" value="filedb.tsv"/>
+			<param name="dburl" value="filedb.tsv"/>
 			<param name="dbfields" value=""/>
 			<param name="dbmsmodes" value=""/>
 			<param name="mzrtinput" value="mz-input-small.tsv"/>
@@ -251,7 +255,7 @@
 		</test>
 
 		<!-- File database test -->
-		<!--
+		
 		<test>
 			<param name="dbtype" value="peakforest"/>
 			<param name="dbtoken" value="@PEAKFOREST_TOKEN@"/>
@@ -264,7 +268,7 @@
 				</assert_contents>
 			</output>
 		</test>
--->
+
 	</tests>
 
 	<!--~~~~
