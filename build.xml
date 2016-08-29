@@ -135,6 +135,16 @@
 				</replacetokens>
 			</filterchain>
 		</copy>
+
+		<!-- Copy python script. -->
+		<copy todir="${dist.code.dir}">
+			<fileset dir="galaxy" includes="*.py"/>
+		</copy>
+
+		<!-- Update paths python files. -->
+		<replace dir="${dist.code.dir}">
+			<replacefilter token="../r-msdb/" value="./"/>
+		</replace>
 	</target>
 
 	<!--~~~~~~~~~

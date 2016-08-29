@@ -143,8 +143,8 @@
 					</param>
 					<when value="true"></when>
 					<when value="false">
-						<param name="list" label="Chromatographic columns" type="text" size="64" value="" help="Set here the list of chromatographic columns against which the retention time matching will be run. This is a comma separated list of the column names as used instead the database file."/>
-						<!--					<param name="list" type="select" label="Chromatographic columns" dynamic_options="get_chrom_cols(dbtype = dbtype, dburl = dburl, field_name=field_name)" help="Color will be applied to the selected field's component associated with this index." />-->
+<!--						<param name="list" label="Chromatographic columns" type="text" size="64" value="" help="Set here the list of chromatographic columns against which the retention time matching will be run. This is a comma separated list of the column names as used instead the database file."/>-->
+						<param name="list" type="select" label="Chromatographic columns" dynamic_options="get_chrom_cols(dbtype = dbtype, dburl = dburl, dbtoken = dbtoken, dbfields = dbfields, dbmsmodes = dbmsmodes)" help="Select here the set of chromatographic columns against which the retention time matching will be run."/>
 					</when>
 				</conditional>
 
@@ -268,9 +268,9 @@
 				</assert_contents>
 			</output>
 		</test>
-
-	</tests>
 -->
+	</tests>
+
 	<!--~~~~
 	~ HELP ~
 	~~~~~-->
