@@ -15,28 +15,14 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
         if dbtoken is not None:
             url += '?token=' + dbtoken
         result = urllib2.urlopen(url).read()
-        v = json.JSONDecoder(result)
-        print(v)
+        v = json.JSONDecoder().decode(result)
+        i = 0
+        for colid, coldesc in v.iteritems():
+            cols.append( (coldesc['name'], colid, i == 0) )
+            ++i
         
-    # Construct command to run
-#    command = ["../r-msdb/search-mz", "-d", dbtype, "--url", dburl]
-#    if dbtoken is not None:
-#        command.extend(["--db-token", dbtoken])
-#    if dbfields is not None:
-#        command.extend(["--db-fields", dbfields])
-#    command.append("--list-cols")
-#    
-#    # Run command and get output
-#    cols_table = subprocess.check_output(' '.join(command), shell = True)
-#    
-#    # Parse each output lines and fill the list
-#    i = 0
-#    for i, line in enumerate(cols_table.split("\n")[1:]):
-#        m = re.search('^"(.*)"\s*"(.*)"$', line)
-#        if m is not None:
-#            value = m.group(1)
-#            title = m.group(2)
-#            cols.append( (title, value, i == 0) )
+    elif dbtype == 'inhouse':
+       pass         
     
     return cols
 
