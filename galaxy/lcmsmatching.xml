@@ -255,7 +255,7 @@
 		</test>
 
 		<!-- File database test -->
-		
+<!--	
 		<test>
 			<param name="dbtype" value="peakforest"/>
 			<param name="dbtoken" value="@PEAKFOREST_TOKEN@"/>
@@ -264,13 +264,13 @@
 			<param name="mzmode" value="pos"/>
 			<output name="mainoutput">
 				<assert_contents>
-					<has_text text="mz">
+					<has_text text="mz"/>
 				</assert_contents>
 			</output>
 		</test>
 
 	</tests>
-
+-->
 	<!--~~~~
 	~ HELP ~
 	~~~~~-->
