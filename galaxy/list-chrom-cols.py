@@ -4,7 +4,7 @@ import argparse
 import subprocess
 import re
 
-def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None, dbmsmodes = None):
+def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
     
     # Construct command to run
     command = ["../r-msdb/search-mz", "-d", dbtype, "--url", dburl]
@@ -12,8 +12,6 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None, dbmsmodes = N
         command.extend(["--db-token", dbtoken])
     if dbfields is not None:
         command.extend(["--db-fields", dbfields])
-    if dbmsmodes is not None:
-        command.extend(["--db-ms-modes", dbmsmodes])
     command.append("--list-cols")
     
     # Run command and get output
@@ -43,7 +41,6 @@ if __name__ == '__main__':
     parser.add_argument('-u', help = 'Database URL',        dest = 'dburl',     required = True)
     parser.add_argument('-t', help = 'Database token',      dest = 'dbtoken',   required = False)
     parser.add_argument('-f', help = 'Database fields',     dest = 'dbfields',  required = False)
-    parser.add_argument('-m', help = 'Database MS modes',   dest = 'dbmsmodes', required = False)
     args = parser.parse_args()
     args_dict = vars(args)
     
