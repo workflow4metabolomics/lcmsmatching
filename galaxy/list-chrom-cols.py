@@ -3,29 +3,40 @@
 import argparse
 import subprocess
 import re
+import urllib2
+import json
 
 def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
     
-    # Construct command to run
-    command = ["../r-msdb/search-mz", "-d", dbtype, "--url", dburl]
-    if dbtoken is not None:
-        command.extend(["--db-token", dbtoken])
-    if dbfields is not None:
-        command.extend(["--db-fields", dbfields])
-    command.append("--list-cols")
-    
-    # Run command and get output
-    cols_table = subprocess.check_output(' '.join(command), shell = True)
-    
-    # Parse each output lines and fill the list
     cols = []
-    i = 0
-    for i, line in enumerate(cols_table.split("\n")[1:]):
-        m = re.search('^"(.*)"\s*"(.*)"$', line)
-        if m is not None:
-            value = m.group(1)
-            title = m.group(2)
-            cols.append( (title, value, i == 0) )
+    
+    if dbtype == 'peakforest':
+        url = dburl + 'metadata/lc/list-code-columns'
+        if dbtoken is not None:
+            url += '?token=' + dbtoken
+        result = urllib2.urlopen(url).read()
+        v = json.JSONDecoder(result)
+        print(v)
+        
+    # Construct command to run
+#    command = ["../r-msdb/search-mz", "-d", dbtype, "--url", dburl]
+#    if dbtoken is not None:
+#        command.extend(["--db-token", dbtoken])
+#    if dbfields is not None:
+#        command.extend(["--db-fields", dbfields])
+#    command.append("--list-cols")
+#    
+#    # Run command and get output
+#    cols_table = subprocess.check_output(' '.join(command), shell = True)
+#    
+#    # Parse each output lines and fill the list
+#    i = 0
+#    for i, line in enumerate(cols_table.split("\n")[1:]):
+#        m = re.search('^"(.*)"\s*"(.*)"$', line)
+#        if m is not None:
+#            value = m.group(1)
+#            title = m.group(2)
+#            cols.append( (title, value, i == 0) )
     
     return cols
 
