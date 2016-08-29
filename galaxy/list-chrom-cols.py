@@ -5,6 +5,7 @@ import subprocess
 import re
 import urllib2
 import json
+import csv
 
 def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
     
@@ -22,7 +23,25 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
             ++i
         
     elif dbtype == 'inhouse':
-       pass         
+        # Get field for chromatographic column name
+        col_field = 'col'
+        if dbfields is not None:
+            fields = dict(u.split("=") for u in dbfields.split(","))
+            if 'col' in fields:
+                col_field = fields['col']
+                
+        # Get all column names from file
+        with open(dburl, 'rb') as dbfile:
+            reader = csv.reader(dbfile, delimiter = "\t", quotechar='"')
+            header = reader.next()
+            i = header.index(col_field)
+            allcols = []
+            for row in reader:
+                col = row[i]
+                if col not in allcols:
+                    allcols.append(col)
+            for i, c in enumerate(allcols):
+                cols.append( (c, c, i == 0) )
     
     return cols
 
