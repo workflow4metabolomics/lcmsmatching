@@ -82,26 +82,26 @@
 
 		<conditional name="db">
 
-			<param name="dbtype" label="Database" type="select">
+			<param name="dbtype" label="Database" type="select" refresh_on_change="true">
 				<option value="inhouse">In-house</option>
 				<option value="peakforest">Peakforest</option>
 			</param>
 
 			<when value="inhouse">
 				<!-- Database file -->
-				<param name="dburl" label="Database file" type="data" format="tabular" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
+				<param name="dburl" label="Database file" type="data" format="tabular" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
 
 				<!-- File database field names -->
-				<param name="dbfields" label="File database column names" type="text" size="256" value="@DB_FIELDS@" help=""/>
+				<param name="dbfields" label="File database column names" type="text" size="256" value="@DB_FIELDS@" refresh_on_change="true" help=""/>
 
 				<!-- File database MS modes -->
 				<param name="dbmsmodes" label="File database MS modes" type="text" size="32" value="@DB_MS_MODES@" help=""/>
 			</when>
 
 			<when value="peakforest">
-				<param name="dburl" type="hidden" value="https://rest.peakforest.org/"/>
+				<param name="dburl" type="hidden" value="https://rest.peakforest.org/" refresh_on_change="true"/>
 
-				<param name="dbtoken" label="Peakforest security token" type="text" size="32" value="" help="If you do not have yet a Peakforest token, go to Peakforest website and request one from your account."/>
+				<param name="dbtoken" label="Peakforest security token" type="text" size="32" value="" refresh_on_change="true" help="If you do not have yet a Peakforest token, go to Peakforest website and request one from your account."/>
 			</when>
 		</conditional>
 
@@ -144,7 +144,7 @@
 					<when value="true"></when>
 					<when value="false">
 <!--						<param name="list" label="Chromatographic columns" type="text" size="64" value="" help="Set here the list of chromatographic columns against which the retention time matching will be run. This is a comma separated list of the column names as used instead the database file."/>-->
-						<param name="list" type="select" label="Chromatographic columns" dynamic_options="get_chrom_cols(dbtype = dbtype, dburl = dburl, dbtoken = dbtoken, dbfields = dbfields, dbmsmodes = dbmsmodes)" help="Select here the set of chromatographic columns against which the retention time matching will be run."/>
+						<param name="list" type="select" label="Chromatographic columns" multiple="true" dynamic_options="get_chrom_cols(dbtype = dbtype, dburl = dburl, dbtoken = dbtoken, dbfields = dbfields)" help="Select here the set of chromatographic columns against which the retention time matching will be run."/>
 					</when>
 				</conditional>
 
