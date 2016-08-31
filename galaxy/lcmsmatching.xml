@@ -41,16 +41,13 @@
 		#if $prec.match == "true"
 			--precursor-match --pos-prec "$prec.pos" --neg-prec "$prec.neg"
 		#end if
-		#if $prec.match == "true" and $rt.match == "true"
-			--precursor-rt-tol $rt.tolz
+		#if $prec.match == "true" and $chromcols != ""
+			--precursor-rt-tol $tolz
 		#end if
 
 		## Chromatographic columns options and retention matching 
-		#if $rt.match == "true" and $rt.cols.all == "true"
-			--all-cols --rttolx $rt.tolx --rttoly $rt.toly
-		#end if
-		#if $rt.match == "true" and $rt.cols.all == "false" and $rt.cols.list != ""
-			-c "$rt.cols.list" --check-cols	--rttolx $rt.tolx --rttoly $rt.toly
+		#if $chromcols != ""
+			-c "$chromcols" --check-cols --rttolx $tolx --rttoly $toly
 		#end if
 
 		## Table outputs 
@@ -115,45 +112,25 @@
 
 		<!-- M/Z MATCHING -->
 
-				<!-- Mode -->
-				<param name="mzmode" label="MS mode" type="select" display="radio" multiple="false" help="">
-					<option value="pos">Positive</option>
-					<option value="neg">Negative</option>
-				</param>
-
-				<!-- MZ matching parameters -->
-				<param name="mzprec" label="M/Z precision (in ppm)" type="float" help="" value="5"/>
-				<param name="mzshift" label="M/Z shift (in ppm)" type="float" help="" value="0"/>
-
-		<!-- RETENTION TIME PARAMETERS -->
-		<conditional name="rt">
-
-			<param name="match" label="Retention time match" type="select">
-				<option value="false">Off</option>
-				<option value="true">On</option>
+			<!-- Mode -->
+			<param name="mzmode" label="MS mode" type="select" display="radio" multiple="false" help="">
+				<option value="pos">Positive</option>
+				<option value="neg">Negative</option>
 			</param>
 
-			<when value="false"></when>
-			<when value="true">
-				<!-- Columns -->
-				<conditional name="cols">
-					<param name="all" label="All chromatographic columns" type="select">
-						<option value="true">Yes</option>
-						<option value="false">No</option>
-					</param>
-					<when value="true"></when>
-					<when value="false">
-<!--						<param name="list" label="Chromatographic columns" type="text" size="64" value="" help="Set here the list of chromatographic columns against which the retention time matching will be run. This is a comma separated list of the column names as used instead the database file."/>-->
-						<param name="list" type="select" label="Chromatographic columns" multiple="true" dynamic_options="get_chrom_cols(dbtype = dbtype, dburl = dburl, dbtoken = dbtoken, dbfields = dbfields)" help="Select here the set of chromatographic columns against which the retention time matching will be run."/>
-					</when>
-				</conditional>
+			<!-- MZ matching parameters -->
+			<param name="mzprec" label="M/Z precision (in ppm)" type="float" help="" value="5"/>
+			<param name="mzshift" label="M/Z shift (in ppm)" type="float" help="" value="0"/>
 
-				<!-- Tolerances -->
-				<param name="tolx" label="RTX retention time tolerance, parameter x (in seconds)" type="float" help="" value="5"/>
-				<param name="toly" label="RTY retention time tolerance, parameter y" type="float" help="" value="0.8"/>
-				<param name="tolz" label="RTZ retention time tolerance, used when precursor matching is enabled." type="float" help="" value="5"/>
-			</when>
-		</conditional>
+		<!-- RETENTION TIME PARAMETERS -->
+
+			<!-- List of chromatographic columns -->
+			<param name="chromcols" type="select" label="Chromatographic columns" multiple="true" dynamic_options="get_chrom_cols(dbtype = db['dbtype'], dburl = db['dburl'], dbtoken = db['dbtoken'], dbfields = db['dbfields'])" help="Select here the set of chromatographic columns against which the retention time matching will be run."/>
+
+			<!-- Tolerances -->
+			<param name="tolx" label="RTX retention time tolerance, parameter x (in seconds)" type="float" help="" value="5"/>
+			<param name="toly" label="RTY retention time tolerance, parameter y" type="float" help="" value="0.8"/>
+			<param name="tolz" label="RTZ retention time tolerance, used when precursor matching is enabled." type="float" help="" value="5"/>
 
 		<!-- PRECURSOR MATCH -->
 		<conditional name="prec">
