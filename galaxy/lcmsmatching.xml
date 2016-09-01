@@ -236,7 +236,7 @@
 		</test>
 
 		<!-- File database test -->
-
+<!--
 		<test>
 			<param name="dbtype" value="peakforest"/>
 			<param name="dbtoken" value="@PEAKFOREST_TOKEN@"/>
@@ -249,7 +249,7 @@
 				</assert_contents>
 			</output>
 		</test>
-
+-->
 	</tests>
 
 	<!--~~~~
