@@ -12,7 +12,7 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
     cols = []
     
     if dbtype == 'peakforest':
-        url = dburl + ( dburl[-1] == '/' ? '' : '/' ) + 'metadata/lc/list-code-columns'
+        url = dburl + ( '' if dburl[-1] == '/' else '/' ) + 'metadata/lc/list-code-columns'
         if dbtoken is not None:
             url += '?token=' + dbtoken
         result = urllib2.urlopen(url).read()
