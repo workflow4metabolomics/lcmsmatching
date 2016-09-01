@@ -19,7 +19,9 @@
 	~ COMMAND ~
 	~~~~~~~~-->
 
-	<command><![CDATA[
+	<command>
+		<![CDATA[
+		## @@@BEGIN_CHEETAH@@@
 		@TOOL_PREFIX@search-mz -i "$mzrtinput"
 
 		## Database
@@ -41,12 +43,12 @@
 		#if $prec.match == "true"
 			--precursor-match --pos-prec "$prec.pos" --neg-prec "$prec.neg"
 		#end if
-		#if $prec.match == "true" and $chromcols != "" and $chromcols != "None"
+		#if $prec.match == "true" and $chromcols is not None and $chromcols != "":
 			--precursor-rt-tol $tolz
 		#end if
 
 		## Chromatographic columns options and retention matching 
-		#if $chromcols != "" and $chromcols != "None"
+		#if $chromcols is not None and $chromcols != "":
 			-c "$chromcols" --check-cols --rttolx $tolx --rttoly $toly
 		#end if
 
@@ -66,7 +68,7 @@
 		#else
 			--molids-sep "|"
 		#end if
-
+		## @@@END_CHEETAH@@@
 	]]></command>
 
 	<!--~~~~~~
