@@ -86,7 +86,7 @@
 
 			<when value="inhouse">
 				<!-- Database file -->
-				<param name="dburl" label="Database file" type="data" format="tabular" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
+				<param name="dburl" label="Database file" type="data" format="tabular,tsv" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
 
 				<!-- File database field names -->
 				<param name="dbfields" label="File database column names" type="text" size="256" value="@DB_FIELDS@" refresh_on_change="true" help=""/>
@@ -109,7 +109,7 @@
 		<!-- INPUT -->
 
 			<!-- Input file -->
-			<param name="mzrtinput" label="Input file - MZ(/RT) values" type="data" format="tabular" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. RT values must be in seconds."/>
+			<param name="mzrtinput" label="Input file - MZ(/RT) values" type="data" format="tabular,tsv" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. RT values must be in seconds."/>
 
 			<!-- Input field names -->
 			<param name="inputfields" label="Input file column names" type="text" size="32" value="mz=mzmed,rt=rtmed" help=""/>

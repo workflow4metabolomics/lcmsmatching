@@ -31,7 +31,7 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
                 col_field = fields['col']
                 
         # Get all column names from file
-        with open(dburl, 'rb') as dbfile:
+        with open(dburl.get_file_name(), 'rb') as dbfile:
             reader = csv.reader(dbfile, delimiter = "\t", quotechar='"')
             header = reader.next()
             i = header.index(col_field)
