@@ -265,7 +265,17 @@
 LC/MS matching
 ==============
 
-This tool performs LC/MS matching on an input list of MZ/RT values, using a provided single file database.
+This tool performs LC/MS matching on an input list of MZ/RT values, using either a provided in-house single file database or a connection to Peakforest database.
+
+--------
+Database
+--------
+
+When selecting the database, you have the choice between a Peakforest database or an in-house file.
+
+For the Peakforest database, a default REST web base address is already provided. But you can change it of you want to use a custom database. A field is also available for setting a token key in case the access to the Peakforest database you want to use is restricted. This is the case of the default database.
+
+For the in-house file, please refer to the paragraph "Single file database" below.
 
 -----------
 Input files
