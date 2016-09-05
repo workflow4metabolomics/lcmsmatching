@@ -34,14 +34,15 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
         with open(dburl.get_file_name(), 'rb') as dbfile:
             reader = csv.reader(dbfile, delimiter = "\t", quotechar='"')
             header = reader.next()
-            i = header.index(col_field)
-            allcols = []
-            for row in reader:
-                col = row[i]
-                if col not in allcols:
-                    allcols.append(col)
-            for i, c in enumerate(allcols):
-                cols.append( (c, c, i == 0) )
+            if col_field in header:
+                i = header.index(col_field)
+                allcols = []
+                for row in reader:
+                    col = row[i]
+                    if col not in allcols:
+                        allcols.append(col)
+                for i, c in enumerate(allcols):
+                    cols.append( (c, c, i == 0) )
     
     return cols
 
