@@ -30,11 +30,11 @@ opt <- read.args()
 spectra.ids <- read.table(opt$input, stringsAsFactors = FALSE)[[1]]
 
 # Create factory
-fact <- BiodbFactory$new(useragent = 'get-massbank-peaks ; pierrick.roger@gmail.com', cache.dir = 'cache', debug = TRUE)
+fact <- BiodbFactory$new(useragent = 'get-massbank-peaks ; pierrick.roger@gmail.com', cache.dir = 'cache', debug = TRUE, chunk.size = 500)
 
 # Get all entries
 cat("Get all entry contents...\n")
-entry.contents <- fact$getEntryContent(BIODB.MASSBANK, BIODB.SPECTRUM, id = spectra.ids, chunk.size = 500)
+entry.contents <- fact$getEntryContent(BIODB.MASSBANK, BIODB.SPECTRUM, id = spectra.ids)
 
 # Create data frame from entries
 cat("Create data frame from entry contents...\n")
