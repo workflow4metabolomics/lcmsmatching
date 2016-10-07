@@ -24,14 +24,14 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
         
     elif dbtype == 'inhouse':
         # Get field for chromatographic column name
-        col_field = 'col'
+        col_field = 'chromcol'
         if dbfields is not None:
             fields = dict(u.split("=") for u in dbfields.split(","))
-            if 'col' in fields:
-                col_field = fields['col']
+            if 'chromcol' in fields:
+                col_field = fields['chromcol']
                 
         # Get all column names from file
-        with open(dburl.get_file_name(), 'rb') as dbfile:
+        with open(dburl if isinstance(dburl, str) else dburl.get_file_name(), 'rb') as dbfile:
             reader = csv.reader(dbfile, delimiter = "\t", quotechar='"')
             header = reader.next()
             if col_field in header:
