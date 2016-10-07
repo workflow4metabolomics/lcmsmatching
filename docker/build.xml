@@ -41,7 +41,7 @@
 	~~~~~~~~~-->
 
 	<target name="tool.pkg">
-		<ant dir=".." target="dist" inheritAll="false">
+		<ant dir=".." target="dist.w4m" inheritAll="false">
 			<property name="TIMESTAMP" value="false"/>
 			<property name="VERSION" value="false"/>
 			<property name="PKG.PREFIX" value="tool"/>
