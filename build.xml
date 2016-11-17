@@ -51,7 +51,12 @@
 	~ ALL ~
 	~~~~~-->
 
-	<target name="all"/>
+	<target name="all">
+		<exec executable="make" failonerror="true">
+			<arg value="-C"/>
+			<arg value="r-biodb/src"/>
+		</exec>
+	</target>
 
 	<!--~~~~
 	~ DIST ~
