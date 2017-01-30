@@ -164,7 +164,7 @@
 		<copy todir="${dist.code.dir}">
 			<fileset dir="r-msdb" includes="search-mz,*.R"/>
 			<fileset dir="r-lib" includes="*.R"/> <!-- dependency -->
-			<fileset dir="r-biodb" includes="*.R"/> <!-- dependency -->
+			<fileset dir="r-biodb/R" includes="*.R"/> <!-- dependency -->
 		</copy>
 
 		<!-- Update paths in `source()` function calls. -->
