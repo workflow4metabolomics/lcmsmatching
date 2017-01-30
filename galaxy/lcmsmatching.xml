@@ -178,8 +178,8 @@
 		<conditional name="out">
 
 			<param name="enabled" label="Output settings" type="select">
-				<option value="false">Off</option>
-				<option value="true">On</option>
+				<option value="false">Default</option>
+				<option value="true">Customized</option>
 			</param>
 
 			<when value="false"></when>
