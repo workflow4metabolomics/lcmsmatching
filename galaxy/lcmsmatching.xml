@@ -1,4 +1,4 @@
-<tool id="lcmsmatching" name="LC/MS matching" version="3.1.6">
+<tool id="lcmsmatching" name="LC/MS matching" version="3.1.7" profile="16.01">
 
 	<description>Annotation of MS peaks using matching on a spectra database.</description>
 

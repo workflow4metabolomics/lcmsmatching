@@ -2,6 +2,7 @@
 
 	<dirname property="this.dir" file="${ant.file.w4m.tool.lcmsmatching}"/>
 	<property name="conda.dir" value="${user.home}/w4m-conda"/>
+	<property name="planemo.dir" value="${user.home}/.planemo"/>
 
 	<!--~~~~~~~~~~~~~~~~~
 	~ PUBLIC PROPERTIES ~
@@ -52,10 +53,7 @@
 	~~~~~-->
 
 	<target name="all">
-		<exec executable="make" failonerror="true">
-			<arg value="-C"/>
-			<arg value="r-biodb/src"/>
-		</exec>
+		<ant dir="r-biodb/src"/>
 	</target>
 
 	<!--~~~~
@@ -172,9 +170,9 @@
 		<!-- Update paths in `source()` function calls. -->
 		<replace dir="${dist.code.dir}">
 			<replacefilter token="../r-lib/" value=""/>
-			<replacefilter token="../r-biodb/" value=""/>
+			<replacefilter token="../r-biodb/R/" value=""/>
 			<replacefilter token="'..', 'r-lib', " value=""/>
-			<replacefilter token="'..', 'r-biodb', " value=""/>
+			<replacefilter token="'..', 'r-biodb', 'R', " value=""/>
 		</replace>
 
 	</target>
@@ -208,6 +206,7 @@
 	<target name="clean">
 		<delete dir="${dist.dir}"/>
 		<delete dir="${conda.dir}"/>
+		<delete dir="${planemo.dir}"/>
 	</target>
 
 	<!--~~~~~~~~~~~
@@ -223,6 +222,7 @@
 	<target name="planemo.lint" depends="planemo.env">
 		<exec executable="planemo" dir="${dist.code.dir}" failonerror="true">
 			<arg value="lint"/>
+			<arg value="--no_xsd"/>
 			<arg value="${tool.xml}"/>
 		</exec>
 	</target>
