@@ -104,40 +104,8 @@
 
 	<target name="w4m.code" depends="dist.code">
 
-		<!-- Get all needed values for completing tool XML file. -->
-		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="input.fields">
-			<arg value="--print-input-col-names"/>
-		</exec>
-		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="output.fields">
-			<arg value="--print-output-col-names"/>
-		</exec>
-		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="pos.prec">
-			<arg value="--print-pos-prec"/>
-		</exec>
-		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="neg.prec">
-			<arg value="--print-neg-prec"/>
-		</exec>
-		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="db.fields">
-			<arg value="--print-db-fields"/>
-		</exec>
-		<exec executable="r-msdb/search-mz" failonerror="true" outputproperty="db.ms.modes">
-			<arg value="--print-db-ms-modes"/>
-		</exec>
-
 		<!-- Copy and transform tool XML file. -->
-		<copy file="${orig.tool.xml}" tofile="${dest.tool.xml}">
-			<filterchain>
-				<replacetokens>
-					<token key="TOOL_PREFIX" value="${TOOL.PREFIX}"/>
-					<token key="INPUT_FIELDS" value="${input.fields}"/>
-					<token key="OUTPUT_FIELDS" value="${output.fields}"/>
-					<token key="POS_PREC" value="${pos.prec}"/>
-					<token key="NEG_PREC" value="${neg.prec}"/>
-					<token key="DB_FIELDS" value="${db.fields}"/>
-					<token key="DB_MS_MODES" value="${db.ms.modes}"/>
-				</replacetokens>
-			</filterchain>
-		</copy>
+		<copy file="${orig.tool.xml}" tofile="${dest.tool.xml}"/>
 
 		<!-- Copy python script. -->
 		<copy todir="${dist.code.dir}">
