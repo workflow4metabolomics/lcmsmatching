@@ -1,5 +1,0 @@
-#!/bin/bash
-
-ant -f .. -DNOTIMESTAMP clean dist.w4m
-mv ../dist/w4m-tool-lcmsmatching-2.0.tar.gz .
-docker build -t lcmsmatching .
