@@ -1,12 +1,6 @@
 [submodule "r-msdb"]
 	path = r-msdb
 	url = https://github.com/pierrickrogermele/r-msdb
-[submodule "r-lib"]
-	path = r-lib
-	url = https://github.com/pierrickrogermele/r-lib
-[submodule "r-biodb"]
-	path = r-biodb
-	url = https://github.com/pierrickrogermele/r-biodb
 [submodule "tool-pandoc"]
 	path = tool-pandoc
 	url = https://github.com/pierrickrogermele/tool-pandoc

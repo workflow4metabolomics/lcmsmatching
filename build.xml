@@ -52,9 +52,7 @@
 	~ ALL ~
 	~~~~~-->
 
-	<target name="all">
-		<ant dir="r-biodb/src"/>
-	</target>
+	<target name="all"/>
 
 	<!--~~~~
 	~ DIST ~
@@ -131,17 +129,7 @@
 		<!-- Copy R code -->
 		<copy todir="${dist.code.dir}">
 			<fileset dir="r-msdb" includes="search-mz,*.R"/>
-			<fileset dir="r-lib" includes="*.R"/> <!-- dependency -->
-			<fileset dir="r-biodb/R" includes="*.R"/> <!-- dependency -->
 		</copy>
-
-		<!-- Update paths in `source()` function calls. -->
-		<replace dir="${dist.code.dir}">
-			<replacefilter token="../r-lib/" value=""/>
-			<replacefilter token="../r-biodb/R/" value=""/>
-			<replacefilter token="'..', 'r-lib', " value=""/>
-			<replacefilter token="'..', 'r-biodb', 'R', " value=""/>
-		</replace>
 
 	</target>
 
