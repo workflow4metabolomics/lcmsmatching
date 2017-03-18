@@ -1,2 +1,0 @@
-setns ns=http://api.massbank/xsd
-xpath //ns:id/text()
