@@ -1,12 +1,3 @@
-[submodule "tool-pandoc"]
-	path = tool-pandoc
-	url = https://github.com/pierrickrogermele/tool-pandoc
-[submodule "tool-plantuml"]
-	path = tool-plantuml
-	url = https://github.com/pierrickrogermele/tool-plantuml
 [submodule "java-msdb"]
 	path = java-msdb
 	url = https://github.com/pierrickrogermele/java-msdb
-[submodule "ant-lib"]
-	path = ant-lib
-	url = https://github.com/pierrickrogermele/ant-lib
