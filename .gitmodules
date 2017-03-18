@@ -1,6 +1,3 @@
-[submodule "r-msdb"]
-	path = r-msdb
-	url = https://github.com/pierrickrogermele/r-msdb
 [submodule "tool-pandoc"]
 	path = tool-pandoc
 	url = https://github.com/pierrickrogermele/tool-pandoc

@@ -1,0 +1,244 @@
+#!/usr/bin/env Rscript
+# vi: ft=R
+library(methods)
+library(RUnit)
+library(getopt)
+args <- commandArgs(trailingOnly = FALSE)
+script.path <- sub("--file=", "", args[grep("--file=", args)])
+source(file.path(dirname(script.path), '..', 'MsPeakForestDb.R'), chdir = TRUE)
+source(file.path(dirname(script.path), '..', 'MsFileDb.R'), chdir = TRUE)
+source(file.path(dirname(script.path), '..', 'MsXlsDb.R'), chdir = TRUE)
+source(file.path(dirname(script.path), '..', 'Ms4TabSqlDb.R'), chdir = TRUE)
+source(file.path(dirname(script.path), '..', 'MsBioDb.R'), chdir = TRUE)
+source(file.path(dirname(script.path), '..', '..', 'r-lib', 'nethlp.R'), chdir = TRUE)
+source(file.path(dirname(script.path), '..', '..', 'r-lib', 'strhlp.R'), chdir = TRUE)
+source(file.path(dirname(script.path), '..', '..', 'r-biodb', 'R', 'BiodbObject.R'), chdir = TRUE)
+source(file.path(dirname(script.path), '..', '..', 'r-biodb', 'R', 'BiodbFactory.R'), chdir = TRUE)
+
+#############
+# CONSTANTS #
+#############
+
+PEAKFOREST.URL <- 'https://peakforest-alpha.inra.fr/rest'
+USERAGENT <- 'r-msdb.test ; pierrick.roger@gmail.com'
+
+ENV <- Sys.getenv()
+for (var in c('RMSDB_4TABSQL_URL', 'RMSDB_4TABSQL_DBNAME', 'RMSDB_4TABSQL_USER', 'RMSDB_4TABSQL_PASSWORD', 'RMSBD_PEAKFOREST_TOKEN'))
+	if ( ! var %in% names(ENV))
+		ENV[[var]] <- NA_character_
+
+DB.TYPES = c('filedb', 'filedb-cust-modes', 'filedb-cust-cols', '4tabsqldb', 'peakforestdb', 'xlsdb', 'massbank', 'massfiledb')
+
+#############
+# READ ARGS #
+#############
+
+read.args <- function() {
+  
+  # program name
+  prog <- sub('^.*/([^/]+)$', '\\1', commandArgs()[4], perl = TRUE)
+  
+  # options
+  spec = matrix(c(
+    'all',                  'a', 0, 'logical',      'Run all tests. Disabled by default.',
+    'help',                 'h', 0, 'logical',      'Print this help.',
+    'filedb',               'f', 0, 'logical',      'Run tests on single file database. Disabled by default.',
+    'filedb-cust-modes',    'm', 0, 'logical',      'Run tests on single file database with custome modes. Disabled by default.',
+    'filedb-cust-cols',     'c', 0, 'logical',      'Run tests on single file database with custome colums. Disabled by default.',
+    'peakforestdb',         'p', 0, 'logical',      'Run tests on PeakForest database. Disabled by default.',
+    '4tabsqldb',            '4', 0, 'logical',      'Run tests on 4TabSql database. Disabled by default.',
+    'name',                 'n', 1, 'character',    'Run only test of the specified name. Unset by default.',
+    'quick',                'q', 0, 'logical',      'Do not run long tests. Disabled by default.',
+    'xlsdb',                'x', 0, 'logical',      'Run tests on XLS database. Disabled by default.',
+    'massbank',             NA_character_, 0, 'logical',      'Run tests on Massbank database. Disabled by default.',
+    'massfiledb',           NA_character_, 0, 'logical',      'Run tests on MassFiledb database. Disabled by default.',
+    'msdb',                 'd', 0, 'logical',      'Test MsDb classes. Disabled by default.',
+    'searchmz',             'z', 0, 'logical',      'Test search-mz script. Disabled by default.',
+    'searchmz-script',      NA_character_, 0, 'character',   'Set path to search-mz script to test.'
+  ), byrow = TRUE, ncol = 5)
+   
+  opt <- getopt(spec)
+
+  # help
+  if ( ! is.null(opt$help)) {
+    cat(getopt(spec, usage = TRUE, command = prog))
+    q(status = 1)
+  }
+
+  return(opt)
+}
+
+################
+# GET RES PATH #
+###############
+
+get.res.path <- function (...) {
+	return(file.path(dirname(script.path), ...))
+}
+
+#################
+# GET DB PARAMS #
+#################
+
+get.db.params <- function(type, test.dir) {
+
+	db.params <- switch(type,
+		'filedb' = list( type = 'file', db = MsFileDb, url = get.res.path( 'filedb.tsv')),
+		'filedb-cust-modes' = list( type = 'file', db = MsFileDb, url = get.res.path( 'filedb-custmodes.tsv'), modes = list(pos = '+', neg = '-')),
+		'filedb-cust-cols' = list( type = 'file', db = MsFileDb, url = get.res.path( 'filedb-custcols.tsv'), fields = list(mz = 'MASS', rt = 'RETTime', col = 'column')),
+		'4tabsqldb' = list(type = '4tabsql', db = Ms4TabSqlDb, url = ENV[['RMSDB_4TABSQL_URL']], dbname = ENV[['RMSDB_4TABSQL_DBNAME']], user = ENV[['RMSDB_4TABSQL_USER']], password = ENV[['RMSDB_4TABSQL_PASSWORD']]),
+		'massfiledb' = list( type = 'massfiledb', db = MsBioDb, url = get.res.path( 'filedb.tsv')),
+		'peakforestdb' = list(type = 'peakforest', db = MsPeakForestDb, url = PEAKFOREST.URL, useragent = USERAGENT, token = ENV[['RMSBD_PEAKFOREST_TOKEN']]),
+		'xlsdb' = list(type = 'xls', db = MsXlsDb, url = get.res.path( 'xlsdb'), cache_dir = get.res.path( 'xlsdb', 'cache'))
+	)
+
+	return(db.params)
+}
+
+#################
+# SET CONN FLAG #
+#################
+
+.g.conn.flag <- NULL;
+
+set.conn.flag <- function(type) {
+
+	db.params <- get.db.params(type)
+
+	.g.conn.flag <<- c('-d', db.params$type, '--url', db.params$url)
+
+	for(field in names(db.params)) {
+		.g.conn.flag <<- switch(field,
+			modes = c(.g.conn.flag, '--db-ms-modes', concat.kv.list(db.params$modes)),
+			fields = c(.g.conn.flag, '--db-fields', concat.kv.list(db.params$fields)),
+			dbname = c(.g.conn.flag, '--db-name', db.params$dbname),
+			user = c(.g.conn.flag, '--db-user', db.params$user),
+			password = c(.g.conn.flag, '--db-password', db.params$password),
+			token = c(.g.conn.flag, '--db-token', db.params$token),
+			.g.conn.flag
+		)
+	}
+}
+
+##################
+# CALL SEARCH MZ #
+##################
+
+.g.search.mz.script <- file.path(dirname(script.path), '..', 'search-mz');
+
+call.search.mz <- function(opt, silent = FALSE, use.global.conn.flags = TRUE) {
+
+	# TODO Add option to choose search-mz script.
+
+	if (use.global.conn.flags && is.null(.g.conn.flag))
+		stop("No connection flags provided for search-mz.")
+
+	# Set program path
+	prog <- .g.search.mz.script
+
+	# Adjust path arguments
+	for (path.arg in c('--url', '-i', '-o', '--html-output-file', '--peak-output-file')) {
+		path.arg.index = which(opt %in% path.arg)
+		if (length(path.arg.index == 1)) {
+			if (substr(opt[[path.arg.index + 1]], 1, 4) != 'http' && substr(opt[[path.arg.index + 1]], 1, 1) != '/')
+				opt[[path.arg.index + 1]] <- get.res.path(opt[[path.arg.index + 1]])
+		}
+	}
+
+	# Set arguments
+	args <- c(opt, '--debug')
+	if (use.global.conn.flags)
+		args <- c(args, .g.conn.flag)
+
+	# Call program
+	call <- paste(c(prog, args), collapse = ' ')
+	if (silent)
+		call <- paste(call, ">/dev/null", "2>/dev/null")
+
+	print(call)
+	retcode <- system(call)
+
+	if (retcode != 0)
+		stop("Error when running search-mz.")
+}
+
+###############
+# DB INSTANCE #
+###############
+
+.g.db <- NULL;
+
+get.db <- function() {
+
+	if (is.null(.g.db))
+		stop("No database provided.")
+
+	return(.g.db)
+}
+
+set.db <- function(type, test.dir) {
+
+	db.params <- get.db.params(type, test.dir)
+
+	.g.db <<- switch(type,
+		'peakforestdb' = MsPeakForestDb$new(url = db.params$url, useragent = db.params$useragent, token = db.params$token),
+		'4tabsqldb' = Ms4TabSqlDb$new(host = extract.address(db.params$url), port = extract.port(db.params$url), dbname = db.params$dbname, user = db.params$user, password = db.params$password),
+		'filedb' = MsFileDb$new(file = db.params$url),
+		'filedb-cust-modes' = { db <- MsFileDb$new(file = db.params$url) ; db$setDbMsModes(db.params$modes) ; db },
+		'filedb-cust-cols' = { db <- MsFileDb$new(file = db.params$url) ; db$setDbFields(msdb.make.db.fields(db.params$fields)) ; db },
+		'xlsdb' = MsXlsDb$new(db_dir = db.params$url, cache_dir = db.params$cache_dir),
+		'massbank' = MsBioDb$new(BiodbFactory$new(useragent = USERAGENT)$getConn(BIODB.MASSBANK)),
+		'massfiledb' = MsBioDb$new(BiodbFactory$new()$getConn(BIODB.MASSFILEDB, url = db.params$url)),
+		NULL)
+}
+
+########
+# MAIN #
+########
+
+options(error = function() { traceback(2) ; q(status = 1) }, warn = 2 )
+
+opt <- read.args()
+
+# Set search-mz script
+if ( ! is.null(opt[['searchmz-script']]))
+	.g.search.mz.script <<- opt[['searchmz-script']]
+
+# Set db types to test
+dbtypes <- DB.TYPES
+if (is.null(opt[['all']]))
+	dbtypes <- DB.TYPES[DB.TYPES %in% names(opt)]
+
+# Define set of functions
+test.fcts = '^(.+\\.)?test\\..+'
+if (! is.null(opt$quick) || ! is.null(opt$all))
+	test.fcts = '^test\\..+'
+if ( ! is.null(opt$name))
+	test.fcts = paste0('^', opt$name, '$')
+
+# Loop on all db types
+to.test <- character()
+if ( ! is.null(opt[['searchmz']]) || ! is.null(opt[['all']]))
+	to.test <- c(to.test, 'searchmz')
+if ( ! is.null(opt$msdb) || ! is.null(opt[['all']]))
+	to.test <- c(to.test, 'msdb')
+if (length(to.test) > 0)
+	for (type in dbtypes) {
+		cat("****************************************************************\n")
+		cat("RUNNING TESTS FOR DB TYPE \"", type, "\".\n", sep = '')
+		set.conn.flag(type)
+		set.db(type)
+		test.suite <- defineTestSuite('msdb', dirname(script.path), testFileRegexp = paste0('^test-all-dbs-(', paste(to.test, collapse = '|'), ').*\\.R$'), testFuncRegexp = test.fcts)
+		isValidTestSuite(test.suite)
+		test.results <- runTestSuite(test.suite)
+		print(test.results)
+		(test.results$msdb$nErr == 0 && test.results$msdb$nFail == 0) || stop("Test fails !")
+	}
+
+if ( ! is.null(opt$searchmz)) {
+	test.suite <- defineTestSuite('searchmz', dirname(script.path), testFileRegexp = '^test-searchmz-.+\\.R$', testFuncRegexp = '^.+$')
+	isValidTestSuite(test.suite)
+	test.results <- runTestSuite(test.suite)
+	print(test.results)
+	(test.results$searchmz$nErr == 0 && test.results$searchmz$nFail == 0) || stop("Test fails !")
+}

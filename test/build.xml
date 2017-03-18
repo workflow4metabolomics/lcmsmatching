@@ -1,0 +1,118 @@
+<project name="r-msdb.test" default="all">
+
+	<dirname property="this.dir" file="${ant.file.r-msdb.test}"/>
+	<property name="mzrt.input" value="mzrt-input.tsv"/>
+
+	<!-- ALL -->
+	<target name="all" depends="test.data">
+		<exec executable="./test-msdb" failonerror="true">
+			<arg value="-f"/>
+			<arg value="-d"/>
+			<arg value="-z"/>
+		</exec>
+	</target>
+
+	<!-- TEST DATA -->
+	<target name="test.data" depends="filedbs,input.files"/>
+	
+	<!-- FILEDBS -->
+	<target name="filedbs" depends="filedb.custcols,filedb.custmodes"/>
+
+	<!-- FILEDB CUSTCOLS -->
+	<uptodate property="filedb.custcols.uptodate" srcfile="filedb.tsv" targetfile="filedb-custcols.tsv"/>
+	<target name="filedb.custcols" unless="filedb.custcols.uptodate">
+		<copy file="filedb.tsv" tofile="filedb-custcols.tsv">
+			<filterchain>
+				<tokenfilter>
+					<replacestring from='"mz"' to='"MASS"'/>
+					<replacestring from='"rt"' to='"RETTime"'/>
+					<replacestring from='"col"' to='"column"'/>
+				</tokenfilter>
+			</filterchain>
+		</copy>
+	</target>
+
+	<!-- FILEDB CUSTCMODES -->
+	<uptodate property="filedb.custmodes.uptodate" srcfile="filedb.tsv" targetfile="filedb-custmodes.tsv"/>
+	<target name="filedb.custmodes" unless="filedb.custmodes.uptodate">
+		<copy file="filedb.tsv" tofile="filedb-custmodes.tsv">
+			<filterchain>
+				<tokenfilter>
+					<replacestring from='"POS"' to='"+"'/>
+					<replacestring from='"NEG"' to='"-"'/>
+				</tokenfilter>
+			</filterchain>
+		</copy>
+	</target>
+
+	<!-- INPUT FILES -->
+	<target name="input.files" depends="mz.input.file,empty.input.file,small.input.files"/>
+
+	<!-- MZ INPUT FILE -->
+	<target name="mz.input.file">
+		<copy file="${mzrt.input}" tofile="mz-input.tsv">
+			<filterchain>
+				<tokenfilter>
+					<replaceregex pattern="\t[^\t]*$" replace=""/>
+				</tokenfilter>
+			</filterchain>
+		</copy>
+	</target>
+
+	<!-- SMALL INPUT FILES -->
+	<target name="small.input.files">
+		<copy file="${mzrt.input}" tofile="mzrt-input-small.tsv">
+			<filterchain>
+				<headfilter lines="31"/>
+			</filterchain>
+		</copy>
+		<copy file="mzrt-input-small.tsv" tofile="mz-input-small.tsv">
+			<filterchain>
+				<tokenfilter>
+					<replaceregex pattern="\t[^\t]*$" replace=""/>
+				</tokenfilter>
+			</filterchain>
+		</copy>
+		<copy file="mzrt-input-small.tsv" tofile="mzrt-input-small-morecols.tsv">
+			<filterchain>
+				<tokenfilter>
+					<replaceregex pattern="(\t)([^\t]*)$" replace="\1\2\1ZAPA\1hop"/>
+				</tokenfilter>
+			</filterchain>
+		</copy>
+		<copy file="mzrt-input-small.tsv" tofile="mzrt-input-small-noheader.tsv">
+			<filterchain>
+				<headfilter lines="-1" skip="1"/>
+			</filterchain>
+		</copy>
+		<copy file="mzrt-input-small.tsv" tofile="mzrt-input-small-custom-colnames.tsv">
+			<filterchain>
+				<replacestring from='mz' to='MASS'/>
+				<replacestring from='rt' to='RETTime'/>
+			</filterchain>
+		</copy>
+	</target>
+
+	<!-- EMPTY INPUT FILE (WITH HEADER) -->
+	<target name="empty.input.file">
+		<copy file="${mzrt.input}" tofile="mzrt-input-empty.tsv">
+			<filterchain>
+				<headfilter lines="1"/>
+			</filterchain>
+		</copy>
+	</target>
+
+	<!-- CLEAN -->
+	<target name="clean">
+		<delete dir="xlsdb/cache"/>
+		<delete dir="." includes="*-output.tsv"/>
+		<delete dir="." includes="*-output-*.tsv"/>
+		<delete dir="." includes="*-output.html"/>
+		<delete dir="." includes="filedb-*.tsv"/>
+		<delete dir="." includes="mzrt-input-*.tsv"/>
+		<delete dir="." includes="mz-input*.tsv"/>
+	</target>
+
+</project>
+
+
