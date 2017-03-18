@@ -33,7 +33,7 @@
 
 	<!-- Tool XML paths -->
 	<property name="tool.xml" value="lcmsmatching.xml"/>
-	<property name="orig.tool.xml" value="galaxy/${tool.xml}"/>
+	<property name="orig.tool.xml" value="${tool.xml}"/>
 	<property name="dest.tool.xml" value="${dist.code.dir}/${tool.xml}"/>
 
 	<!-- Time stamp -->
@@ -85,11 +85,11 @@
 			<arg value="-d"/>
 			<arg value="file"/>
 			<arg value="--url"/>
-			<arg value="r-msdb/test/filedb.tsv"/>
+			<arg value="test/filedb.tsv"/>
 			<arg value="-m"/>
 			<arg value="pos"/>
 			<arg value="-i"/>
-			<arg value="r-msdb/test/mzrt-input.tsv"/>
+			<arg value="test/mzrt-input.tsv"/>
 			<arg value="-o"/>
 			<arg value="mzrt-output.tsv"/>
 		</exec>
@@ -107,13 +107,8 @@
 
 		<!-- Copy python script. -->
 		<copy todir="${dist.code.dir}">
-			<fileset dir="galaxy" includes="*.py"/>
+			<fileset dir="." includes="*.py"/>
 		</copy>
-
-		<!-- Update paths python files. -->
-		<replace dir="${dist.code.dir}">
-			<replacefilter token="../r-msdb/" value="./"/>
-		</replace>
 	</target>
 
 	<!--~~~~~~~~~
@@ -128,7 +123,7 @@
 
 		<!-- Copy R code -->
 		<copy todir="${dist.code.dir}">
-			<fileset dir="r-msdb" includes="search-mz,*.R"/>
+			<fileset dir="." includes="search-mz,*.R"/>
 		</copy>
 
 	</target>
@@ -330,12 +325,12 @@
 
 	<target name="planemo.env" depends="w4m.code">
 		<chmod file="${dist.code.dir}/search-mz" perm="u+x"/>
-		<ant dir="r-msdb/test" target="input.files"/>
+		<ant dir="test" target="input.files"/>
 		<mkdir dir="${dist.code.dir}/test-data"/>
 		<copy todir="${dist.code.dir}/test-data">
-			<fileset dir="r-msdb/test" includes="filedb.tsv"/>
-			<fileset dir="r-msdb/test" includes="mz-input-small.tsv"/>
-			<fileset dir="r-msdb/test/res" includes="filedb-small-mz-match-*"/>
+			<fileset dir="test" includes="filedb.tsv"/>
+			<fileset dir="test" includes="mz-input-small.tsv"/>
+			<fileset dir="test/res" includes="filedb-small-mz-match-*"/>
 		</copy>
 		<copy file="shed.yml" tofile="${dist.code.dir}/.shed.yml"/>
 	</target>
