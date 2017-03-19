@@ -1,0 +1,104 @@
+#!/bin/bash
+# vi: fdm=marker
+
+# Constants {{{1
+################################################################
+
+PROG_NAME=$(basename $0)
+SCRIPT_PATH=$(dirname $0)
+SEARCHMZ=$SCRIPT_PATH/../search-mz
+SEP="\t"
+
+# Check {{{1
+################################################################
+
+function check {
+
+	local testfct=$1
+
+	# Run test
+	echo -n "$testfct ... "
+	test_output=$($testfct 2>&1)
+
+	# Failure
+	exit_code=$?
+	if [ $exit_code -gt 0 ] ; then
+		echo failure in $PROG_NAME at line $ERRLINE.
+		echo $test_output
+		exit 1
+	fi
+
+	# Success
+	echo success. 
+}
+
+# Get column index  {{{1
+################################################################
+
+function get_col_index {
+
+	file=$1
+	col_name=$2
+
+	n=$(head -n 1 "$file" | tr "$SEP" "\n" | egrep -n "^\"?${col_name}\"?\$" | sed 's/:.*$//')
+
+	echo $n
+}
+
+# Test filedb RT unit {{{1
+################################################################
+
+function test_filedb_rtunit {
+
+	res_name=filedb
+	res_dir=$SCRIPT_PATH/res/$res_name
+	nb_match=
+
+	# Loop on all RT units for database
+	for db_rtunit in sec min ; do
+
+		# Set path to database file
+		db_file=$res_dir/filedb-rt$db_rtunit.tsv
+
+		# Loop on all RT units for input file
+		for input_rtunit in sec min ; do
+
+			# Set path to input and output files
+			input_file=$res_dir/mzrt-input-$input_rtunit.tsv
+			main_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-main.tsv
+			peak_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.tsv
+			html_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.html
+
+			# Run program
+			$SEARCHMZ -d file --url $db_file --db-rt-unit $db_rtunit -m pos -p 5 -s 0 -i $input_file --input-col-names 'mz=mz,rt=rt' -o $main_output --peak-output-file $peak_output --html-output-file $html_output --rtunit $input_rtunit --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+
+			# Check outputs
+			[[ -f $main_output ]] || return 1
+			[[ -f $peak_output ]] || return 1
+			[[ -f $html_output ]] || return 1
+
+			# Check COMPOUND IDs NA values in main output
+			main_compid_index=$(get_col_index $main_output compoundid)
+			[[ $main_compid_index -gt 0 ]] || return 1
+			nb_main_compids=$(awk "{if (NR > 1 && \$$main_compid_index != \"NA\") {++n}} END{print n}" $main_output)
+			[[ $nb_main_compids -gt 0 ]] || return 1
+
+			# Check COMPOUND IDs NA values in peak output
+			peak_compid_index=$(get_col_index $peak_output compoundid)
+			[[ $peak_compid_index -gt 0 ]] || return 1
+			nb_peak_compids=$(awk "{if (NR > 1 && \$$peak_compid_index != \"NA\") {++n}} END{print n}" $peak_output)
+			[[ $nb_peak_compids -gt 0 ]] || return 1
+
+			if [[ -z $nb_match ]] ; then
+				nb_match=$nb_peak_compids
+			else
+				[[ $nb_peak_compids -eq $nb_match ]] || return 1
+			fi
+		done
+	done
+}
+
+# Main {{{1
+################################################################
+
+check test_filedb_rtunit
