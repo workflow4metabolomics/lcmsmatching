@@ -1,10 +1,10 @@
-test.searchmz.ticket.2016031010000034 <- function() {
-	call.search.mz(c('-d', 'file', '--url', 'res/ticket-2016031010000034-database_CEA_test_2_utf8.tsv', '-m', 'pos', '-i', 'res/ticket-2016031010000034-input_file_for_db_test_2.tsv', '--input-col-names', 'mz=mzmed,rt=rtmed', '-o', 'ticket-2016031010000034-output.tsv', '--peak-output-file', 'ticket-2016031010000034-output-peaks.tsv', '--html-output-file', 'ticket-2016031010000034-output.html'), use.global.conn.flags = FALSE)
-}
+#test.searchmz.ticket.2016031010000034 <- function() {
+#	call.search.mz(c('-d', 'file', '--url', 'res/ticket-2016031010000034-database_CEA_test_2_utf8.tsv', '-m', 'pos', '-i', 'res/ticket-2016031010000034-input_file_for_db_test_2.tsv', '--input-col-names', 'mz=mzmed,rt=rtmed', '-o', 'ticket-2016031010000034-output.tsv', '--peak-output-file', 'ticket-2016031010000034-output-peaks.tsv', '--html-output-file', 'ticket-2016031010000034-output.html'), use.global.conn.flags = FALSE)
+#}
 
-test.searchmz.peakforest.estelle.20170314 <- function() {
-	call.search.mz(c('-d', 'peakforest', '--url', 'https://peakforest-alpha.inra.fr/rest', '--db-token', ENV[['RMSBD_PEAKFOREST_TOKEN']], '-m', 'pos', '-p', '5', '-s', '0', '-i', 'res/peakforest.estelle.20170314-input.tsv', '--input-col-names', 'mz=mzmed,rt=rtmed', '-o', 'peakforest.estelle.20170314-output.tsv', '--peak-output-file', 'peakforest.estelle.20170314-output-peaks.tsv', '--html-output-file', 'peakforest.estelle.20170314-output.html'), use.global.conn.flags = FALSE)
-}
+#test.searchmz.peakforest.estelle.20170314 <- function() {
+#	call.search.mz(c('-d', 'peakforest', '--url', 'https://peakforest-alpha.inra.fr/rest', '--db-token', ENV[['RMSBD_PEAKFOREST_TOKEN']], '-m', 'pos', '-p', '5', '-s', '0', '-i', 'res/peakforest.estelle.20170314-input.tsv', '--input-col-names', 'mz=mzmed,rt=rtmed', '-o', 'peakforest.estelle.20170314-output.tsv', '--peak-output-file', 'peakforest.estelle.20170314-output-peaks.tsv', '--html-output-file', 'peakforest.estelle.20170314-output.html'), use.global.conn.flags = FALSE)
+#}
 
 test.searchmz.peakforest.estelle.20170316.rtunit <- function() {
 
@@ -51,34 +51,34 @@ test.searchmz.peakforest.estelle.20170316.rtunit <- function() {
 	checkTrue(all(abs(sec.main[['rtmed']] - sec.in[['rtmed']]) < 1e-10))
 }
 
-test.searchmz.filedb.rtunit <- function() {
-
-	res.name <- 'filedb'
-	res.dir <- file.path(dirname(script.path), 'res', res.name)
-	nb.match <- NA_integer_
-	for (db.rtunit in MSDB.RTUNIT.VALS) {
-
-		file.db <- file.path(res.dir, paste('filedb-rt', db.rtunit, '.tsv', sep = ''))
-
-		for (input.rtunit in MSDB.RTUNIT.VALS) {
-
-			input.file <- file.path(res.dir, paste('mzrt-input-', input.rtunit, '.tsv', sep = ''))
-
-			main.output <- file.path(dirname(script.path), paste(res.name, db.rtunit, 'input', input.rtunit, 'main.tsv', sep = '-'))
-			peak.output <- file.path(dirname(script.path), paste(res.name, db.rtunit, 'input', input.rtunit, 'peak.tsv', sep = '-'))
-			html.output <- file.path(dirname(script.path), paste(res.name, db.rtunit, 'input', input.rtunit, 'peak.html', sep = '-'))
-
-			call.search.mz(c('-d', 'file', '--url', file.db, '--db-rt-unit', db.rtunit, '-m', 'pos', '-p', '5', '-s', '0', '-i', input.file, '--input-col-names', 'mz=mz,rt=rt', '-o', main.output, '--peak-output-file', peak.output, '--html-output-file', html.output, '--rtunit', input.rtunit, '--all-cols', '--rttolx', '5', '--rttoly', '0.8', '--check-cols', '--same-rows', '--same-cols', '--no-main-table-in-html-output'), use.global.conn.flags = FALSE)
-
-			# Check outputs
-			main <- read.table(main.output, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-			peak <- read.table(peak.output, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-			checkTrue(any( ! is.na(main[[MSDB.TAG.MOLID]])))
-			checkTrue(any( ! is.na(peak[[MSDB.TAG.MOLID]])))
-			if (is.na(nb.match))
-				nb.match <- sum(! is.na(peak[[MSDB.TAG.MOLID]]))
-			else
-				checkEquals(sum(! is.na(peak[[MSDB.TAG.MOLID]])), nb.match)
-		}
-	}
-}
+#test.searchmz.filedb.rtunit <- function() {
+#
+#	res.name <- 'filedb'
+#	res.dir <- file.path(dirname(script.path), 'res', res.name)
+#	nb.match <- NA_integer_
+#	for (db.rtunit in MSDB.RTUNIT.VALS) {
+#
+#		file.db <- file.path(res.dir, paste('filedb-rt', db.rtunit, '.tsv', sep = ''))
+#
+#		for (input.rtunit in MSDB.RTUNIT.VALS) {
+#
+#			input.file <- file.path(res.dir, paste('mzrt-input-', input.rtunit, '.tsv', sep = ''))
+#
+#			main.output <- file.path(dirname(script.path), paste(res.name, db.rtunit, 'input', input.rtunit, 'main.tsv', sep = '-'))
+#			peak.output <- file.path(dirname(script.path), paste(res.name, db.rtunit, 'input', input.rtunit, 'peak.tsv', sep = '-'))
+#			html.output <- file.path(dirname(script.path), paste(res.name, db.rtunit, 'input', input.rtunit, 'peak.html', sep = '-'))
+#
+#			call.search.mz(c('-d', 'file', '--url', file.db, '--db-rt-unit', db.rtunit, '-m', 'pos', '-p', '5', '-s', '0', '-i', input.file, '--input-col-names', 'mz=mz,rt=rt', '-o', main.output, '--peak-output-file', peak.output, '--html-output-file', html.output, '--rtunit', input.rtunit, '--all-cols', '--rttolx', '5', '--rttoly', '0.8', '--check-cols', '--same-rows', '--same-cols', '--no-main-table-in-html-output'), use.global.conn.flags = FALSE)
+#
+#			# Check outputs
+#			main <- read.table(main.output, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+#			peak <- read.table(peak.output, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+#			checkTrue(any( ! is.na(main[[MSDB.TAG.MOLID]])))
+#			checkTrue(any( ! is.na(peak[[MSDB.TAG.MOLID]])))
+#			if (is.na(nb.match))
+#				nb.match <- sum(! is.na(peak[[MSDB.TAG.MOLID]]))
+#			else
+#				checkEquals(sum(! is.na(peak[[MSDB.TAG.MOLID]])), nb.match)
+#		}
+#	}
+#}
