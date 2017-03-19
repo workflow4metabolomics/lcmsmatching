@@ -45,6 +45,21 @@ function get_col_index {
 	echo $n
 }
 
+# Count values {{{1
+################################################################
+
+function count_values {
+
+	file=$1
+	col=$2
+
+	col_index=$(get_col_index $file $col)
+	[[ $col_index -gt 0 ]] || return 1
+	nb_values=$(awk "{if (NR > 1 && \$$col_index != \"NA\") {++n}} END{print n}" $file)
+
+	echo $nb_values
+}
+
 # Test filedb RT unit {{{1
 ################################################################
 
@@ -78,15 +93,11 @@ function test_filedb_rtunit {
 			[[ -f $html_output ]] || return 1
 
 			# Check COMPOUND IDs NA values in main output
-			main_compid_index=$(get_col_index $main_output compoundid)
-			[[ $main_compid_index -gt 0 ]] || return 1
-			nb_main_compids=$(awk "{if (NR > 1 && \$$main_compid_index != \"NA\") {++n}} END{print n}" $main_output)
+			nb_main_compids=$(count_values $main_output compoundid)
 			[[ $nb_main_compids -gt 0 ]] || return 1
 
 			# Check COMPOUND IDs NA values in peak output
-			peak_compid_index=$(get_col_index $peak_output compoundid)
-			[[ $peak_compid_index -gt 0 ]] || return 1
-			nb_peak_compids=$(awk "{if (NR > 1 && \$$peak_compid_index != \"NA\") {++n}} END{print n}" $peak_output)
+			nb_peak_compids=$(count_values $peak_output compoundid)
 			[[ $nb_peak_compids -gt 0 ]] || return 1
 
 			if [[ -z $nb_match ]] ; then
