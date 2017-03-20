@@ -50,6 +50,10 @@ function get_col_index {
 
 	n=$(head -n 1 "$file" | tr "$SEP" "\n" | egrep -n "^\"?${col_name}\"?\$" | sed 's/:.*$//')
 
+	if [[ -z $n ]] ; then
+		n=-1
+	fi
+
 	echo $n
 }
 
@@ -190,10 +194,10 @@ function test_filedb_rtunit {
 	done
 }
 
-# Test ticket 2016031010000034 {{{1
+# Test filedb ticket 2016031010000034 {{{1
 ################################################################
 
-function test_ticket_2016031010000034 {
+function test_filedb_ticket_2016031010000034 {
 
 	local db_file=$RES_DIR/ticket-2016031010000034-database_CEA_test_2_utf8.tsv
 	local input_file=$RES_DIR/ticket-2016031010000034-input_file_for_db_test_2.tsv
@@ -238,24 +242,43 @@ function test_peakforest_estelle_20170316_rtunit {
 	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
 
 	# Check that output file contains at least same matches
-	nb_sec_peak_compids=$(count_values $sec_peak_output compoundid)
+	local nb_sec_peak_compids=$(count_values $sec_peak_output compoundid)
 	[[ $nb_sec_peak_compids -gt 0 ]] || return 1
-	nb_min_peak_compids=$(count_values $min_peak_output compoundid)
+	local nb_min_peak_compids=$(count_values $min_peak_output compoundid)
 	[[ $nb_min_peak_compids -gt 0 ]] || return 2
 	[[ $(get_nb_cols $sec_peak_output) -eq $(get_nb_cols $min_peak_output) ]] || return 3
 	[[ $(get_nb_rows $sec_peak_output) -eq $(get_nb_rows $min_peak_output) ]] || return 4
 	expect_identical_cols compoundid $sec_peak_output $min_peak_output || return 5
 
 	# Checkout RT output values
-	err=1e-10
+	local err=1e-10
 	[[ $(get_nb_rows $min_input) -eq 1 ]] || return 6
-	min_rtmed=$(get_val $min_input rtmed 1)
+	local min_rtmed=$(get_val $min_input rtmed 1)
 	[[ $(get_nb_rows $sec_input) -eq 1 ]] || return 7
-	sec_rtmed=$(get_val $sec_input rtmed 1)
+	local sec_rtmed=$(get_val $sec_input rtmed 1)
 	expect_float_col_equals $min_peak_output rtmed $min_rtmed $err || return 8
 	expect_float_col_equals $sec_peak_output rtmed $sec_rtmed $err || return 9
 	expect_float_col_equals $min_main_output rtmed $min_rtmed $err || return 10
 	expect_float_col_equals $sec_main_output rtmed $sec_rtmed $err || return 11
+}
+
+# Test no 'y' column in output {{{1
+################################################################
+
+function test_filedb_no_y_col_in_output {
+
+	local res_name=filedb
+	local res_dir=$RES_DIR/$res_name
+	local db_file=$res_dir/filedb-rtsec.tsv
+	local input_file=$res_dir/mzrt-input-sec.tsv
+	local main_output=$SCRIPT_PATH/test_filedb_no_y_col_in_output-main.tsv
+
+	# Run program
+	$SEARCHMZ -d file --url $db_file -m pos -i $input_file -o $main_output --same-rows
+
+	# Test that no 'y' column is added in output when running an MZ match
+	n=$(get_col_index $main_output y)
+	[[ $n -lt 0 ]] || return 1
 }
 
 # Main {{{1
@@ -268,7 +291,8 @@ if [[ -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
 fi
 
 # Run filedb tests
-check test_ticket_2016031010000034
+check test_filedb_no_y_col_in_output
+check test_filedb_ticket_2016031010000034
 check test_filedb_rtunit
 
 # Run Peakforest tests

@@ -1,10 +1,3 @@
-test.match.mz.no.y.col.in.output <- function() {
-	# Test that no 'y' column is added in output when running an MZ match
-	call.search.mz(c('-m pos', '-i', 'mz-input-small.tsv', '-o', 'mz-output.tsv', '--same-rows'))
-	df <- read.table(get.res.path('mz-output.tsv'), header = TRUE)
-	checkTrue( ! 'y' %in% colnames(df))
-}
-
 # 2017-01-18 Failure encountered on Galaxy production instance (lcmsmatching version 2.1.3) with Florence Castelli
 test.2017.01.18.florence.castelli <- function() {
 
