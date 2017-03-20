@@ -17,15 +17,27 @@ PEAKFOREST_URL='https://peakforest-alpha.inra.fr/rest'
 function check {
 
 	local testfct=$1
+	local show_output=$2
+	local test_output=
 
 	# Run test
 	echo -n "$testfct ... "
-	test_output=$($testfct 2>&1)
+	if [[ -n $show_output ]] ; then
+		$testfct
+	else
+		test_output=$($testfct 2>&1)
+	fi
 
 	# Failure
 	exit_code=$?
 	if [ $exit_code -gt 0 ] ; then
-		echo failure in $PROG_NAME. 
+		echo failure in $PROG_NAME with exit code $exit_code.
+		echo $test_output
+		exit 1
+	fi
+
+	# Success
+	echo success. 
 }
 
 # Get column index  {{{1
@@ -33,8 +45,8 @@ function check {
 
 function get_col_index {
 
-	file=$1
-	col_name=$2
+	local file=$1
+	local col_name=$2
 
 	n=$(head -n 1 "$file" | tr "$SEP" "\n" | egrep -n "^\"?${col_name}\"?\$" | sed 's/:.*$//')
 
@@ -46,12 +58,12 @@ function get_col_index {
 
 function count_values {
 
-	file=$1
-	col=$2
+	local file=$1
+	local col=$2
 
 	col_index=$(get_col_index $file $col)
 	[[ $col_index -gt 0 ]] || return 1
-	nb_values=$(awk "{if (NR > 1 && \$$col_index != \"NA\") {++n}} END{print n}" $file)
+	nb_values=$(awk "BEGIN{FS=\"$SEP\"}{if (NR > 1 && \$$col_index != \"NA\") {++n}} END{print n}" $file)
 
 	echo $nb_values
 }
@@ -61,7 +73,7 @@ function count_values {
 
 function get_nb_cols {
 
-	file=$1
+	local file=$1
 
 	echo $(head -n 1 "$file" | tr "$SEP" "\n" | wc -l)
 }
@@ -71,9 +83,28 @@ function get_nb_cols {
 
 function get_nb_rows {
 
-	file=$1
+	local file=$1
 
-	echo $(wc -l <$1)
+	n=$(wc -l <$1)
+	((n=n-1)) # Deduct header line
+
+	echo $n
+}
+
+# Get value {{{1
+################################################################
+
+function get_val {
+
+	local file=$1
+	local col=$2
+	local row=$3
+
+	col_index=$(get_col_index $file $col)
+	[[ $col_index -gt 0 ]] || return 1
+	val=$(awk 'BEGIN{FS="'$SEP'"}{ if (NR == '$row' + 1) {print $'$col_index'} }' $file)
+
+	echo $val
 }
 
 # Expect identical columns {{{1
@@ -81,17 +112,33 @@ function get_nb_rows {
 
 function expect_identical_cols {
 
-	col=$1
-	file1=$2
-	file2=$3
+	local col=$1
+	local file1=$2
+	local file2=$3
 
 	col1=$(get_col_index $file1 $col)
 	col2=$(get_col_index $file2 $col)
 	ncols_file1=$(get_nb_cols $file1)
 	((col2 = col2 + ncols_file1))
-	ident=$(paste $file1 $file2 | awk "BEGIN{eq=1}{if (\$$col1 != \$$col2) eq=0}END{print eq}")
+	ident=$(paste $file1 $file2 | awk 'BEGIN{FS="'$SEP'";eq=1}{if ($'$col1' != $'$col2') {eq=0}}END{print eq}')
 
-	[[ $iden -eq 1 ]] || return 1
+	[[ $ident -eq 1 ]] || return 1
+}
+
+# Expect float column equals {{{1
+################################################################
+
+function expect_float_col_equals {
+
+	local file=$1
+	local col=$2
+	local val=$3
+	local tol=$4
+
+	col_index=$(get_col_index $file $col)
+	ident=$(awk 'function abs(v) { return v < 0 ? -v : v }BEGIN{FS="'$SEP'";eq=1}{if (NR > 1 && abs($'$col_index' - '$val') > '$tol') {eq=0}}END{print eq}' $file)
+
+	[[ $ident -eq 1 ]] || return 1
 }
 
 # Test filedb RT unit {{{1
@@ -99,9 +146,9 @@ function expect_identical_cols {
 
 function test_filedb_rtunit {
 
-	res_name=filedb
-	res_dir=$RES_DIR/$res_name
-	nb_match=
+	local res_name=filedb
+	local res_dir=$RES_DIR/$res_name
+	local nb_match=
 
 	# Loop on all RT units for database
 	for db_rtunit in sec min ; do
@@ -148,13 +195,13 @@ function test_filedb_rtunit {
 
 function test_ticket_2016031010000034 {
 
-	db_file=$RES_DIR/ticket-2016031010000034-database_CEA_test_2_utf8.tsv
-	input_file=$RES_DIR/ticket-2016031010000034-input_file_for_db_test_2.tsv
-	main_output=$SCRIPT_PATH/ticket-2016031010000034-output.tsv
-	peak_output=$SCRIPT_PATH/ticket-2016031010000034-output-peaks.tsv
-	html_output=$SCRIPT_PATH/ticket-2016031010000034-output.html
+	local db_file=$RES_DIR/ticket-2016031010000034-database_CEA_test_2_utf8.tsv
+	local input_file=$RES_DIR/ticket-2016031010000034-input_file_for_db_test_2.tsv
+	local main_output=$SCRIPT_PATH/ticket-2016031010000034-output.tsv
+	local peak_output=$SCRIPT_PATH/ticket-2016031010000034-output-peaks.tsv
+	local html_output=$SCRIPT_PATH/ticket-2016031010000034-output.html
 
-	$SEARCHMZ -d file --url $db_file -m pos -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output || return 1
+	$SEARCHMZ -d file --url $db_file -m pos -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
 }
 
 # Test Peakforest Estelle 14/03/2017 {{{1
@@ -162,63 +209,68 @@ function test_ticket_2016031010000034 {
 
 function test_peakforest_estelle_20170314 {
 
-	input_file=$RES_DIR/peakforest.estelle.20170314-input.tsv
-	main_output=$SCRIPT_PATH/peakforest.estelle.20170314-output.tsv
-	peak_output=$SCRIPT_PATH/peakforest.estelle.20170314-output-peaks.tsv
-	html_output=$SCRIPT_PATH/peakforest.estelle.20170314-output.html
+	local input_file=$RES_DIR/peakforest.estelle.20170314-input.tsv
+	local main_output=$SCRIPT_PATH/peakforest.estelle.20170314-output.tsv
+	local peak_output=$SCRIPT_PATH/peakforest.estelle.20170314-output-peaks.tsv
+	local html_output=$SCRIPT_PATH/peakforest.estelle.20170314-output.html
 
-	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output || return 1
+	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
 }
+
+# Test Peakforest Estelle 16/03/2017 {{{1
+################################################################
 
 function test_peakforest_estelle_20170316_rtunit {
 
-	res_name=2017-03-16-estelle-rtunit
-	res_dir=$RES_DIR/$res_name
-	min_input=$res_dir/min-input.tsv
-	min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
-	min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
-	min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
-	sec_input=$res_dir/sec-input.tsv
-	sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
-	sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
-	sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
+	local res_name=2017-03-16-estelle-rtunit
+	local res_dir=$RES_DIR/$res_name
+	local min_input=$res_dir/min-input.tsv
+	local min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
+	local min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
+	local min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
+	local sec_input=$res_dir/sec-input.tsv
+	local sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
+	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
+	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
 
-	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output
+	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
 
-	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output
+	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
 
 	# Check that output file contains at least same matches
 	nb_sec_peak_compids=$(count_values $sec_peak_output compoundid)
 	[[ $nb_sec_peak_compids -gt 0 ]] || return 1
 	nb_min_peak_compids=$(count_values $min_peak_output compoundid)
-	[[ $nb_min_peak_compids -gt 0 ]] || return 1
-	[[ $(get_nb_cols $sec_peak_output) -eq $(get_nb_cols $min_peak_output) ]] || return 1
-	[[ $(get_nb_rows $sec_peak_output) -eq $(get_nb_rows $min_peak_output) ]] || return 1
-	expect_identical_cols compoundid $sec_peak_output $min_peak_output || return 1
+	[[ $nb_min_peak_compids -gt 0 ]] || return 2
+	[[ $(get_nb_cols $sec_peak_output) -eq $(get_nb_cols $min_peak_output) ]] || return 3
+	[[ $(get_nb_rows $sec_peak_output) -eq $(get_nb_rows $min_peak_output) ]] || return 4
+	expect_identical_cols compoundid $sec_peak_output $min_peak_output || return 5
 
 	# Checkout RT output values
-	echo YEP
-	return 1
-#	min.in <- read.table(min.input, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-#	sec.in <- read.table(sec.input, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-#	checkTrue(nrow(min.in) == 1)
-#	checkTrue(nrow(sec.in) == 1)
-#	checkTrue('rtmed' %in% colnames(min.peaks))
-#	checkTrue('rtmed' %in% colnames(sec.peaks))
-#	checkTrue(all(abs(min.peaks[['rtmed']] - min.in[['rtmed']]) < 1e-10))
-#	checkTrue(all(abs(sec.peaks[['rtmed']] - sec.in[['rtmed']]) < 1e-10))
-#	sec.main <- read.table(sec.main.output, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-#	min.main <- read.table(min.main.output, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-#	checkTrue('rtmed' %in% colnames(min.main))
-#	checkTrue('rtmed' %in% colnames(sec.main))
-#	checkTrue(all(abs(min.main[['rtmed']] - min.in[['rtmed']]) < 1e-10))
-#	checkTrue(all(abs(sec.main[['rtmed']] - sec.in[['rtmed']]) < 1e-10))
+	err=1e-10
+	[[ $(get_nb_rows $min_input) -eq 1 ]] || return 6
+	min_rtmed=$(get_val $min_input rtmed 1)
+	[[ $(get_nb_rows $sec_input) -eq 1 ]] || return 7
+	sec_rtmed=$(get_val $sec_input rtmed 1)
+	expect_float_col_equals $min_peak_output rtmed $min_rtmed $err || return 8
+	expect_float_col_equals $sec_peak_output rtmed $sec_rtmed $err || return 9
+	expect_float_col_equals $min_main_output rtmed $min_rtmed $err || return 10
+	expect_float_col_equals $sec_main_output rtmed $sec_rtmed $err || return 11
 }
 
 # Main {{{1
 ################################################################
 
+# Check peakforest token
+if [[ -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
+	echo "No Peakforest defined in env var RMSBD_PEAKFOREST_TOKEN." >&2
+	exit 1
+fi
+
+# Run filedb tests
 check test_ticket_2016031010000034
-check test_peakforest_estelle_20170314
 check test_filedb_rtunit
+
+# Run Peakforest tests
 check test_peakforest_estelle_20170316_rtunit
+check test_peakforest_estelle_20170314
