@@ -61,15 +61,13 @@ DEFAULT.ARG.VALUES[['output-col-names']] <- concat.kv.list(msdb.get.dft.output.f
 # PRINT HELP #
 ##############
 
-print.help <- function(spec, status = 0) {
+print.help <- function(spec) {
 	cat(getopt(spec, usage = TRUE, command = PROG))
 
 	cat("\nEXAMPLES:\n")
 
 	cat("\nSimple usage with an in-house database:\n")
 	cat("\t./", PROG, " -d file --url mydbfile.tsv -i input.tsv -m pos -o output.tsv\n", sep = '')
-
-	q(status = status)
 }
 
 ###############################
@@ -149,12 +147,11 @@ parse.arg.val <- function(opt) {
 	return(opt)
 }
 
-##############################
-# MAKE GETOPT SPECIFICATIONS #
-##############################
+# Make getopt specifications {{{1
+################################################################
 
 make.getopt.spec <- function() {
-	spec = c(
+	spec <- c(
 		'input-file',       'i',            1,  'character',    'Set input file.',
 		'input-col-names',  'j',            1,  'character',    paste0('Set the input column names. Default is "', DEFAULT.ARG.VALUES[['input-col-names']], '".'),
 
@@ -203,8 +200,7 @@ make.getopt.spec <- function() {
 		'debug',            'g',            0,  'logical',      'Set debug mode.'
 		)
 
-	if ( ! is.null(spec))
-		spec <- matrix(spec, byrow = TRUE, ncol = 5)
+	spec <- matrix(spec, byrow = TRUE, ncol = 5)
 
 	return(spec)
 }
@@ -220,156 +216,128 @@ read_args <- function() {
 	opt <- getopt(spec)
 
 	# help
-	if ( ! is.null(opt$help))
+	if ( ! is.null(opt$help)) {
 		print.help(spec)
+		quit()
+	}
 
 	opt <- set.dft.arg.val(opt) # Set default values
 	opt <- parse.arg.val(opt) # Parse list values
 
 	# Check values
-	error <- .check.db.conn.opts(opt)
-	if (is.null(opt[['output-file']]) && is.null(opt[['list-cols']])) {
-		warning("You must set a path for the output file.")
-		error <- TRUE
-	}
-	if (is.null(opt[['list-cols']])) {
-		if (is.null(opt[['input-file']])) {
-			warning("You must provide an input file.")
-			error <- TRUE
-		}
-		if (is.null(opt$mode) || ( ! opt$mode %in% MSDB.MODE.VALS)) {
-			warning("You must specify a mode through the --mode option.")
-			error <- TRUE
-		}
-		if (is.null(opt$mzprec)) {
-			warning("You must set a precision in MZ with the --mzprec option.")
-			error <- TRUE
-		}
-		if ( ( ! is.null(opt$rtcol) || ! is.null(opt[['all-cols']])) && (is.null(opt$rttolx) || is.null(opt$rttoly))) {
-			warning("When chromatographic columns are set, you must provide values for --rttolx and -rttoly.")
-			error <- TRUE
-		}
-		if (is.null(opt$mztolunit) || ( ! opt$mztolunit %in% MSDB.MZTOLUNIT.VALS)) {
-			warning("You must specify an M/Z tolerance unit through the --mztolunit option.")
-			error <- TRUE
-		}
-	}
-
-	# help
-	if (error) {
-		cat('Please see help page: `', PROG, " -h`.\n", sep = '')
-		q(status = 1)
-	}
-		
+	error <- check.args(opt)
 
 	return(opt)
 }
 	
-	#####################################
-	# CHECK DATABASE CONNECTION OPTIONS #
-	#####################################
-	
-	.check.db.conn.opts <- function(opt) {
-	
-		# Check values
-		error <- FALSE
-		if (is.null(opt$database)) {
-			warning("You must provide a database type through --database option.")
-			error <- TRUE
-		}
-		if ( ! opt$database %in% MSDB.VALS) {
-			warning(paste0("Invalid value \"", opt$database, "\" for --database option."))
-			error <- TRUE
-		}
-		if (opt$database == MSDB.FILE) {
-			if (is.null(opt$url)) {
-			warning("When using single file database, you must specify the location of the database file with option --url.")
-			error <- TRUE
-			}
-			if ( ! file.exists(opt$url)) {
-				warning(paste0("The file path \"", opt$url,"\" specified with --db-file option is not valid."))
-				error <- TRUE
-			}
-		}
-		if (opt$database == MSDB.XLS) {
-			if (is.null(opt$url)) {
-				warning("When using Excel database, you must specify the location of the Excel files directory with option --url.")
-				error <- TRUE
-			}
-			if ( ! file.exists(opt$url)) {
-				warning(paste0("The directory path \"", opt$url,"\" specified with --xls-dir option is not valid."))
-				error <- TRUE
-			}
-		}
-		if (opt$database == MSDB.4TABSQL) {
-			if (is.null(opt$url)) {
-				warning("When using 4Tab SQL database, you must specify the URL of the SQL server with option --url.")
-				error <- TRUE
-			}
-			if (is.null(opt[['db-name']])) {
-				warning("When using 4Tab SQL database, you must specify the database name through the --db-name option.")
-				error <- TRUE
-			}
-			if (is.null(opt[['db-user']])) {
-				warning("When using 4Tab SQL database, you must specify the database user through the --db-user option.")
-				error <- TRUE
-			}
-			if (is.null(opt[['db-password']])) {
-				warning("When using 4Tab SQL database, you must specify the database user password through the --db-password option.")
-				error <- TRUE
-			}
-		}
-		if (opt$database == MSDB.PEAKFOREST) {
-			if (is.null(opt$url)) {
-				warning("When using PeakForest database, you must specify the URL of the PeakForest server with option --url.")
-				error <- TRUE
-			}
-		}
-	
-		return(error)
-	}
-	
-	#############################
-	# DISPLAY COMMAND LINE HELP #
-	#############################
-	
-	.disp.cmd.line.help <- function(optspec, opt, prog, error = FALSE) {
-	
-		if ( ! is.null(opt$help) || error ) {
-			cat(getopt(optspec, usage = TRUE, command = prog))
-			q(status = 1)
-		}
-	}
-	
-	#################
-	# LOAD DATABASE #
-	#################
-	
-	.load.db <- function(opt) {
+# Check args {{{1
+################################################################
 
-		if (is.null(opt[['pos-prec']]) && is.null(opt[['neg-prec']])) {
-			precursors <- NULL
-		} else {
-			precursors <- list()
-			precursors[[MSDB.TAG.POS]] <- opt[['pos-prec']]
-			precursors[[MSDB.TAG.NEG]] <- opt[['neg-prec']]
-		}
+check.args <- function(opt) {
 
-		db <- switch(opt$database,
-		             peakforest = MsPeakForestDb$new(url = opt$url, useragent = USERAGENT, token = opt[['db-token']]),
-		             xls = MsXlsDb$new(db_dir = opt$url, cache_dir = opt[['cache-dir']]),
-		             '4tabsql' = Ms4TabSqlDb$new(host = extract.address(opt$url), port = extract.port(opt$url), dbname = opt[['db-name']], user = opt[['db-user']], password = opt[['db-password']]),
-		             file = MsFileDb$new(file = opt$url),
-		             NULL)
-		db$setPrecursors(precursors)
-		if (db$areDbFieldsSettable())
-			db$setDbFields(opt[['db-fields']])
-		if (db$areDbMsModesSettable())
-			db$setDbMsModes(opt[['db-ms-modes']])
-		db$addObservers(MsDbLogger$new())
+	# Check database type
+	if (is.null(opt$database))
+		stop("You must provide a database type through --database option.")
+	if ( ! opt$database %in% MSDB.VALS)
+		stop(paste0("Invalid value \"", opt$database, "\" for --database option."))
 
-		return(db)
+	# Check filedb database
+	if (opt$database == MSDB.FILE) {
+		if (is.null(opt$url))
+			stop("When using single file database, you must specify the location of the database file with option --url.")
+		if ( ! file.exists(opt$url))
+			stop(paste0("The file path \"", opt$url,"\" specified with --db-file option is not valid."))
 	}
+
+	# Check Excel database
+	if (opt$database == MSDB.XLS) {
+		if (is.null(opt$url))
+			stop("When using Excel database, you must specify the location of the Excel files directory with option --url.")
+		if ( ! file.exists(opt$url))
+			stop(paste0("The directory path \"", opt$url,"\" specified with --xls-dir option is not valid."))
+	}
+
+	# Check 4 tab database
+	if (opt$database == MSDB.4TABSQL) {
+		if (is.null(opt$url))
+			stop("When using 4Tab SQL database, you must specify the URL of the SQL server with option --url.")
+		if (is.null(opt[['db-name']]))
+			stop("When using 4Tab SQL database, you must specify the database name through the --db-name option.")
+		if (is.null(opt[['db-user']]))
+			stop("When using 4Tab SQL database, you must specify the database user through the --db-user option.")
+		if (is.null(opt[['db-password']]))
+			stop("When using 4Tab SQL database, you must specify the database user password through the --db-password option.")
+	}
+
+	# Check Peakforest database
+	if (opt$database == MSDB.PEAKFOREST) {
+		if (is.null(opt$url))
+			stop("When using PeakForest database, you must specify the URL of the PeakForest server with option --url.")
+	}
+
+	if (is.null(opt[['list-cols']])) {
+
+		if (is.null(opt[['output-file']]))
+			stop("You must set a path for the output file.")
+
+		if (is.null(opt[['input-file']]))
+			stop("You must provide an input file.")
+
+		if (is.null(opt$mode) || ( ! opt$mode %in% MSDB.MODE.VALS))
+			stop("You must specify a mode through the --mode option.")
+
+		if (is.null(opt$mzprec))
+			stop("You must set a precision in MZ with the --mzprec option.")
+
+		if ( ( ! is.null(opt$rtcol) || ! is.null(opt[['all-cols']])) && (is.null(opt$rttolx) || is.null(opt$rttoly)))
+			stop("When chromatographic columns are set, you must provide values for --rttolx and -rttoly.")
+
+		if (is.null(opt$mztolunit) || ( ! opt$mztolunit %in% MSDB.MZTOLUNIT.VALS))
+			stop("You must specify an M/Z tolerance unit through the --mztolunit option.")
+	}
+}
+
+#############################
+# DISPLAY COMMAND LINE HELP #
+#############################
+
+.disp.cmd.line.help <- function(optspec, opt, prog, error = FALSE) {
+
+	if ( ! is.null(opt$help) || error ) {
+		cat(getopt(optspec, usage = TRUE, command = prog))
+		q(status = 1)
+	}
+}
+
+#################
+# LOAD DATABASE #
+#################
+
+.load.db <- function(opt) {
+
+	if (is.null(opt[['pos-prec']]) && is.null(opt[['neg-prec']])) {
+		precursors <- NULL
+	} else {
+		precursors <- list()
+		precursors[[MSDB.TAG.POS]] <- opt[['pos-prec']]
+		precursors[[MSDB.TAG.NEG]] <- opt[['neg-prec']]
+	}
+
+	db <- switch(opt$database,
+		         peakforest = MsPeakForestDb$new(url = opt$url, useragent = USERAGENT, token = opt[['db-token']]),
+		         xls = MsXlsDb$new(db_dir = opt$url, cache_dir = opt[['cache-dir']]),
+		         '4tabsql' = Ms4TabSqlDb$new(host = extract.address(opt$url), port = extract.port(opt$url), dbname = opt[['db-name']], user = opt[['db-user']], password = opt[['db-password']]),
+		         file = MsFileDb$new(file = opt$url),
+		         NULL)
+	db$setPrecursors(precursors)
+	if (db$areDbFieldsSettable())
+		db$setDbFields(opt[['db-fields']])
+	if (db$areDbMsModesSettable())
+		db$setDbMsModes(opt[['db-ms-modes']])
+	db$addObservers(MsDbLogger$new())
+
+	return(db)
+}
 
 ###############
 # OUTPUT HTML #
