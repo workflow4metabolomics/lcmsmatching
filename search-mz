@@ -76,15 +76,19 @@ print.help <- function() {
 
 	cat("\nOPTIONS:\n")
 	spec <- matrix(make.getopt.spec(), byrow = TRUE, ncol = 5)
-	max.length.opt.cols <- max(nchar(spec[,1])) + max(nchar(spec[,2]))
+	max.length.opt.cols <- max(nchar(spec[,1])) + 1
 	sections <- list(database = "Database setting", input = "Input file", output = "Output files", mz = "M/Z matching", rt = "RT matching", precursor = "Precursor matching", misc = "Miscellaneous")
 	for (section in names(sections)) {
 		cat("\n\t", sections[[section]], ":\n", sep = '')
 		spec <- matrix(make.getopt.spec(section), byrow = TRUE, ncol = 5)
 		for (i in seq(nrow(spec))) {
-			nb.space.padding <- max.length.opt.cols - nchar(spec[i,2]) - nchar(spec[i, 1]) - 4 + 6
+			opt <- ''
+			if ( ! is.na(spec[i,2]))
+				opt <- paste('-', spec[i,2], '|', sep = '')
+			opt <- paste(opt, '--', spec[i, 1], sep = '')
+			nb.space.padding <- max.length.opt.cols - nchar(opt) + 6
 			padding <- paste(rep(' ', nb.space.padding), sep = '')
-			cat("\t\t", '-', spec[i,2], '|--', spec[i, 1], padding, "\t", spec[i, 5], "\n", sep = '')
+			cat("\t\t", opt, padding, "\t", spec[i, 5], "\n", sep = '')
 		}
 	}
 
@@ -185,11 +189,14 @@ make.getopt.spec <- function(sections = NULL) {
 
 	spec <- character(0)
 
-	if (is.null(sections) || 'input' %in% sections)
+	if (is.null(sections) || 'input' %in% sections) {
 		spec <- c(spec,
 			'input-file',       'i',            1,  'character',    'Set input file.',
 			'input-col-names',  'j',            1,  'character',    paste0('Set the input column names. Default is "', DEFAULT.ARG.VALUES[['input-col-names']], '".')
 		)
+		for (field in names(msdb.get.dft.input.fields()))
+			spec <- c(spec, paste('input', 'field', field, 'name', sep = '-'), NA_character_, 1, 'character', paste('Set the column name for ', field, ' values in the input file. Default is "', msdb.get.dft.input.fields()[[field]], '".', sep = ''))
+	}
 
 	if (is.null(sections) || 'mz' %in% sections)
 		spec <- c(spec,
@@ -233,7 +240,7 @@ make.getopt.spec <- function(sections = NULL) {
 			'excel2011comp',    'X',            0,  'logical',      'Excel 2011 compatiblity mode. Output ASCII text files instead of UTF-8 files, where greek letters are replaced with their latin names, plusminus sign is replaced with +- and apostrophe is replaced with \"prime\". All other non-ASCII characters are repladed with underscore.'
 		)
 
-	if (is.null(sections) || 'database' %in% sections)
+	if (is.null(sections) || 'database' %in% sections) {
 		spec <- c(spec,
 			'database',         'd',            1,  'character',    paste0('Set database to use: "xls" for an Excel database, "file" for a single file database, "4tabsql" for a 4Tab SQL database, and "peakforest" for a connection to PeakForest database.'),
 			'url',              'W',            1,  'character',    'URL of database. For "peakforest" database it is the HTTP URL, for the "xls" database it is the path to the directory containing the Excel files, for the "file" database it is the path to the file database and for the "4tabsql" database it is the IP address of the server.',
@@ -241,11 +248,14 @@ make.getopt.spec <- function(sections = NULL) {
 			'db-name',          'N',            1,  'character',    'Name of the database. Used by the "4tabsql" database.',
 			'db-user',          'U',            1,  'character',    'User of the database. Used by the "4tabsql" database.',
 			'db-password',      'P',            1,  'character',    'Password of the database user. Used by the "4tabsql" database.',
-			'db-fields',        'F',            1,  'character',    paste0('Comma separated key/value list giving the field names to be used in the single file database. Default is "', MSDB.DFT[['db-fields']], '".'),
 			'db-ms-modes',      'M',            1,  'character',    paste0('Comma separated key/value list giving the MS modes to be used in the single file database. Default is "', MSDB.DFT[['db-ms-modes']], '".'),
 			'db-rt-unit',       'V',            1,  'character',    paste0('Retention time unit for the database, used in the single file database. Default is "', MSDB.DFT[['db-rt-unit']], '". Allowed values are:', paste(MSDB.RTUNIT.VALS, collapse = ", "), '.'),
-			'db-token',         'T',            1,  'character',    'Database token. Used by Peakforest database.'
+			'db-token',         'T',            1,  'character',    'Database token. Used by Peakforest database.',
+			'db-fields',        'F',            1,  'character',    paste0('Comma separated key/value list giving the field names to be used in the single file database. Default is "', MSDB.DFT[['db-fields']], '".')
 		)
+		for (field in names(msdb.get.dft.db.fields()))
+			spec <- c(spec, paste('db', 'field', field, 'name', sep = '-'), NA_character_, 1, 'character', paste('Set the column name for ', field, ' values in the database file. Default is "', msdb.get.dft.db.fields()[[field]], '".', sep = ''))
+	}
 
 	if (is.null(sections) || 'misc' %in% sections)
 		spec <- c(spec,
