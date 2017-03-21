@@ -55,7 +55,6 @@ if ( ! exists('.parse_chrom_col_desc')) { # Do not load again if already loaded
 	MSDB.DFT.PREC <- list()
 	MSDB.DFT.PREC[[MSDB.TAG.POS]] <- c("[(M+H)]+", "[M+H]+", "[(M+Na)]+", "[M+Na]+", "[(M+K)]+", "[M+K]+")
 	MSDB.DFT.PREC[[MSDB.TAG.NEG]] <- c("[(M-H)]-", "[M-H]-", "[(M+Cl)]-", "[M+Cl]-")
-#	MSDB.DFT.OUTPUT.FIELDS <- list( mz = 'mz', rt = 'rt', col = 'col', colrt = 'colrt', molid = 'id', attr = 'attribution', comp = 'composition', int = 'intensity', rel = 'relative', mzexp = 'mzexp', mztheo = 'mztheo', msmatching = 'msmatching', molnames = 'molnames', molcomp = 'molcomp', molmass = 'molmass', inchi = 'inchi', inchikey = 'inchikey', pubchem = 'pubchem', chebi = 'chebi', hmdb = 'hmdb', kegg = 'kegg')
 	MSDB.DFT.OUTPUT.MULTIVAL.FIELD.SEP <- MSDB.MULTIVAL.FIELD.SEP
 	MSDB.DFT.MATCH.FIELDS <- list( molids = 'molid', molnames = 'molnames')
 	MSDB.DFT.MATCH.SEP <- ','
