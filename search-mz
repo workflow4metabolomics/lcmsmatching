@@ -57,12 +57,39 @@ DEFAULT.ARG.VALUES <- MSDB.DFT
 DEFAULT.ARG.VALUES[['input-col-names']] <- concat.kv.list(msdb.get.dft.input.fields())
 DEFAULT.ARG.VALUES[['output-col-names']] <- concat.kv.list(msdb.get.dft.output.fields())
 
-##############
-# PRINT HELP #
-##############
+# Print help {{{1
+################################################################
 
-print.help <- function(spec) {
-	cat(getopt(spec, usage = TRUE, command = PROG))
+print.help <- function() {
+
+	cat("USAGE:\n")
+	prog.mz.match <- paste(PROG, ' -d (', paste(MSDB.VALS, collapse = '|'), ') --url (file|dir|database URL) -i <file> -m (', paste(MSDB.MODE.VALS, collapse = '|'), ") -p <mz precision> -s <mz shift> -u (", paste(MSDB.MZTOLUNIT.VALS, collapse = '|'), ") -o <file>", sep = '')
+	cat("\t(1) ", prog.mz.match, " ...\n", sep = '')
+	cat("\n")
+	cat("\t(2) ", prog.mz.match, "(--all-cols|-c <cols>) -x <X RT tolerance> -y <Y RT tolerance>", " ...\n", sep = '')
+	cat("\n")
+	cat("\t(3) ", PROG, ' -d (', paste(MSDB.VALS, collapse = '|'), ") --url (file|dir|database URL) --list-cols\n", sep = '')
+
+	cat("\nDETAILS:\n")
+	cat("Form (1) is for running an MZ match on a database.\n")
+	cat("Form (2) is for running an MZ/RT match on a database.\n")
+	cat("Form (3) is for getting a list of available chromatographic columns in a database.\n")
+
+	cat("\nOPTIONS:\n")
+	spec <- matrix(make.getopt.spec(), byrow = TRUE, ncol = 5)
+	max.length.opt.cols <- max(nchar(spec[,1])) + max(nchar(spec[,2]))
+	sections <- list(database = "Database setting", input = "Input file", output = "Output files", mz = "M/Z matching", rt = "RT matching", precursor = "Precursor matching", misc = "Miscellaneous")
+	for (section in names(sections)) {
+		cat("\n\t", sections[[section]], ":\n", sep = '')
+		spec <- matrix(make.getopt.spec(section), byrow = TRUE, ncol = 5)
+		for (i in seq(nrow(spec))) {
+			nb.space.padding <- max.length.opt.cols - nchar(spec[i,2]) - nchar(spec[i, 1]) - 4 + 6
+			padding <- paste(rep(' ', nb.space.padding), sep = '')
+			cat("\t\t", '-', spec[i,2], '|--', spec[i, 1], padding, "\t", spec[i, 5], "\n", sep = '')
+		}
+	}
+#	opt <- getopt(matrix(make.getopt.spec(), byrow = TRUE, ncol = 5), usage = TRUE, command = PROG)
+#	cat(opt)
 
 	cat("\nEXAMPLES:\n")
 
@@ -150,74 +177,92 @@ parse.arg.val <- function(opt) {
 # Make getopt specifications {{{1
 ################################################################
 
-make.getopt.spec <- function() {
-	spec <- c(
-		'input-file',       'i',            1,  'character',    'Set input file.',
-		'input-col-names',  'j',            1,  'character',    paste0('Set the input column names. Default is "', DEFAULT.ARG.VALUES[['input-col-names']], '".'),
+make.getopt.spec <- function(sections = NULL) {
 
-		'mode',             'm',            1,  'character',    paste0('MS mode. Possible values are:', paste(MSDB.MODE.VALS, collapse = ", "), '.'),
-		'mzshift',          's',            1,  'numeric',      paste0('Shift on m/z, in ppm. Default is ', MSDB.DFT$mzshift,'.'),
-		'mzprec',           'p',            1,  'numeric',      paste0('Tolerance on m/z, in ppm. Default is ', MSDB.DFT$mzprec,'.'),
-		'mztolunit',        'u',            1,  'character',    paste0('Tolerance on m/z, in ppm. Default is ', MSDB.DFT$mztolunit,'.'),
+	spec <- character(0)
 
-		'all-cols',         'A',            0,  'logical',      'Use all available chromatographic columns to match retention times.',
-		'check-cols',       'k',            0,  'logical',      'Check that the chromatographic column names specified with option -c really exist.',
-		'list-cols',        'l',            0,  'logical',      'List all chromatographic columns present in the database. Write list inside the file specified by -o option.',
-		'rttol',            'r',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
-		'rttolx',           'x',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
-		'rttoly',           'y',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
-		'rtcol',            'c',            1,  'character',    paste0('Chromatographic column to use. Unset by default. If set, use the corresponding column to filter on retention times, if retention times are provided.'),
-		'rtunit',           'v',            1,  'character',    paste0('Retention time unit for the input file. Default is ', MSDB.DFT$rtunit, '. Allowed values are:', paste(MSDB.RTUNIT.VALS, collapse = ", "), '.'),
-
-		'precursor-match',  'Q',            0,  'logical',      'Remove peaks whose molecule precursor peak has not been matched. Unset by default.',
-		'precursor-rt-tol', 'R',            1,  'numeric',      paste0('Precursor retention time tolerance. Only used when precursor-match is enabled. Default is ', MSDB.DFT[['precursor-rt-tol']], '.'),
-		'pos-prec',         'Y',            1,  'character',    paste0('Set the list of precursors to use in positive mode. Default is "', MSDB.DFT[['pos-prec']], '".'),
-		'neg-prec',         'Z',            1,  'character',    paste0('Set the list of precursors to use in negative mode. Default is "', MSDB.DFT[['neg-prec']], '".'),
-
-		'output-file',      'o',            1,  'character',    'Set file to use for the main output.',
-		'peak-output-file', 'O',            1,  'character',    'If set and if --same-rows is set, then output all matches inside the specified file, with one mz match per line. The output columns are: mz, rt, id, col, colrt, composition, attribution. This means that if an mz value is matched several times, then it will repeated on several lines, with one match description per line.',
-		'html-output-file', 'H',            1,  'character',    'Set file to use for the HTML output.',
-		'no-main-table-in-html-output',  't',  0,  'logical',      'Do not display main table in HTML output.',
-		'same-rows',        'a',            0,  'logical',      'If set, output exactly the same number of rows as the input. This means that in case of multiple matches for one mz, then only one line is output (i.e.: the mz value is not duplicated on several lines). In the main output file, an "ms.matching" column is output with inside, for each mz, a comma separated list of matched component/molecule IDs. If unset, then only the main output file is used, and one single is written to it with one line per peak match, and eventual mz line duplicated if there are multiple matches for this mz.',
-		'same-cols',        'b',            0,  'logical',      'If set, output the same columns as inside the input. All input columns are copied to the output.',
-		'output-col-names', 'J',            1,  'character',    paste0('Set the output column names. Default is "', DEFAULT.ARG.VALUES[['output-col-names']], '".'),
-		'molids-sep',       'S',            1,  'character',    paste0('Set character separator used to when concatenating molecule IDs in output. Default is "', MSDB.DFT[['molids-sep']] , '".'),
-		'first-val',        '1',            0,  'logical',      'Keep only the first value in multi-value fields. Unset by default.',
-		'excel2011comp',    'X',            0,  'logical',      'Excel 2011 compatiblity mode. Output ASCII text files instead of UTF-8 files, where greek letters are replaced with their latin names, plusminus sign is replaced with +- and apostrophe is replaced with \"prime\". All other non-ASCII characters are repladed with underscore.',
-
-		'database',         'd',            1,  'character',    paste0('Set database to use: "xls" for an Excel database, "file" for a single file database, "4tabsql" for a 4Tab SQL database, and "peakforest" for a connection to PeakForest database.'),
-		'url',              'W',            1,  'character',    'URL of database. For "peakforest" database it is the HTTP URL, for the "xls" database it is the path to the directory containing the Excel files, for the "file" database it is the path to the file database and for the "4tabsql" database it is the IP address of the server.',
-		'cache-dir',        'C',            1,  'character',    'Path to directory where to store cache files. Only used when database flag is set to "xls".',
-		'db-name',          'N',            1,  'character',    'Name of the database. Used by the "4tabsql" database.',
-		'db-user',          'U',            1,  'character',    'User of the database. Used by the "4tabsql" database.',
-		'db-password',      'P',            1,  'character',    'Password of the database user. Used by the "4tabsql" database.',
-		'db-fields',        'F',            1,  'character',    paste0('Comma separated key/value list giving the field names to be used in the single file database. Default is "', MSDB.DFT[['db-fields']], '".'),
-		'db-ms-modes',      'M',            1,  'character',    paste0('Comma separated key/value list giving the MS modes to be used in the single file database. Default is "', MSDB.DFT[['db-ms-modes']], '".'),
-		'db-rt-unit',       'V',            1,  'character',    paste0('Retention time unit for the database, used in the single file database. Default is "', MSDB.DFT[['db-rt-unit']], '". Allowed values are:', paste(MSDB.RTUNIT.VALS, collapse = ", "), '.'),
-		'db-token',         'T',            1,  'character',    'Database token. Used by Peakforest database.',
-
-		'help',             'h',            0,  'logical',      'Print this help.',
-		'debug',            'g',            0,  'logical',      'Set debug mode.'
+	if (is.null(sections) || 'input' %in% sections)
+		spec <- c(spec,
+			'input-file',       'i',            1,  'character',    'Set input file.',
+			'input-col-names',  'j',            1,  'character',    paste0('Set the input column names. Default is "', DEFAULT.ARG.VALUES[['input-col-names']], '".')
 		)
 
-	spec <- matrix(spec, byrow = TRUE, ncol = 5)
+	if (is.null(sections) || 'mz' %in% sections)
+		spec <- c(spec,
+			'mode',             'm',            1,  'character',    paste0('MS mode. Possible values are:', paste(MSDB.MODE.VALS, collapse = ", "), '.'),
+			'mzshift',          's',            1,  'numeric',      paste0('Shift on m/z. Default is ', MSDB.DFT$mzshift,'.'),
+			'mzprec',           'p',            1,  'numeric',      paste0('Tolerance on m/z. Default is ', MSDB.DFT$mzprec,'.'),
+			'mztolunit',        'u',            1,  'character',    paste0('Unit used for tolerance values (options -s and -p) on M/Z. Default is ', MSDB.DFT$mztolunit,'.')
+		)
+
+	if (is.null(sections) || 'rt' %in% sections)
+		spec <- c(spec,
+			'all-cols',         'A',            0,  'logical',      'Use all available chromatographic columns to match retention times.',
+			'rtcol',            'c',            1,  'character',    paste0('Chromatographic column to use. Unset by default. If set, use the corresponding column to filter on retention times, if retention times are provided.'),
+			'check-cols',       'k',            0,  'logical',      'Check that the chromatographic column names specified with option -c really exist.',
+			'list-cols',        'l',            0,  'logical',      'List all chromatographic columns present in the database. Write list inside the file specified by -o option.',
+			'rttol',            'r',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
+			'rttolx',           'x',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
+			'rttoly',           'y',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
+			'rtunit',           'v',            1,  'character',    paste0('Retention time unit for the input file. Default is ', MSDB.DFT$rtunit, '. Allowed values are:', paste(MSDB.RTUNIT.VALS, collapse = ", "), '.')
+		)
+
+	if (is.null(sections) || 'precursor' %in% sections)
+		spec <- c(spec,
+			'precursor-match',  'Q',            0,  'logical',      'Remove peaks whose molecule precursor peak has not been matched. Unset by default.',
+			'precursor-rt-tol', 'R',            1,  'numeric',      paste0('Precursor retention time tolerance. Only used when precursor-match is enabled. Default is ', MSDB.DFT[['precursor-rt-tol']], '.'),
+			'pos-prec',         'Y',            1,  'character',    paste0('Set the list of precursors to use in positive mode. Default is "', MSDB.DFT[['pos-prec']], '".'),
+			'neg-prec',         'Z',            1,  'character',    paste0('Set the list of precursors to use in negative mode. Default is "', MSDB.DFT[['neg-prec']], '".')
+		)
+
+	if (is.null(sections) || 'output' %in% sections)
+		spec <- c(spec,
+			'output-file',      'o',            1,  'character',    'Set file to use for the main output.',
+			'peak-output-file', 'O',            1,  'character',    'If set and if --same-rows is set, then output all matches inside the specified file, with one mz match per line. The output columns are: mz, rt, id, col, colrt, composition, attribution. This means that if an mz value is matched several times, then it will repeated on several lines, with one match description per line.',
+			'html-output-file', 'H',            1,  'character',    'Set file to use for the HTML output.',
+			'no-main-table-in-html-output',  't',  0,  'logical',   'Do not display main table in HTML output.',
+			'same-rows',        'a',            0,  'logical',      'If set, output exactly the same number of rows as the input. This means that in case of multiple matches for one mz, then only one line is output (i.e.: the mz value is not duplicated on several lines). In the main output file, an "ms.matching" column is output with inside, for each mz, a comma separated list of matched component/molecule IDs. If unset, then only the main output file is used, and one single is written to it with one line per peak match, and eventual mz line duplicated if there are multiple matches for this mz.',
+			'same-cols',        'b',            0,  'logical',      'If set, output the same columns as inside the input. All input columns are copied to the output.',
+			'output-col-names', 'J',            1,  'character',    paste0('Set the output column names. Default is "', DEFAULT.ARG.VALUES[['output-col-names']], '".'),
+			'molids-sep',       'S',            1,  'character',    paste0('Set character separator used to when concatenating molecule IDs in output. Default is "', MSDB.DFT[['molids-sep']] , '".'),
+			'first-val',        '1',            0,  'logical',      'Keep only the first value in multi-value fields. Unset by default.',
+			'excel2011comp',    'X',            0,  'logical',      'Excel 2011 compatiblity mode. Output ASCII text files instead of UTF-8 files, where greek letters are replaced with their latin names, plusminus sign is replaced with +- and apostrophe is replaced with \"prime\". All other non-ASCII characters are repladed with underscore.'
+		)
+
+	if (is.null(sections) || 'database' %in% sections)
+		spec <- c(spec,
+			'database',         'd',            1,  'character',    paste0('Set database to use: "xls" for an Excel database, "file" for a single file database, "4tabsql" for a 4Tab SQL database, and "peakforest" for a connection to PeakForest database.'),
+			'url',              'W',            1,  'character',    'URL of database. For "peakforest" database it is the HTTP URL, for the "xls" database it is the path to the directory containing the Excel files, for the "file" database it is the path to the file database and for the "4tabsql" database it is the IP address of the server.',
+			'cache-dir',        'C',            1,  'character',    'Path to directory where to store cache files. Only used when database flag is set to "xls".',
+			'db-name',          'N',            1,  'character',    'Name of the database. Used by the "4tabsql" database.',
+			'db-user',          'U',            1,  'character',    'User of the database. Used by the "4tabsql" database.',
+			'db-password',      'P',            1,  'character',    'Password of the database user. Used by the "4tabsql" database.',
+			'db-fields',        'F',            1,  'character',    paste0('Comma separated key/value list giving the field names to be used in the single file database. Default is "', MSDB.DFT[['db-fields']], '".'),
+			'db-ms-modes',      'M',            1,  'character',    paste0('Comma separated key/value list giving the MS modes to be used in the single file database. Default is "', MSDB.DFT[['db-ms-modes']], '".'),
+			'db-rt-unit',       'V',            1,  'character',    paste0('Retention time unit for the database, used in the single file database. Default is "', MSDB.DFT[['db-rt-unit']], '". Allowed values are:', paste(MSDB.RTUNIT.VALS, collapse = ", "), '.'),
+			'db-token',         'T',            1,  'character',    'Database token. Used by Peakforest database.'
+		)
+
+	if (is.null(sections) || 'misc' %in% sections)
+		spec <- c(spec,
+			'help',             'h',            0,  'logical',      'Print this help.',
+			'debug',            'g',            0,  'logical',      'Set debug mode.'
+		)
 
 	return(spec)
 }
 
-#############
-# READ ARGS #
-#############
+# Read args {{{1
+################################################################
 
 read_args <- function() {
 
-	# options
-	spec <- make.getopt.spec()
-	opt <- getopt(spec)
+	# Get options
+	opt <- getopt(matrix(make.getopt.spec(), byrow = TRUE, ncol = 5))
 
 	# help
 	if ( ! is.null(opt$help)) {
-		print.help(spec)
+		print.help()
 		quit()
 	}
 
