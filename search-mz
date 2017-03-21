@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# vi: ft=R
+# vi: ft=R fdm=marker
 args <- commandArgs(trailingOnly = F)
 script.path <- sub("--file=","",args[grep("--file=",args)])
 library(getopt)
@@ -21,9 +21,8 @@ source(file.path(dirname(script.path), 'nethlp.R'), chdir = TRUE)
 if (as.integer(R.Version()$major) == 2 && as.numeric(R.Version()$minor) < 15)
 	paste0 <- function(...) paste(..., sep = '')
 
-#############
-# CONSTANTS #
-#############
+# Constants {{{1
+################################################################
 
 PROG <- sub('^.*/([^/]+)$', '\\1', commandArgs()[4], perl = TRUE)
 USERAGENT <- 'search-mz ; pierrick.roger@gmail.com'
@@ -88,18 +87,24 @@ print.help <- function() {
 			cat("\t\t", '-', spec[i,2], '|--', spec[i, 1], padding, "\t", spec[i, 5], "\n", sep = '')
 		}
 	}
-#	opt <- getopt(matrix(make.getopt.spec(), byrow = TRUE, ncol = 5), usage = TRUE, command = PROG)
-#	cat(opt)
 
 	cat("\nEXAMPLES:\n")
 
-	cat("\nSimple usage with an in-house database:\n")
+	cat("\nSimple M/Z matching with a file database:\n")
 	cat("\t./", PROG, " -d file --url mydbfile.tsv -i input.tsv -m pos -o output.tsv\n", sep = '')
+
+	cat("\nFile database with M/Z tolerance:\n")
+	cat("\t./", PROG, " -d file --url mydbfile.tsv -i input.tsv -m pos -o output.tsv -p 0.5 -s 0\n", sep = '')
+
+	cat("\nFile database with M/Z tolerance unit:\n")
+	cat("\t./", PROG, " -d file --url mydbfile.tsv -i input.tsv -m pos -o output.tsv -p 1 -s 0.5 -u plain\n", sep = '')
+
+	cat("\nPeakforest database:\n")
+	cat("\t./", PROG, " -d peakforest --url https://rest.peakforest.org/ --db-token <your Peakforest token> -i input.tsv -m pos -o output.tsv\n", sep = '')
 }
 
-###############################
-# SET DEFAULT ARGUMENT VALUES #
-###############################
+# Set default argument values {{{1
+################################################################
 
 set.dft.arg.val <-function(opt) {
 
@@ -117,9 +122,8 @@ set.dft.arg.val <-function(opt) {
 	return(opt)
 }
 
-#########################
-# PARSE ARGUMENT VALUES #
-#########################
+# Parse argument values {{{1
+################################################################
 
 parse.arg.val <- function(opt) {
 
@@ -342,21 +346,8 @@ check.args <- function(opt) {
 	}
 }
 
-#############################
-# DISPLAY COMMAND LINE HELP #
-#############################
-
-.disp.cmd.line.help <- function(optspec, opt, prog, error = FALSE) {
-
-	if ( ! is.null(opt$help) || error ) {
-		cat(getopt(optspec, usage = TRUE, command = prog))
-		q(status = 1)
-	}
-}
-
-#################
-# LOAD DATABASE #
-#################
+# Load database {{{1
+################################################################
 
 .load.db <- function(opt) {
 
@@ -384,9 +375,8 @@ check.args <- function(opt) {
 	return(db)
 }
 
-###############
-# OUTPUT HTML #
-###############
+# Output HTML {{{1
+################################################################
 
 output.html <- function(db, main, peaks, file, opt, output.fields) {
 
@@ -470,11 +460,8 @@ output.html <- function(db, main, peaks, file, opt, output.fields) {
 	html$writeEndTag('html')
 }
 
-########
-# MAIN #
-########
-
-options(error = function() { traceback(2) ; quit(status = 1) }, warn = 2 )
+# MAIN {{{1
+################################################################
 
 # Read command line arguments
 opt <- read_args()
