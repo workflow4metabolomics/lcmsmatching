@@ -54,7 +54,6 @@ MSDB.DFT[['db-rt-unit']] <- MSDB.RTUNIT.SEC
 MSDB.DFT[['rtunit']] <- MSDB.RTUNIT.SEC
 DEFAULT.ARG.VALUES <- MSDB.DFT
 DEFAULT.ARG.VALUES[['input-col-names']] <- concat.kv.list(msdb.get.dft.input.fields())
-DEFAULT.ARG.VALUES[['output-col-names']] <- concat.kv.list(msdb.get.dft.output.fields())
 
 # Print help {{{1
 ################################################################
@@ -159,20 +158,6 @@ parse.arg.val <- function(opt) {
 		opt[['input-col-names']] <- c(custcols, dftcols[ ! names(dftcols) %in% names(custcols)]) 
 	}
 
-	# Parse output column names
-	if (is.null(opt[['output-col-names']])) {
-		# By default keep input col names for output
-		opt[['output-col-names']] <- msdb.get.dft.output.fields()
-		input.cols <- names(opt[['input-col-names']])
-		output.cols <- names(opt[['output-col-names']])
-		opt[['output-col-names']] <- c(opt[['input-col-names']][input.cols %in% output.cols], opt[['output-col-names']][ ! output.cols %in% input.cols])
-	}
-	else {
-		custcols <- split.kv.list(opt[['output-col-names']])
-		dftcols <- msdb.get.dft.output.fields()
-		opt[['output-col-names']] <- c(custcols, dftcols[ ! names(dftcols) %in% names(custcols)]) 
-	}
-
 	# Parse lists of precursors
 	if ( ! is.null(opt[['pos-prec']]))
 		opt[['pos-prec']] <- split.str(opt[['pos-prec']], unlist = TRUE)
@@ -234,7 +219,6 @@ make.getopt.spec <- function(sections = NULL) {
 			'no-main-table-in-html-output',  't',  0,  'logical',   'Do not display main table in HTML output.',
 			'same-rows',        'a',            0,  'logical',      'If set, output exactly the same number of rows as the input. This means that in case of multiple matches for one mz, then only one line is output (i.e.: the mz value is not duplicated on several lines). In the main output file, an "ms.matching" column is output with inside, for each mz, a comma separated list of matched component/molecule IDs. If unset, then only the main output file is used, and one single is written to it with one line per peak match, and eventual mz line duplicated if there are multiple matches for this mz.',
 			'same-cols',        'b',            0,  'logical',      'If set, output the same columns as inside the input. All input columns are copied to the output.',
-			'output-col-names', 'J',            1,  'character',    paste0('Set the output column names. Default is "', DEFAULT.ARG.VALUES[['output-col-names']], '".'),
 			'molids-sep',       'S',            1,  'character',    paste0('Set character separator used to when concatenating molecule IDs in output. Default is "', MSDB.DFT[['molids-sep']] , '".'),
 			'first-val',        '1',            0,  'logical',      'Keep only the first value in multi-value fields. Unset by default.',
 			'excel2011comp',    'X',            0,  'logical',      'Excel 2011 compatiblity mode. Output ASCII text files instead of UTF-8 files, where greek letters are replaced with their latin names, plusminus sign is replaced with +- and apostrophe is replaced with \"prime\". All other non-ASCII characters are repladed with underscore.'
@@ -534,10 +518,15 @@ if ( ! is.null(opt[['check-cols']]) && ! is.null(opt$rtcol)) {
 if ( ! is.null(opt$rtcol) && ! opt[['input-col-names']][['rt']] %in% colnames(input))
 	stop(paste0("You are running an MZ/RT match run on your input data, but no retention time column named '", opt[['input-col-names']][['rt']],"' can be found inside your input file."))
 
+# Set output col names
+output.col.names <- opt[['input-col-names']]
+if (opt$database == MSDB.FILE)
+	output.col.names <- c(output.col.names, opt[['db-fields']][ ! names(opt[['db-fields']]) %in% names(output.col.names)])
+
 # Set streams
 input.stream <- MsDbInputDataFrameStream$new(df = input, input.fields = opt[['input-col-names']], rtunit = opt[['rtunit']])
-main.output <- MsDbOutputDataFrameStream$new(keep.unused = ! is.null(opt[['same-cols']]), output.fields = opt[['output-col-names']], one.line = ! is.null(opt[['same-rows']]), match.sep = opt[['molids-sep']], first.val = ! is.null(opt[['first-val']]), ascii = ! is.null(opt[['excel2011comp']]), nogreek = ! is.null(opt[['excel2011comp']]), noapostrophe = ! is.null(opt[['excel2011comp']]), noplusminus = ! is.null(opt[['excel2011comp']]), rtunit = opt[['rtunit']])
-peaks.output <- MsDbOutputDataFrameStream$new(keep.unused = ! is.null(opt[['same-cols']]), output.fields = opt[['output-col-names']], first.val = ! is.null(opt[['first-val']]), ascii = ! is.null(opt[['excel2011comp']]), nogreek = ! is.null(opt[['excel2011comp']]), noapostrophe = ! is.null(opt[['excel2011comp']]), noplusminus = ! is.null(opt[['excel2011comp']]), rtunit = opt[['rtunit']])
+main.output <- MsDbOutputDataFrameStream$new(keep.unused = ! is.null(opt[['same-cols']]), output.fields = output.col.names, one.line = ! is.null(opt[['same-rows']]), match.sep = opt[['molids-sep']], first.val = ! is.null(opt[['first-val']]), ascii = ! is.null(opt[['excel2011comp']]), nogreek = ! is.null(opt[['excel2011comp']]), noapostrophe = ! is.null(opt[['excel2011comp']]), noplusminus = ! is.null(opt[['excel2011comp']]), rtunit = opt[['rtunit']])
+peaks.output <- MsDbOutputDataFrameStream$new(keep.unused = ! is.null(opt[['same-cols']]), output.fields = output.col.names, first.val = ! is.null(opt[['first-val']]), ascii = ! is.null(opt[['excel2011comp']]), nogreek = ! is.null(opt[['excel2011comp']]), noapostrophe = ! is.null(opt[['excel2011comp']]), noplusminus = ! is.null(opt[['excel2011comp']]), rtunit = opt[['rtunit']])
 invisible(db$setInputStream(input.stream))
 db$addOutputStreams(c(main.output, peaks.output))
 
@@ -560,4 +549,4 @@ if ( ! is.null(opt[['peak-output-file']]))
 	df.write.tsv(peaks.output$getDataFrame(), file = opt[['peak-output-file']], row.names = FALSE)
 if ( ! is.null(opt[['html-output-file']]))
 	# TODO Create a class MsDbOutputHtmlFileStream
-	output.html(db = db, main = main.output$getDataFrame(), peaks = peaks.output$getDataFrame(), file = opt[['html-output-file']], opt = opt, output.fields = opt[['output-col-names']])
+	output.html(db = db, main = main.output$getDataFrame(), peaks = peaks.output$getDataFrame(), file = opt[['html-output-file']], opt = opt, output.fields = output.col.names)
