@@ -19,7 +19,8 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
         v = json.JSONDecoder().decode(result)
         i = 0
         for colid, coldesc in v.iteritems():
-            cols.append( (coldesc['name'], colid, i == 0) )
+            s = coldesc['name'] + ' - ' + coldesc['constructor'] + ' - L' + str(coldesc['length']) + ' - diam. ' + str(coldesc['diameter']) + ' - part. ' + str(coldesc['particule_size']) + ' - flow ' + str(coldesc['flow_rate'])
+            cols.append( (s , colid, i == 0) )
             ++i
         
     elif dbtype == 'inhouse':
