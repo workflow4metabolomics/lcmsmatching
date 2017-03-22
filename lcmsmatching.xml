@@ -34,7 +34,7 @@
 		## Database
 		#if $db.dbtype == "inhouse"
 			-d file
-			--db-fields "$db.dbfields"
+			--db-fields "mztheo=$db.dbmzreffield,chromcolrt=$db.dbchromcolrtfield,compoundid=$db.dbspectrumidfield,chromcol=$db.dbchromcolfield,msmode=$db.dbmsmodefield,peakattr=$db.dbpeakattrfield,pubchemcompid=$db.dbpubchemcompidfield,chebiid=$db.dbchebiidfield,hmdbid=$db.dbhmdbidfield,keggid=$db.dbkeggidfield"
 			--db-ms-modes "$db.dbmsmodes"
 			--db-rt-unit $db.dbrtunit
 		#end if
@@ -96,7 +96,16 @@
 				<param name="dburl" label="Database file" type="data" format="tabular,tsv" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
 
 				<!-- File database field names -->
-				<param name="dbfields" label="File database column names" type="text" size="256" value="mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,peakcomp=peakcomp,fullnames=fullnames,compoundmass=compoundmass,compoundcomp=compoundcomp,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" refresh_on_change="true" help=""/>
+				<param name="dbspectrumidfield" type="select" label="Database file Spectrum ID column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['spectrumid', 'accession', 'compoundid', 'molid'])" help="Select the Spectrum ID column of the database file."/>
+				<param name="dbmzreffield" type="select" label="Database file Reference MZ column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['mztheo', 'mzexp', 'mz'])" help="Select the Reference MZ column of the database file."/>
+				<param name="dbchromcolfield" type="select" label="Database file Chromatographic Column Name column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['chromcol', 'col'])" help="Select the Chromatographic Column Name column of the database file."/>
+				<param name="dbchromcolrtfield" type="select" label="Database file Chromatographic Column Retention Time column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['chromcolrt', 'colrt', 'rt'])" help="Select the Chromatographic Column Retention Time column of the database file."/>
+				<param name="dbmsmodefield" type="select" label="Database file MS Mode column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['msmode', 'mode'])" help="Select the MS Mode column of the database file."/>
+				<param name="dbpeakattrfield" type="select" label="Database file Peak Attribution column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['peakattr', 'attr'])" help="Select the Peak Attribution column of the database file."/>
+				<param name="dbpubchemcompidfield" type="select" label="Database file PubChem Compound ID column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['pubchemcompid', 'pubchemid', 'pubchemcomp', 'pubchem'])" help="Select the PubChem Compound ID column of the database file."/>
+				<param name="dbchebiidfield" type="select" label="Database file ChEBI ID column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['chebiid', 'chebi'])" help="Select the ChEBI ID column of the database file."/>
+				<param name="dbhmdbidfield" type="select" label="Database file HMDB Metabolite ID column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['hmdbid', 'hmdb'])" help="Select the HMDB Metabolite ID column of the database file."/>
+				<param name="dbkeggidfield" type="select" label="Database file KEGG Compound ID column name" multiple="false" dynamic_options="get_file_cols(file = db['dburl'], preferred = ['keggid', 'kegg'])" help="Select the KEGG Compound ID column of the database file."/>
 
 				<!-- File database MS modes -->
 				<param name="dbmsmodes" label="File database MS modes" type="text" size="32" value="pos=POS,neg=NEG" help=""/>

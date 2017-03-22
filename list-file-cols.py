@@ -12,6 +12,7 @@ def get_file_cols(file, preferred):
 		# Read file header
 		reader = csv.reader(f, delimiter = "\t", quotechar='"')
 		header = reader.next()
+		header.insert(0, 'NA')
 
 		# Determine default value
 		default = 0
@@ -21,7 +22,7 @@ def get_file_cols(file, preferred):
 				if c == p:
 					default = i # Perfect match !
 					break
-				if re.match(p, c):
+				if partial_match < 0 and re.match(p, c):
 					partial_match = i # Keep this partial match in case we find no perfect match
 			if default != 0:
 				break
