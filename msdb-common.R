@@ -9,33 +9,31 @@ if ( ! exists('.parse_chrom_col_desc')) { # Do not load again if already loaded
 	#############
 
 	# Field tags
-	MSDB.TAG.MZ <- BIODB.PEAK.MZ
-	MSDB.TAG.MZEXP <- BIODB.PEAK.MZEXP
-	MSDB.TAG.MZTHEO <- BIODB.PEAK.MZTHEO
-	MSDB.TAG.RT <- BIODB.PEAK.RT
-	MSDB.TAG.MODE <- BIODB.MSMODE
-	MSDB.TAG.MOLID <- BIODB.COMPOUND.ID
-	MSDB.TAG.COL <- BIODB.CHROM.COL
-	MSDB.TAG.COLRT <- BIODB.CHROM.COL.RT
-	MSDB.TAG.ATTR <- BIODB.PEAK.ATTR
-	MSDB.TAG.INT <- BIODB.PEAK.INTENSITY
-	MSDB.TAG.REL <- BIODB.PEAK.RELATIVE.INTENSITY
-	MSDB.TAG.COMP <- BIODB.PEAK.COMP
-	MSDB.TAG.MOLNAMES <- BIODB.FULLNAMES
-	MSDB.TAG.MOLCOMP <- BIODB.COMPOUND.MASS
-#	MSDB.TAG.MOLATTR <- 'molattr'
-	MSDB.TAG.MOLMASS <- BIODB.COMPOUND.COMP
-	MSDB.TAG.INCHI <- BIODB.INCHI
-	MSDB.TAG.INCHIKEY <- BIODB.INCHIKEY
-	# TODO Use BIODB tags.
-	MSDB.TAG.PUBCHEM <- BIODB.PUBCHEMCOMP.ID
-	MSDB.TAG.CHEBI <- BIODB.CHEBI.ID
-	MSDB.TAG.HMDB <- BIODB.HMDB.ID
-	MSDB.TAG.KEGG <- BIODB.KEGG.ID
+	MSDB.TAG.MZ <- 'mz'
+	MSDB.TAG.MZEXP <- 'mzexp'
+	MSDB.TAG.MZTHEO <- 'mztheo'
+	MSDB.TAG.RT <- 'rt'
+	MSDB.TAG.MODE <- 'msmode'
+	MSDB.TAG.MOLID <- 'compoundid'
+	MSDB.TAG.COL <- 'chromcol'
+	MSDB.TAG.COLRT <- 'chromcolrt'
+	MSDB.TAG.ATTR <- 'peakattr'
+	MSDB.TAG.INT <- 'intensity'
+	MSDB.TAG.REL <- 'relative.intensity'
+	MSDB.TAG.COMP <- 'peakcomp'
+	MSDB.TAG.MOLNAMES <- 'fullnames'
+	MSDB.TAG.MOLCOMP <- 'compoundmass'
+	MSDB.TAG.MOLMASS <- 'compoundcomp'
+	MSDB.TAG.INCHI <- 'inchi'
+	MSDB.TAG.INCHIKEY <- 'inchikey'
+	MSDB.TAG.PUBCHEM <- 'pubchemcompid'
+	MSDB.TAG.CHEBI <- 'chebiid'
+	MSDB.TAG.HMDB <- 'hmdbid'
+	MSDB.TAG.KEGG <- 'keggid'
 
 	# Mode tags
-	MSDB.TAG.POS           <- BIODB.MSMODE.NEG
-	MSDB.TAG.NEG           <- BIODB.MSMODE.POS
+	MSDB.TAG.POS           <- 'neg'
+	MSDB.TAG.NEG           <- 'pos'
 
 	# Fields containing multiple values
 	MSDB.MULTIVAL.FIELDS <- c(MSDB.TAG.MOLNAMES)
