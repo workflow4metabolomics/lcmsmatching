@@ -12,17 +12,6 @@ test.match.mzrt.using.input.file.without.rt <- function() {
 	# Test running MZ/RT search using an input file without RT column
 	checkException(call.search.mz(c('-m pos', '-i', 'mz-input-small.tsv', '-o', 'mz-output.tsv', '--all-cols', '-x 5.0', '-y 0.8'), silent = TRUE), silent = TRUE)
 }
-	
-test.empty.files <- function() {	
-	# Empty files
-	call.search.mz(c('-m pos', '-i', 'mzrt-input-empty.tsv', '-o', 'mz-output.tsv'))
-	call.search.mz(c('-m pos', '-i', 'empty.tsv', '-o', 'mz-output.tsv'))
-}
-
-test.cust.input.file <- function() {
-	# Custom input file column names
-	call.search.mz(c('-m pos', '-i', 'mzrt-input-small-custom-colnames.tsv', '-o', 'mz-output.tsv', '--input-col-names mz=MASS,rt=RETTime'))
-}
 
 test.match.mz <- function() {
 
