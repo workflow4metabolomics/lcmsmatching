@@ -372,10 +372,10 @@ check.args <- function(opt) {
 # Output HTML {{{1
 ################################################################
 
-output.html <- function(db, main, peaks, file, opt, output.fields) {
+output.html <- function(db, peaks, file) {
 
 	# Replace public database IDs by URLs
-	if ( ! is.null(peaks) || ! is.null(main)) {
+	if ( ! is.null(peaks)) {
 		# Conversion from extdb id field to extdb name
 		extdb2classdb = list()
 		extdb2classdb[MSDB.TAG.KEGG] = BIODB.KEGG
@@ -385,13 +385,8 @@ output.html <- function(db, main, peaks, file, opt, output.fields) {
 
 		# Loop on all dbs
 		for (extdb in c(MSDB.TAG.KEGG, MSDB.TAG.HMDB, MSDB.TAG.CHEBI, MSDB.TAG.PUBCHEM)) {
-			field <- output.fields[[extdb]]
-			if ( ! is.null(peaks) && field %in% colnames(peaks))
-				peaks[[field]] <- vapply(peaks[[field]], function(id) if (is.na(id)) '' else paste0('<a href="', get.entry.url(class = extdb2classdb[[extdb]], accession = id, content.type = BIODB.HTML), '">', id, '</a>'), FUN.VALUE = '')
-			if ( ! is.null(main) && field %in% colnames(main)) {
-				main[[field]] <- as.character(main[[field]])
-				main[[field]] <- vapply(main[[field]], function(ids) if (is.na(ids) || nchar(ids) == 0) '' else paste(vapply(strsplit(ids, opt[['molids-sep']])[[1]], function(id) paste0('<a href="', get.entry.url(class = extdb2classdb[[extdb]], accession = id, content.type = BIODB.HTML), '">', id, '</a>'), FUN.VALUE = ''), collapse = opt[['molids-sep']]), FUN.VALUE = '')
-			}
+			if ( ! is.null(peaks) && extdb %in% colnames(peaks))
+				peaks[[extdb]] <- vapply(peaks[[extdb]], function(id) if (is.na(id)) '' else paste0('<a href="', get.entry.url(class = extdb2classdb[[extdb]], accession = id, content.type = BIODB.HTML), '">', id, '</a>'), FUN.VALUE = '')
 		}
 	}
 
@@ -412,36 +407,9 @@ output.html <- function(db, main, peaks, file, opt, output.fields) {
 	html$writeEndTag('style')
 	html$writeEndTag('header')
 	html$writeBegTag('body')
-	html$writeTag('h1', text = "LC/MS matching")
-
-	# Write parameters
-	html$writeTag('h2', text = "Parameters")
-	html$writeBegTag('ul')
-	html$writeTag('li', text = paste0("Mode = ", opt$mode, "."))
-	html$writeTag('li', text = paste0("M/Z precision = ", opt$mzprec, "."))
-	html$writeTag('li', text = paste0("M/Z shift = ", opt$mzshift, "."))
-	html$writeTag('li', text = paste0("Precursor match = ", (if (is.null(opt[['precursor-match']])) "no" else "yes"), "."))
-	if ( ! is.null(opt[['precursor-match']])) {
-		html$writeTag('li', text = paste0("Positive precursors = ", paste0(opt[['pos-prec']], collapse = ', '), "."))
-		html$writeTag('li', text = paste0("Negative precursors = ", paste0(opt[['neg-prec']], collapse = ', '), "."))
-	}
-	if ( ! is.null(opt$rtcol)) {
-		html$writeTag('li', text = paste0("Columns = ", paste(opt$rtcol, collapse = ", "), "."))
-		html$writeTag('li', text = paste0("RTX = ", opt$rttolx, "."))
-		html$writeTag('li', text = paste0("RTY = ", opt$rttoly, "."))
-		if ( ! is.null(opt[['precursor-match']]))
-			html$writeTag('li', text = paste0("RTZ = ", opt[['precursor-rt-tol']], "."))
-	}
-	html$writeEndTag('ul')
 
 	# Write results
-	html$writeTag('h2', text = "Results")
 	results <- FALSE
-	if ( ! is.null(main) && nrow(main) > 0 && is.null(opt[['no-main-table-in-html-output']])) {
-		html$writeTag('h3', text = "Main output")
-		html$writeTable(main)
-		results <- TRUE
-	}
 	if ( ! is.null(peaks) && nrow(peaks) > 0) {
 		html$writeTag('h3', text = "Matched peaks")
 		html$writeTable(peaks)
@@ -520,8 +488,6 @@ if ( ! is.null(opt$rtcol) && ! opt[['input-col-names']][['rt']] %in% colnames(in
 
 # Set output col names
 output.col.names <- opt[['input-col-names']]
-if (opt$database == MSDB.FILE)
-	output.col.names <- c(output.col.names, opt[['db-fields']][ ! names(opt[['db-fields']]) %in% names(output.col.names)])
 
 # Set streams
 input.stream <- MsDbInputDataFrameStream$new(df = input, input.fields = opt[['input-col-names']], rtunit = opt[['rtunit']])
@@ -549,4 +515,4 @@ if ( ! is.null(opt[['peak-output-file']]))
 	df.write.tsv(peaks.output$getDataFrame(), file = opt[['peak-output-file']], row.names = FALSE)
 if ( ! is.null(opt[['html-output-file']]))
 	# TODO Create a class MsDbOutputHtmlFileStream
-	output.html(db = db, main = main.output$getDataFrame(), peaks = peaks.output$getDataFrame(), file = opt[['html-output-file']], opt = opt, output.fields = output.col.names)
+	output.html(db = db, peaks = peaks.output$getDataFrame(), file = opt[['html-output-file']])
