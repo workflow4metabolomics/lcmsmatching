@@ -1,7 +1,3 @@
-test.wrong.input.file <- function() {
-	checkException(call.search.mz(c('-m pos', '-i', 'blabla.zut', '-o', 'mz-output.tsv'), silent = TRUE), silent = TRUE)
-}
-
 test.match.mz.no.rt.in.output <- function() {
 	# Test that no RT column is added in output when running an MZ match
 	call.search.mz(c('-m pos', '-i', 'mz-input-small.tsv', '-o', 'mz-output.tsv'))

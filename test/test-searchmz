@@ -334,15 +334,15 @@ function test_filedb_2017_01_18_florence_castelli {
 # Test bug replacing values of columns by integers
 function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 
-	res_name=2017-01-26-w4m-sacurine-phenomenal-demo
-	res_dir=$RES_DIR/$res_name
-	db_file=$res_dir/massbank-neg-ms1-peaks.tsv
-	input_file=$res_dir/Biosigner_variableMetadata.tsv
-	main_ref_output=$res_dir/main.tsv
-	peak_ref_output=$res_dir/peak.tsv
-	main_output=$SCRIPT_PATH/$res_name-main.tsv
-	peak_output=$SCRIPT_PATH/$res_name-peak.tsv
-	html_output=$SCRIPT_PATH/$res_name-peak.html
+	local res_name=2017-01-26-w4m-sacurine-phenomenal-demo
+	local res_dir=$RES_DIR/$res_name
+	local db_file=$res_dir/massbank-neg-ms1-peaks.tsv
+	local input_file=$res_dir/Biosigner_variableMetadata.tsv
+	local main_ref_output=$res_dir/main.tsv
+	local peak_ref_output=$res_dir/peak.tsv
+	local main_output=$SCRIPT_PATH/$res_name-main.tsv
+	local peak_output=$SCRIPT_PATH/$res_name-peak.tsv
+	local html_output=$SCRIPT_PATH/$res_name-peak.html
 
 	$SEARCHMZ -d file --url $db_file --db-fields 'mztheo=peak.mz,chromcolrt=chromcolrt,compoundid=accession,chromcol=chromcol,msmode=msmode,peakcomp=peak.formula,fullnames=name,compoundmass=mass,compoundcomp=formula,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid' --db-ms-modes pos=pos,neg=neg -i $input_file --input-col-names mz=mass_to_charge,rt=retention_time -m neg -p 10.0 -s 0.0 --same-rows --same-cols -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
 
@@ -352,11 +352,11 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 	[[ -f $html_output ]] || return 4
 
 	# Test order of columns in output: we should get the same columns as input file first, then the new columns
-	nb_input_cols=$(get_nb_cols $input_file)
-	input_cols=$(get_col_names $input_file)
-	main_cols=$(get_col_names $main_output $nb_input_cols 1)
+	local nb_input_cols=$(get_nb_cols $input_file)
+	local input_cols=$(get_col_names $input_file)
+	local main_cols=$(get_col_names $main_output $nb_input_cols 1)
 	[[ $main_cols == $input_cols ]] || return 5
-	peak_cols=$(get_col_names $peak_output $nb_input_cols 1)
+	local peak_cols=$(get_col_names $peak_output $nb_input_cols 1)
 	[[ $peak_cols == $input_cols ]] || return 6
 
 	# Check that outputs are identical
@@ -364,16 +364,29 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 	diff -q $peak_output $peak_ref_output || return 8
 }
 
+# Test wrong input file {{{1
+################################################################
+
+function test_wrong_input_file {
+
+	local res_name=filedb
+	local res_dir=$RES_DIR/$res_name
+	local db_file=$res_dir/filedb-rtsec.tsv
+
+	! $SEARCHMZ -d file --url $db_file -m pos -i blabla.zut -o mz-output.tsv || return 1
+}
+
 # Main {{{1
 ################################################################
 
 # Check peakforest token
 if [[ -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
-	echo "No Peakforest defined in env var RMSBD_PEAKFOREST_TOKEN." >&2
+	echo "No Peakforest token defined in env var RMSBD_PEAKFOREST_TOKEN." >&2
 	exit 1
 fi
 
 # Run filedb tests
+check test_wrong_input_file
 check test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
 check test_filedb_2017_01_18_florence_castelli
 check test_filedb_no_y_col_in_output
