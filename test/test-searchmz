@@ -379,12 +379,6 @@ function test_wrong_input_file {
 # Main {{{1
 ################################################################
 
-# Check peakforest token
-if [[ -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
-	echo "No Peakforest token defined in env var RMSBD_PEAKFOREST_TOKEN." >&2
-	exit 1
-fi
-
 # Run filedb tests
 check test_wrong_input_file
 check test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
@@ -392,6 +386,12 @@ check test_filedb_2017_01_18_florence_castelli
 check test_filedb_no_y_col_in_output
 check test_filedb_ticket_2016031010000034
 check test_filedb_rtunit
+
+# Check peakforest token
+if [[ -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
+	echo "No Peakforest defined in env var RMSBD_PEAKFOREST_TOKEN." >&2
+	exit 1
+fi
 
 # Run Peakforest tests
 check test_peakforest_estelle_20170316_rtunit
