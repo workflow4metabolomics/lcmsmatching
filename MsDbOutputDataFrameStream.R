@@ -8,17 +8,18 @@ if ( ! exists('MsDbOutputDataFrameStream')) { # Do not load again if already loa
 	# CLASS DECLARATION #
 	#####################
 	
-	MsDbOutputDataFrameStream <- setRefClass("MsDbOutputDataFrameStream", contains = 'MsDbOutputStream', fields = list( .df = "ANY"))
+	MsDbOutputDataFrameStream <- setRefClass("MsDbOutputDataFrameStream", contains = 'MsDbOutputStream', fields = list( .df = "ANY", .output.fields = "ANY"))
 	
 	###############
 	# CONSTRUCTOR #
 	###############
 	
-	MsDbOutputDataFrameStream$methods( initialize = function(keep.unused = FALSE, one.line = FALSE, match.sep = MSDB.DFT.MATCH.SEP, output.fields = msdb.get.dft.output.fields(), multval.field.sep = MSDB.DFT.OUTPUT.MULTIVAL.FIELD.SEP, first.val = FALSE, ascii = FALSE, noapostrophe = FALSE, noplusminus = FALSE, nogreek = FALSE, ...) {
+	MsDbOutputDataFrameStream$methods( initialize = function(keep.unused = FALSE, one.line = FALSE, match.sep = MSDB.DFT.MATCH.SEP, output.fields = NULL, multval.field.sep = MSDB.DFT.OUTPUT.MULTIVAL.FIELD.SEP, first.val = FALSE, ascii = FALSE, noapostrophe = FALSE, noplusminus = FALSE, nogreek = FALSE, ...) {
 		
-		callSuper(keep.unused = keep.unused, one.line = one.line, match.sep = match.sep, output.fields = output.fields, multval.field.sep = multval.field.sep, first.val = first.val, ascii = ascii, noapostrophe = noapostrophe, noplusminus = noplusminus, nogreek = nogreek, ...)
+		callSuper(keep.unused = keep.unused, one.line = one.line, match.sep = match.sep, multval.field.sep = multval.field.sep, first.val = first.val, ascii = ascii, noapostrophe = noapostrophe, noplusminus = noplusminus, nogreek = nogreek, ...)
 
 		.df <<- data.frame()
+		.output.fields <<- output.fields
 	})
 
 	##################

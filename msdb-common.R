@@ -75,20 +75,6 @@ if ( ! exists('.parse_chrom_col_desc')) { # Do not load again if already loaded
 		return(dft.fields)
 	}
 
-	#############################
-	# GET DEFAULT OUTPUT FIELDS #
-	#############################
-
-	msdb.get.dft.output.fields <- function () {
-
-		dft.fields <- list()
-
-		for(f in c(MSDB.TAG.MZ, MSDB.TAG.RT, MSDB.TAG.COL, MSDB.TAG.COLRT, MSDB.TAG.MOLID, MSDB.TAG.ATTR, MSDB.TAG.COMP, MSDB.TAG.INT, MSDB.TAG.REL, MSDB.TAG.MZEXP, MSDB.TAG.MZTHEO, MSDB.TAG.MOLNAMES, MSDB.TAG.MOLCOMP, MSDB.TAG.MOLMASS, MSDB.TAG.INCHI, MSDB.TAG.INCHIKEY, MSDB.TAG.PUBCHEM, MSDB.TAG.CHEBI, MSDB.TAG.HMDB, MSDB.TAG.KEGG))
-			dft.fields[[f]] <- f
-
-		return(dft.fields)
-	}
-
 	#########################
 	# GET DEFAULT DB FIELDS #
 	#########################
