@@ -15,6 +15,7 @@
 	</requirements>
 
 	<code file="list-chrom-cols.py"/>
+	<code file="list-file-cols.py"/>
 
 	<!--~~~~~~~
 	~ COMMAND ~
@@ -27,7 +28,7 @@
 
 		## Input file
 		-i "$mzrtinput"
-		--input-col-names "$inputfields"
+		--input-col-names "mz=$inputmzfield,rt=$inputrtfield"
 		--rtunit "$inputrtunit"
 
 		## Database
@@ -121,10 +122,11 @@
 		<!-- INPUT -->
 
 			<!-- Input file -->
-			<param name="mzrtinput" label="Input file - MZ(/RT) values" type="data" format="tabular,tsv" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. RT values must be in seconds."/>
+			<param name="mzrtinput" label="Input file - MZ(/RT) values" type="data" format="tabular,tsv" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. RT values must be in seconds."/>
 
 			<!-- Input field field names -->
-			<param name="inputfields" label="Input file column names" type="text" size="32" value="mz=mzmed,rt=rtmed" help=""/>
+			<param name="inputmzfield" type="select" label="Input file MZ column name" multiple="false" dynamic_options="get_file_cols(file = mzrtinput, preferred = ['mzmed', 'mz'])" help="Select the MZ column of the input file."/>
+			<param name="inputrtfield" type="select" label="Input file RT column name" multiple="false" dynamic_options="get_file_cols(file = mzrtinput, preferred = ['rtmed', 'rt'])" help="Select the RT column of the input file."/>
 
 			<!-- Input file RT unit -->
 			<param name="inputrtunit" label="Retention time unit" type="select" display="radio" multiple="false" help="">
@@ -246,7 +248,8 @@
 			<param name="dbfields" value=""/>
 			<param name="dbmsmodes" value=""/>
 			<param name="mzrtinput" value="mz-input-small.tsv"/>
-			<param name="inputfields" value=""/>
+			<param name="inputmzfield" value="mzmed"/>
+			<param name="inputrtfield" value="rtmed"/>
 			<param name="mzmode" value="pos"/>
 			<output name="mainoutput" file="filedb-small-mz-match-output.tsv"/>
 			<output name="peaksoutput" file="filedb-small-mz-match-peaks-output.tsv"/>
