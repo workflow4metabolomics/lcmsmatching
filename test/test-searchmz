@@ -178,7 +178,7 @@ function get_db_args {
 		args="-d file --url $db_file"
 
 	elif [[ $db == xls ]] ; then
-		local db_dir=xls
+		local db_dir=$RES_DIR/xlsdb
 		args="-d xls --url $db_dir"
 
 	elif [[ $db == peakforest ]] ; then
@@ -390,7 +390,20 @@ function test_generic_wrong_input_file {
 
 	local db=$1
 
-	! $SEARCHMZ $(get_db_args $db) -m pos -i blabla.zut -o mz-output.tsv || return 1
+	! $SEARCHMZ $(get_db_args $db) -m pos -i blabla.zut -o test_generic_wrong_input_file-output.tsv || return 1
+}
+
+# Test empty files {{{1
+################################################################
+
+function test_empty_files {	
+
+	local db=$1
+	local mzrt_empty=$RES_DIR/mzrt-input-empty.tsv
+	local empty=$RES_DIR/empty.tsv
+
+	$SEARCHMZ $(get_db_args $db) -m pos -i $mzrt_empty -o test_empty_files-mzrt-output.tsv || return 1
+	$SEARCHMZ $(get_db_args $db) -m pos -i $empty -o test_empty_files-output.tsv || return 1
 }
 
 # Main {{{1
@@ -408,6 +421,7 @@ fi
 # Run generic tests
 for db in $DATABASES ; do
 	check test_generic_wrong_input_file $db
+	check test_empty_files $db
 done
 
 # Run filedb tests
