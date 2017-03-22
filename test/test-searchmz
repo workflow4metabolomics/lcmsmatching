@@ -17,16 +17,12 @@ PEAKFOREST_URL='https://peakforest-alpha.inra.fr/rest'
 function check {
 
 	local testfct=$1
-	local show_output=$2
+	shift
 	local test_output=
 
 	# Run test
-	echo -n "$testfct ... "
-	if [[ -n $show_output ]] ; then
-		$testfct
-	else
-		test_output=$($testfct 2>&1)
-	fi
+	echo -n "$testfct $* ... "
+	test_output=$($testfct "$*" 2>&1)
 
 	# Failure
 	exit_code=$?
@@ -167,6 +163,29 @@ function expect_float_col_equals {
 	ident=$(awk 'function abs(v) { return v < 0 ? -v : v }BEGIN{FS="'$SEP'";eq=1}{if (NR > 1 && abs($'$col_index' - '$val') > '$tol') {eq=0}}END{print eq}' $file)
 
 	[[ $ident -eq 1 ]] || return 1
+}
+
+# Get database arguments {{{1
+################################################################
+
+function get_db_args {
+
+	local db=$1
+	if [[ $db == file ]] ; then
+		local res_name=filedb
+		local res_dir=$RES_DIR/$res_name
+		local db_file=$res_dir/filedb-rtsec.tsv
+		args="-d file --url $db_file"
+
+	elif [[ $db == xls ]] ; then
+		local db_dir=xls
+		args="-d xls --url $db_dir"
+
+	elif [[ $db == peakforest ]] ; then
+		args="-d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN"
+	fi
+
+	echo $args
 }
 
 # Test filedb RT unit {{{1
@@ -364,29 +383,35 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 	diff -q $peak_output $peak_ref_output || return 8
 }
 
-# Test wrong input file {{{1
+# Test wrong input file in filedb {{{1
 ################################################################
 
-function test_wrong_input_file {
+function test_generic_wrong_input_file {
 
-	local res_name=filedb
-	local res_dir=$RES_DIR/$res_name
-	local db_file=$res_dir/filedb-rtsec.tsv
+	local db=$1
 
-	! $SEARCHMZ -d file --url $db_file -m pos -i blabla.zut -o mz-output.tsv || return 1
+	! $SEARCHMZ $(get_db_args $db) -m pos -i blabla.zut -o mz-output.tsv || return 1
 }
 
 # Main {{{1
 ################################################################
 
-if [[ ( -z $DATABASES || " $DATABASES " == *" peakforest "* ) && -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
+# Set databases
+[[ -n $DATABASES ]] || DATABASES="file xls peakforest"
+
+# Test peakforest token
+if [[ " $DATABASES " == *" peakforest "* && -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
 	echo "No Peakforest defined in env var RMSBD_PEAKFOREST_TOKEN." >&2
 	exit 1
 fi
 
+# Run generic tests
+for db in $DATABASES ; do
+	check test_generic_wrong_input_file $db
+done
+
 # Run filedb tests
-if [[ -z $DATABASES || " $DATABASES " == *" file "* ]] ; then
-	check test_wrong_input_file
+if [[ " $DATABASES " == *" file "* ]] ; then
 	check test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
 	check test_filedb_2017_01_18_florence_castelli
 	check test_filedb_no_y_col_in_output
