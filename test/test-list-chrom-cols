@@ -11,5 +11,5 @@ LIST_CHROM_COLS=$SCRIPT_PATH/../list-chrom-cols.py
 ################################################################
 
 output_file=filedb-chromcols.txt
-$LIST_CHROM_COLS -d inhouse -u $SCRIPT_PATH/res/filedb/filedb-rtsec.tsv >$output_file || exit 1
+$LIST_CHROM_COLS -d inhouse -u $SCRIPT_PATH/res/filedb/filedb-rtsec.tsv -f chromcol >$output_file || exit 1
 diff $output_file $SCRIPT_PATH/res/ref-$output_file || exit 2

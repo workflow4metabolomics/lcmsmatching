@@ -13,3 +13,5 @@ mzrt-input-*.tsv
 res/.*.swp
 *-main.tsv
 *-peak.tsv
+*.txt
+*.log

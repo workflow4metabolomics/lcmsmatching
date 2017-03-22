@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# vi: fdm=marker
 
 import argparse
 import subprocess
@@ -7,7 +8,10 @@ import urllib2
 import json
 import csv
 
-def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
+# Get chrom cols {{{1
+################################################################
+
+def get_chrom_cols(dbtype, dburl, dbtoken = None, col_field = 'chromcol'):
     
     cols = []
     
@@ -24,15 +28,9 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
             ++i
         
     elif dbtype == 'inhouse':
-        # Get field for chromatographic column name
-        col_field = 'chromcol'
-        if dbfields is not None:
-            fields = dict(u.split("=") for u in dbfields.split(","))
-            if 'chromcol' in fields:
-                col_field = fields['chromcol']
                 
         # Get all column names from file
-        with open(dburl if isinstance(dburl, str) else dburl.get_file_name(), 'rb') as dbfile:
+        with open(dburl if isinstance(dburl, str) else dburl.get_file_name(), 'r') as dbfile:
             reader = csv.reader(dbfile, delimiter = "\t", quotechar='"')
             header = reader.next()
             if col_field in header:
@@ -47,9 +45,8 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, dbfields = None):
     
     return cols
 
-########
-# MAIN #
-########
+# Main {{{1
+################################################################
 
 if __name__ == '__main__':
     
@@ -58,7 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', help = 'Database type',       dest = 'dbtype',    required = True)
     parser.add_argument('-u', help = 'Database URL',        dest = 'dburl',     required = True)
     parser.add_argument('-t', help = 'Database token',      dest = 'dbtoken',   required = False)
-    parser.add_argument('-f', help = 'Database fields',     dest = 'dbfields',  required = False)
+    parser.add_argument('-f', help = 'Chromatogrphic column field name',     dest = 'col_field',  required = False)
     args = parser.parse_args()
     args_dict = vars(args)
     
