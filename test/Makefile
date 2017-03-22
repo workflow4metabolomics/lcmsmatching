@@ -1,4 +1,5 @@
 all:
+	./test-list-chrom-cols
 	./test-searchmz
 
 clean:
