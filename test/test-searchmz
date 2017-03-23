@@ -448,6 +448,73 @@ function test_generic_match_mz_no_rt_in_output {
 	! expect_has_columns $output_file rt || return 2
 }
 
+# Test generic - mzrt matching without rt input {{{1
+################################################################
+
+function test_generic_match_mzrt_using_input_file_without_rt {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mz-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_generic_match_mzrt_using_input_file_without_rt-output.tsv
+
+	! $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --all-cols -x 5.0 -y 0.8 || return 1
+}
+
+# Test generic - mz matching {{{1
+################################################################
+
+function test_generic_match_mz {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mz-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_generic_match_mz-output.tsv
+
+	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file || return 1
+	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --mzprec 5 --mzshift 0 || return 2
+	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --mzprec 0.1 --mzshift 0 --mztolunit plain || return 2
+}
+
+# Test generic - mz matching with unused rt {{{1
+################################################################
+
+function test_generic_match_mz_unused_rt {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mz-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_match_mz_unused_rt-output.tsv
+
+	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file || return 1
+}
+
+# Test generic - mzrt matching {{{1
+################################################################
+
+function test_generic_match_mz_rt {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_generic_match_mz_rt-output.tsv
+
+	local db_args=$(get_db_args $db)
+	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
+	[[ -n $chromcols ]] || return 1
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 2
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i  $input_file -o $output_file || return 3
+}
+
+# Test filedb - field names set to NA {{{1
+################################################################
+
+function test_filedb_na_db_fields {
+
+	local db_file=$RES_DIR/filedb/filedb-rtsec.tsv
+	local input_file=$RES_DIR/inputs/mzrt-sec.tsv
+	local main_output=$SCRIPT_PATH/test_filedb_na_db_fields-main.tsv
+
+	$SEARCHMZ -d file --url $db_file --db-fields chebiid=NA,keggid=NA -m pos -i $input_file -o $main_output --same-rows || return 1
+}
+
 # Main {{{1
 ################################################################
 
@@ -460,25 +527,32 @@ if [[ " $DATABASES " == *" peakforest "* && -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
 	exit 1
 fi
 
-# Run generic tests
+# Loop on all databases
 for db in $DATABASES ; do
+
+	# Run generic tests
+	check test_generic_match_mz_rt $db
+	check test_generic_match_mz_unused_rt $db
+	check test_generic_match_mz $db
+	check test_generic_match_mzrt_using_input_file_without_rt $db
 	check test_generic_match_mz_no_rt_in_output $db
 	check test_generic_wrong_input_file $db
 	check test_generic_empty_files $db
+
+	# Run filedb tests
+	if [[ $db == file ]] ; then
+		check test_filedb_na_db_fields
+		check test_filedb_input_file_with_number_sign_char
+		check test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
+		check test_filedb_2017_01_18_florence_castelli
+		check test_filedb_no_y_col_in_output
+		check test_filedb_ticket_2016031010000034
+		check test_filedb_rtunit
+	fi
+
+	# Run Peakforest tests
+	if [[ $db == peakforest ]] ; then
+		check test_peakforest_estelle_20170316_rtunit
+		check test_peakforest_estelle_20170314
+	fi
 done
-
-# Run filedb tests
-if [[ " $DATABASES " == *" file "* ]] ; then
-	check test_filedb_input_file_with_number_sign_char
-	check test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
-	check test_filedb_2017_01_18_florence_castelli
-	check test_filedb_no_y_col_in_output
-	check test_filedb_ticket_2016031010000034
-	check test_filedb_rtunit
-fi
-
-# Run Peakforest tests
-if [[ -z $DATABASES || " $DATABASES " == *" peakforest "* ]] ; then
-	check test_peakforest_estelle_20170316_rtunit
-	check test_peakforest_estelle_20170314
-fi

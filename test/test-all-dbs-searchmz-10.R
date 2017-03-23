@@ -1,30 +1,3 @@
-test.match.mzrt.using.input.file.without.rt <- function() {
-	# Test running MZ/RT search using an input file without RT column
-	checkException(call.search.mz(c('-m pos', '-i', 'mz-input-small.tsv', '-o', 'mz-output.tsv', '--all-cols', '-x 5.0', '-y 0.8'), silent = TRUE), silent = TRUE)
-}
-
-test.match.mz <- function() {
-
-	# Match on mz values
-	call.search.mz(c('-m pos', '-i', 'mz-input-small.tsv', '-o', 'mz-output.tsv'))
-
-	# Match with custom tolerance
-	call.search.mz(c('-m pos', '-i', 'mz-input-small.tsv', '-o', 'mz-output.tsv', '--mzprec 5', '--mzshift 0'))
-	call.search.mz(c('-m pos', '-i', 'mz-input-small.tsv', '-o', 'mz-output.tsv', '--mzprec 0.1', '--mzshift 0', '--mztolunit plain'))
-}
-
-test.match.mz.unused.rt <- function() {
-	# Match on mz values, with an unused rt column
-	call.search.mz(c('-m pos', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))
-}
-
-test.match.mz.rt <- function() {
-	# Match on mz/rt values
-# TODO Use script to get list of columns
-	call.search.mz(c('-m pos', '-c uplc-c8', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))
-	call.search.mz(c('-m pos', '-c uplc-c8,hsf5', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))
-}
-
 test.match.mzrt.col.numbers <- function() {   
    # Match on mz/rt values, using column numbers instead of column names
 	call.search.mz(c('-m pos', '-c uplc-c8', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv', '--input-col-names mz=1,rt=2'))
