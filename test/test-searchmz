@@ -383,7 +383,7 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 	diff -q $peak_output $peak_ref_output || return 8
 }
 
-# Test wrong input file in filedb {{{1
+# Test generic - wrong input file in filedb {{{1
 ################################################################
 
 function test_generic_wrong_input_file {
@@ -393,17 +393,29 @@ function test_generic_wrong_input_file {
 	! $SEARCHMZ $(get_db_args $db) -m pos -i blabla.zut -o test_generic_wrong_input_file-output.tsv || return 1
 }
 
-# Test empty files {{{1
+# Test generic - empty files {{{1
 ################################################################
 
-function test_empty_files {	
+function test_generic_empty_files {	
 
 	local db=$1
-	local mzrt_empty=$RES_DIR/mzrt-input-empty.tsv
-	local empty=$RES_DIR/empty.tsv
+	local mzrt_empty=$RES_DIR/inputs/mzrt-empty.tsv
+	local empty=$RES_DIR/inputs/empty.tsv
 
 	$SEARCHMZ $(get_db_args $db) -m pos -i $mzrt_empty -o test_empty_files-mzrt-output.tsv || return 1
 	$SEARCHMZ $(get_db_args $db) -m pos -i $empty -o test_empty_files-output.tsv || return 1
+}
+
+# Test filedb - input file with number sign character (#) {{{1
+################################################################
+
+function test_filedb_input_file_with_number_sign_char {
+
+	local db=$1
+	local db_file=$RES_DIR/filedb/filedb-number-sign.tsv
+	local input_file=$RES_DIR/inputs/mz-number-sign.tsv
+
+	$SEARCHMZ -d file --url $db_file -m pos -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
 }
 
 # Main {{{1
@@ -421,11 +433,12 @@ fi
 # Run generic tests
 for db in $DATABASES ; do
 	check test_generic_wrong_input_file $db
-	check test_empty_files $db
+	check test_generic_empty_files $db
 done
 
 # Run filedb tests
 if [[ " $DATABASES " == *" file "* ]] ; then
+	check test_filedb_input_file_with_number_sign_char
 	check test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
 	check test_filedb_2017_01_18_florence_castelli
 	check test_filedb_no_y_col_in_output

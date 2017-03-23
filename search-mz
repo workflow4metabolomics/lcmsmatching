@@ -442,7 +442,7 @@ if ( ! is.null(opt[['input-file']]) && ! file.exists(opt[['input-file']]))
 if (file.info(opt[['input-file']])$size > 0) {
 
 	# Load file into data frame
-	input <- read.table(file = opt[['input-file']], header = TRUE, sep = "\t", stringsAsFactor = FALSE, check.names = FALSE)
+	input <- read.table(file = opt[['input-file']], header = TRUE, sep = "\t", stringsAsFactor = FALSE, check.names = FALSE, comment.char = '')
 
 	# Convert each column that is identified by a number into a name
 	for (field in names(opt[['input-col-names']])) {

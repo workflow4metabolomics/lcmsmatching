@@ -61,7 +61,7 @@ MassFiledbConn$methods( .init.db = function() {
 	if (is.null(.self$.db)) {
 
 		# Load database
-		.db <<- read.table(.self$.file, sep = .self$.file.sep, .self$.file.quote, header = TRUE, stringsAsFactors = FALSE, row.names = NULL)
+		.db <<- read.table(.self$.file, sep = .self$.file.sep, .self$.file.quote, header = TRUE, stringsAsFactors = FALSE, row.names = NULL, comment.char = '')
 
 		# Save column names
 		.db.orig.colnames <<- colnames(.self$.db)

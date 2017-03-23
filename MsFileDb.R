@@ -82,7 +82,7 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 		if (is.null(.self$.db)) {
 
 			# Load database
-			.db <<- read.table(.self$.file, sep = "\t", quote = "\"", header = TRUE, stringsAsFactors = FALSE, row.names = NULL, check.names = FALSE)
+			.db <<- read.table(.self$.file, sep = "\t", quote = "\"", header = TRUE, stringsAsFactors = FALSE, row.names = NULL, check.names = FALSE, comment.char = '')
 
 			# Check that colnames are unique
 			dupcol <- duplicated(colnames(.self$.db))
