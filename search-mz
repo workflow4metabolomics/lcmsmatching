@@ -133,7 +133,9 @@ parse.arg.val <- function(opt) {
 	# Parse input column names
 	if ( ! is.null(opt[['db-fields']])) {
 		cust <- split.kv.list(opt[['db-fields']])
+		cust <- cust[cust != 'NA']
 		opt[['db-fields']] <- split.kv.list(MSDB.DFT[['db-fields']])
+		cust <- cust[names(cust) %in% names(opt[['db-fields']])]
 		opt[['db-fields']][names(cust)] <- cust
 	}
 
@@ -154,6 +156,7 @@ parse.arg.val <- function(opt) {
 	}
 	else {
 		custcols <- split.kv.list(opt[['input-col-names']])
+		custcols <- custcols[custcols != 'NA']
 		dftcols <- msdb.get.dft.input.fields()
 		opt[['input-col-names']] <- c(custcols, dftcols[ ! names(dftcols) %in% names(custcols)]) 
 	}
