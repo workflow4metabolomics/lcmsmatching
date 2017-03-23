@@ -121,7 +121,7 @@
 
 				<param name="dbtoken" label="Peakforest security token" type="text" size="32" value="" refresh_on_change="true" help="If you do not have yet a Peakforest token, go to Peakforest website and request one from your account."/>
 
-				<param name="dbfields" type="text" size="32" value="" hidden="true"/>
+				<param name="dbchromcolfield" type="text" size="32" value="" hidden="true"/>
 			</when>
 		</conditional>
 

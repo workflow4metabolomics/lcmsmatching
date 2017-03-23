@@ -21,11 +21,9 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, col_field = 'chromcol'):
             url += '?token=' + dbtoken
         result = urllib2.urlopen(url).read()
         v = json.JSONDecoder().decode(result)
-        i = 0
         for colid, coldesc in v.iteritems():
             s = coldesc['name'] + ' - ' + coldesc['constructor'] + ' - L' + str(coldesc['length']) + ' - diam. ' + str(coldesc['diameter']) + ' - part. ' + str(coldesc['particule_size']) + ' - flow ' + str(coldesc['flow_rate'])
-            cols.append( (s , colid, i == 0) )
-            ++i
+            cols.append( (s , colid, False) )
         
     elif dbtype == 'inhouse':
                 
@@ -41,7 +39,7 @@ def get_chrom_cols(dbtype, dburl, dbtoken = None, col_field = 'chromcol'):
                     if col not in allcols:
                         allcols.append(col)
                 for i, c in enumerate(allcols):
-                    cols.append( (c, c, i == 0) )
+                    cols.append( (c, c, False) )
     
     return cols
 
