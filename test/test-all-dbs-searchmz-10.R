@@ -1,13 +1,3 @@
-test.match.mz.no.rt.in.output <- function() {
-	# Test that no RT column is added in output when running an MZ match
-	call.search.mz(c('-m pos', '-i', 'mz-input-small.tsv', '-o', 'mz-output.tsv'))
-	df <- read.table(get.res.path('mz-output.tsv'), header = TRUE)
-	checkTrue( ! 'rt' %in% colnames(df))
-	call.search.mz(c('-m pos', '-i', 'mzrt-input-small.tsv', '-o', 'mz-output.tsv'))
-	df <- read.table(get.res.path('mz-output.tsv'), header = TRUE)
-	checkTrue( ! 'rt' %in% colnames(df))
-}
-
 test.match.mzrt.using.input.file.without.rt <- function() {
 	# Test running MZ/RT search using an input file without RT column
 	checkException(call.search.mz(c('-m pos', '-i', 'mz-input-small.tsv', '-o', 'mz-output.tsv', '--all-cols', '-x 5.0', '-y 0.8'), silent = TRUE), silent = TRUE)

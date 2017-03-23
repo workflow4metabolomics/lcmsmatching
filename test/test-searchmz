@@ -88,7 +88,7 @@ function get_col_names {
 	local remove_quotes=$3
 	local cols=
 
-	if [[ -z $ncol ]] ; then
+	if [[ -z $ncol || $ncol -le 0 ]] ; then
 		cols=$(head -n 1 "$file")
 	else
 		cols=$(head -n 1 "$file" | tr "$SEP" "\n" | head -n $ncol | tr "\n" "$SEP")
@@ -100,6 +100,23 @@ function get_col_names {
 	fi
 
 	echo $cols
+}
+
+# Expect has columns {{{1
+################################################################
+
+function expect_has_columns {
+
+	local file=$1
+	local expected_cols=$2
+	
+	# Get columns
+	cols=$(get_col_names $file 0 1)
+
+	# Loop on all expected columns
+	for c in expected_cols ; do
+		[[ " $cols " == *" c "* ]] || return 1
+	done
 }
 
 # Get number of rows {{{1
@@ -194,20 +211,21 @@ function get_db_args {
 function test_filedb_rtunit {
 
 	local res_name=filedb
-	local res_dir=$RES_DIR/$res_name
+	local db_res_dir=$RES_DIR/$res_name
+	local input_res_dir=$RES_DIR/inputs
 	local nb_match=
 
 	# Loop on all RT units for database
 	for db_rtunit in sec min ; do
 
 		# Set path to database file
-		db_file=$res_dir/filedb-rt$db_rtunit.tsv
+		db_file=$db_res_dir/filedb-rt$db_rtunit.tsv
 
 		# Loop on all RT units for input file
 		for input_rtunit in sec min ; do
 
 			# Set path to input and output files
-			input_file=$res_dir/mzrt-input-$input_rtunit.tsv
+			input_file=$input_res_dir/mzrt-$input_rtunit.tsv
 			main_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-main.tsv
 			peak_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.tsv
 			html_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.html
@@ -310,10 +328,8 @@ function test_peakforest_estelle_20170316_rtunit {
 
 function test_filedb_no_y_col_in_output {
 
-	local res_name=filedb
-	local res_dir=$RES_DIR/$res_name
-	local db_file=$res_dir/filedb-rtsec.tsv
-	local input_file=$res_dir/mzrt-input-sec.tsv
+	local db_file=$RES_DIR/filedb/filedb-rtsec.tsv
+	local input_file=$RES_DIR/inputs/mzrt-sec.tsv
 	local main_output=$SCRIPT_PATH/test_filedb_no_y_col_in_output-main.tsv
 
 	# Run program
@@ -418,6 +434,20 @@ function test_filedb_input_file_with_number_sign_char {
 	$SEARCHMZ -d file --url $db_file -m pos -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
 }
 
+# Test generic - mz matching does not give rt col in output {{{1
+################################################################
+
+function test_generic_match_mz_no_rt_in_output {
+
+	local db=$1
+	local output_file=$SCRIPT_PATH/test_generic_match_mz_no_rt_in_output-output.tsv
+
+	$SEARCHMZ $(get_db_args $db) -m pos -i $RES_DIR/inputs/mz-input-small.tsv -o $output_file
+	! expect_has_columns $output_file rt || return 1
+	$SEARCHMZ $(get_db_args $db) -m pos -i $RES_DIR/inputs/mzrt-input-small.tsv -o $output_file
+	! expect_has_columns $output_file rt || return 2
+}
+
 # Main {{{1
 ################################################################
 
@@ -432,6 +462,7 @@ fi
 
 # Run generic tests
 for db in $DATABASES ; do
+	check test_generic_match_mz_no_rt_in_output $db
 	check test_generic_wrong_input_file $db
 	check test_generic_empty_files $db
 done
