@@ -22,17 +22,20 @@ function check {
 
 	# Run test
 	echo -n "$testfct $* ... "
-	test_output=$($testfct "$*" 2>&1)
+	tmp_output_file=$(mktemp -t test-searchmz-output.XXXXXX)
+	$testfct "$*" >$tmp_output_file 2>&1
 
 	# Failure
 	exit_code=$?
 	if [ $exit_code -gt 0 ] ; then
 		echo failure in $PROG_NAME with exit code $exit_code.
-		echo $test_output
+		cat $tmp_output_file
+		rm $tmp_output_file
 		exit 1
 	fi
 
 	# Success
+	rm $tmp_output_file
 	echo success. 
 }
 
@@ -114,8 +117,11 @@ function expect_has_columns {
 	cols=$(get_col_names $file 0 1)
 
 	# Loop on all expected columns
-	for c in expected_cols ; do
-		[[ " $cols " == *" c "* ]] || return 1
+	echo COLS=$cols
+	echo EXPECTED_COLS=$expected_cols
+	for c in $expected_cols ; do
+		echo C=$c
+		[[ " $cols " == *" $c "* || " $cols " == *" \"$c\" "* ]] || return 1
 	done
 }
 
@@ -193,6 +199,18 @@ function expect_float_col_equals {
 	ident=$(awk 'function abs(v) { return v < 0 ? -v : v }BEGIN{FS="'$SEP'";eq=1}{if (NR > 1 && abs($'$col_index' - '$val') > '$tol') {eq=0}}END{print eq}' $file)
 
 	[[ $ident -eq 1 ]] || return 1
+}
+
+# Expect no duplicated row {{{1
+################################################################
+
+function expect_no_duplicated_row {
+
+	local file=$1
+
+	nrows=$(cat $file | wc -l)
+	n_uniq_rows=$(sort -u $file | wc -l)
+	[[ $nrows -eq $n_uniq_rows ]] || return 1
 }
 
 # Get database arguments {{{1
@@ -572,12 +590,50 @@ function test_match_mzrt_2cols {
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 2
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
+	expect_no_duplicated_row $output_file || return 2
 
-	# Check that there are no duplicated lines
-	nrows=$(cat $output_file | wc -l)
-	n_uniq_rows=$(sort -u $output_file | wc -l)
-	[[ $nrows -eq $n_uniq_rows ]] || return 3
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --precursor-match || return 3
+	expect_no_duplicated_row $output_file || return 4
+}
+
+# Test generic - list of precursors {{{1
+################################################################
+
+function test_generic_precursors_lists {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_generic_precursors_lists-output.tsv
+
+	$SEARCHMZ $(get_db_args $db) -m pos --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' || return 1
+
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' || return 2
+}
+
+# Test generic - same cols {{{1
+################################################################
+
+function test_generic_same_cols {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small-morecols.tsv
+	local output_file=$SCRIPT_PATH/test_generic_same_cols-output.tsv
+
+	local input_cols=$(get_col_names $input_file)
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
+	for c in $input_cols ; do
+		if [[ $c != mz && $c != rt ]] ; then
+			! expect_has_columns $output_file $c || return 2
+		fi
+	done
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-cols || return 3
+	expect_has_columns $output_file "$input_cols" || return 4
 }
 
 # Main {{{1
@@ -596,6 +652,8 @@ fi
 for db in $DATABASES ; do
 
 	# Run generic tests
+	check test_generic_same_cols $db
+	check test_generic_precursors_lists $db
 	check test_match_mzrt_2cols $db
 	check test_generic_unknown_chrom_col $db
 	check test_generic_match_mzrt_col_numbers $db

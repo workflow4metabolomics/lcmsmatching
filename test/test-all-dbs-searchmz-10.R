@@ -1,33 +1,3 @@
-test.match.mzrt.2cols.prec <- function() {
-	# Match on mz/rt values with two columns and precusor match, and check that there are no duplicated lines
-	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '--precursor-match', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))
-	df <- read.table(get.res.path('mzrt-output.tsv'), header = TRUE)
-	checkTrue( ! any(duplicated(df)))
-}
-
-zlong.test.match.mzrt.2cols.prec <- function() {
-	# Match on mz/rt values with two columns and precusor match, and check that there are no duplicated lines
-	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '--precursor-match', '-i', 'mzrt-input.tsv', '-o', 'mzrt-output.tsv'))
-	df <- read.table(get.res.path('mzrt-output.tsv'), header = TRUE)
-	checkTrue( ! any(duplicated(df)))
-}
-
-test.precursors.lists <- function() {
-	call.search.mz(c('-m pos', '--precursor-match', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv', '--pos-prec "[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+"', '--neg-prec "[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-"'))
-	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '--precursor-match', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv', '--pos-prec "[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+"', '--neg-prec "[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-"'))
-}
-
-test.same.cols <- function() {
-	x <- read.table(get.res.path('mzrt-input-small-morecols.tsv'), header = TRUE)
-	extra.cols <- colnames(x)[ ! colnames(x) %in% c('mz', 'rt')]
-	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small-morecols.tsv', '-o', 'mzrt-output.tsv'))
-	df <- read.table(get.res.path('mzrt-output.tsv'), header = TRUE)
-	checkTrue( ! any(extra.cols %in% colnames(df)))
-	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small-morecols.tsv', '-o', 'mzrt-output.tsv', '--same-cols'))
-	df <- read.table(get.res.path('mzrt-output.tsv'), header = TRUE)
-	checkTrue(all(extra.cols %in% colnames(df)))
-}
-
 test.same.rows <- function() {
 	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv', '--same-rows'))
 	x <- read.table(get.res.path('mzrt-input-small.tsv'), header = TRUE)
