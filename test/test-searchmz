@@ -11,6 +11,83 @@ SEARCHMZ=$SCRIPT_PATH/../search-mz
 SEP="\t"
 PEAKFOREST_URL='https://peakforest-alpha.inra.fr/rest'
 
+# Global variables {{{1
+################################################################
+
+g_nb_test_context=0
+g_err_number=0
+declare -a g_err_msgs=()
+declare -a g_err_output_files=()
+
+# Test context {{{1
+################################################################
+
+function test_context {
+
+	local msg=$1
+
+	[[ $g_nb_test_context -gt 0 ]] && echo
+
+	echo -n "$msg "
+
+	((g_nb_test_context=g_nb_test_context+1))
+}
+
+# Test that {{{1
+################################################################
+
+function test_that {
+
+	local msg=$1
+	local test_fct=$2
+	shift 2
+	local params="$*"
+	local tmp_output_file=$(mktemp -t test-searchmz-output.XXXXXX)
+
+	# Run test
+	$test_fct $params 2>$tmp_output_file
+
+	# Failure
+	exit_code=$?
+	if [ $exit_code -gt 0 ] ; then
+		((g_err_number=g_err_number+1))
+		if [[ g_err_number -le 16 ]] ; then
+			printf %x $g_err_number
+		else
+			echo -n E
+		fi
+		g_err_msgs+=("Failure while asserting that \"$msg\".")
+		g_err_output_files+=($tmp_output_file)
+
+	# Success
+	else
+		rm $tmp_output_file
+	fi
+}
+
+# Test report {{{1
+################################################################
+
+function test_report {
+
+	[[ $g_nb_test_context -eq 0 ]] || echo
+
+	if [[ $g_err_number -gt 0 ]] ; then
+		echo '================================================================'
+		echo "$g_err_number error(s) encountered."
+		echo
+
+		# Loop on all errors
+		for ((i = 0 ; i < g_err_number ; ++i)) ; do
+			printf %x $g_err_number
+			echo . ${g_err_msgs[$i]}
+			cat ${g_err_output_files[$i]}
+			rm ${g_err_output_files[$i]}
+			echo '----------------------------------------------------------------'
+		done
+	fi
+}
+
 # Check {{{1
 ################################################################
 
@@ -117,12 +194,80 @@ function expect_has_columns {
 	cols=$(get_col_names $file 0 1)
 
 	# Loop on all expected columns
-	echo COLS=$cols
-	echo EXPECTED_COLS=$expected_cols
 	for c in $expected_cols ; do
-		echo C=$c
-		[[ " $cols " == *" $c "* || " $cols " == *" \"$c\" "* ]] || return 1
+		if [[ " $cols " != *" $c "* && " $cols " != *" \"$c\" "* ]] ; then
+			echo "Column \"$c\" cannot be found inside columns of file \"$file\"." >&2
+			echo "Columns of file \"$file\" are: $cols." >&2
+			return 1
+		fi
 	done
+
+	echo -n .
+}
+
+# Expect success {{{1
+################################################################
+
+function expect_success {
+
+	local cmd="$*"
+
+	$cmd >&2
+
+	if [ $? -gt 0 ] ; then
+		echo "Command \"$cmd\" failed." >&2
+		return 1
+	fi
+
+	echo -n .
+}
+
+# Expect failure {{{1
+################################################################
+
+function expect_failure {
+
+	local cmd="$*"
+
+	$cmd >&2
+
+	if [ $? -eq 0 ] ; then
+		echo "Command \"$cmd\" was successful, but expected failure." >&2
+		return 1
+	fi
+
+	echo -n .
+}
+
+# Expect file exists {{{1
+################################################################
+
+function expect_file_exists {
+
+	local file=$1
+
+	if [[ ! -f $file ]] ; then
+		echo "File \"$file\" does not exist." >&2
+		return 1
+	fi
+
+	echo -n .
+}
+
+# Expect same number of rows {{{1
+################################################################
+
+function expect_same_number_of_rows {
+
+	local file1=$1
+	local file2=$2
+
+	if [[ $(get_nb_rows $file1) -ne $(get_nb_rows $file2) ]] ; then
+		echo "\"$file1\" and \"$file2\" do not have the same number of rows." >&2
+		return 1
+	fi
+
+	echo -n .
 }
 
 # Get number of rows {{{1
@@ -662,7 +807,7 @@ function test_generic_same_rows_with_peaks_output {
 	local peak_output_file=$SCRIPT_PATH/test_generic_same_rows_with_peaks_output-peaks-output.tsv
 
 	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --same-rows --all-cols -x 5.0 -y 0.8 --peak-output-file $peak_output_file || return 1
-	[[ $(get_nb_rows $input_file) -eq $(get_nb_rows $output_file) ]] || return 2
+	expect_same_number_of_rows $input_file $output_file || return 2
 	[[ $(get_nb_rows $input_file) -le $(get_nb_rows $peak_output_file) ]] || return 3
 }
 
@@ -678,8 +823,8 @@ function test_generic_peak_output_file {
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows --peak-output-file $peak_output_file || return 1
-	[[ $(get_nb_rows $input_file) -eq $(get_nb_rows $output_file) ]] || return 2
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows --peak-output-file $peak_output_file || return 1
+	expect_same_number_of_rows $input_file $output_file || return 2
 	[[ $(get_nb_rows $input_file) -le $(get_nb_rows $peak_output_file) ]] || return 3
 	expect_has_columns $peak_output_file "mz rt" || return 4
 }
@@ -695,8 +840,8 @@ function test_generic_html_output_file {
 	local peak_output_file=$SCRIPT_PATH/test_generic_html_output_file-peak-output.tsv
 	local html_output_file=$SCRIPT_PATH/test_generic_html_output_file-html-output.tsv
 
-	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file || return 1
-	[[ -f $html_output_file ]] || return 2
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file || return 1
+	expect_file_exists $html_output_file || return 2
 }
 
 # Main {{{1
@@ -714,38 +859,42 @@ fi
 # Loop on all databases
 for db in $DATABASES ; do
 
+	test_context "Testing $db database"
+
 	# Run generic tests
-	check test_generic_html_output_file $db
-	check test_generic_peak_output_file $db
-	check test_generic_same_rows_with_peaks_output $db
-	check test_generic_same_rows $db
-	check test_generic_same_cols $db
-	check test_generic_precursors_lists $db
-	check test_match_mzrt_2cols $db
-	check test_generic_unknown_chrom_col $db
-	check test_generic_match_mzrt_col_numbers $db
-	check test_generic_match_mz_rt $db
-	check test_generic_match_mz_unused_rt $db
-	check test_generic_match_mz $db
-	check test_generic_match_mzrt_using_input_file_without_rt $db
-	check test_generic_match_mz_no_rt_in_output $db
-	check test_generic_wrong_input_file $db
-	check test_generic_empty_files $db
-
-	# Run filedb tests
-	if [[ $db == file ]] ; then
-		check test_filedb_na_db_fields
-		check test_filedb_input_file_with_number_sign_char
-		check test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
-		check test_filedb_2017_01_18_florence_castelli
-		check test_filedb_no_y_col_in_output
-		check test_filedb_ticket_2016031010000034
-		check test_filedb_rtunit
-	fi
-
-	# Run Peakforest tests
-	if [[ $db == peakforest ]] ; then
-		check test_peakforest_estelle_20170316_rtunit
-		check test_peakforest_estelle_20170314
-	fi
+	test_that "An HTML output file is written." test_generic_html_output_file $db
+	test_that "A peak output file contains the right number of rows and the right columns." test_generic_peak_output_file $db
+#	check test_generic_same_rows_with_peaks_output $db
+#	check test_generic_same_rows $db
+#	check test_generic_same_cols $db
+#	check test_generic_precursors_lists $db
+#	check test_match_mzrt_2cols $db
+#	check test_generic_unknown_chrom_col $db
+#	check test_generic_match_mzrt_col_numbers $db
+#	check test_generic_match_mz_rt $db
+#	check test_generic_match_mz_unused_rt $db
+#	check test_generic_match_mz $db
+#	check test_generic_match_mzrt_using_input_file_without_rt $db
+#	check test_generic_match_mz_no_rt_in_output $db
+#	check test_generic_wrong_input_file $db
+#	check test_generic_empty_files $db
+#
+#	# Run filedb tests
+#	if [[ $db == file ]] ; then
+#		check test_filedb_na_db_fields
+#		check test_filedb_input_file_with_number_sign_char
+#		check test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
+#		check test_filedb_2017_01_18_florence_castelli
+#		check test_filedb_no_y_col_in_output
+#		check test_filedb_ticket_2016031010000034
+#		check test_filedb_rtunit
+#	fi
+#
+#	# Run Peakforest tests
+#	if [[ $db == peakforest ]] ; then
+#		check test_peakforest_estelle_20170316_rtunit
+#		check test_peakforest_estelle_20170314
+#	fi
 done
+
+test_report
