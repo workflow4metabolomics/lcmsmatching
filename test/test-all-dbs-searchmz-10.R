@@ -1,9 +1,3 @@
-test.unknown.chrom.col <- function() {
-	# Unknown chrom column
-	call.search.mz(c('-m pos', '-c zap', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))
-	checkException(call.search.mz(c('-m pos', '-c zap', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv', '--check-cols'), silent = TRUE), silent = TRUE)
-}
-
 test.match.mzrt.2cols <- function() {
 	# Match on mz/rt values with two columns, and check that there are no duplicated lines
 	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))
