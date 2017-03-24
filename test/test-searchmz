@@ -148,6 +148,19 @@ function get_val {
 	echo $val
 }
 
+# List chrom cols {{{1
+################################################################
+
+function list_chrom_cols {
+
+	local db_args=$1
+
+	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
+	[[ -n $chromcols ]] || return 1
+
+	echo $chromcols
+}
+
 # Expect identical columns {{{1
 ################################################################
 
@@ -495,9 +508,7 @@ function test_generic_match_mz_rt {
 	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_match_mz_rt-output.tsv
 
-	local db_args=$(get_db_args $db)
-	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
-	[[ -n $chromcols ]] || return 1
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
 	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 2
 	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i  $input_file -o $output_file || return 3
@@ -525,9 +536,7 @@ function test_generic_match_mzrt_col_numbers {
 	local input_file_without_header=$RES_DIR/inputs/mzrt-input-small-noheader.tsv
 	local output_file=$SCRIPT_PATH/test_generic_match_mzrt_col_numbers-output.tsv
 
-	local db_args=$(get_db_args $db)
-	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
-	[[ -n $chromcols ]] || return 1
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
 	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=2' || return 2
 	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file_without_header -o $output_file --input-col-names 'mz=1,rt=2' || return 3
@@ -543,9 +552,7 @@ function test_generic_unknown_chrom_col {
 	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_unknown_chrom_col-output.tsv
 
-	local db_args=$(get_db_args $db)
-	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
-	[[ -n $chromcols ]] || return 1
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
 	# Unknown chrom cols, without checking
 	$SEARCHMZ $(get_db_args $db) -m pos -c badaboum --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 2
@@ -563,9 +570,7 @@ function test_match_mzrt_2cols {
 	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_match_mzrt_2cols-output.tsv
 
-	local db_args=$(get_db_args $db)
-	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
-	[[ -n $chromcols ]] || return 1
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
 	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 2
 
