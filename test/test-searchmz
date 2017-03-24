@@ -515,6 +515,25 @@ function test_filedb_na_db_fields {
 	$SEARCHMZ -d file --url $db_file --db-fields chebiid=NA,keggid=NA -m pos -i $input_file -o $main_output --same-rows || return 1
 }
 
+# Test generic - mzrt matching with column numbers {{{1
+################################################################
+
+function test_generic_match_mzrt_col_numbers {   
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local input_file_without_header=$RES_DIR/inputs/mzrt-input-small-noheader.tsv
+	local output_file=$SCRIPT_PATH/test_generic_match_mzrt_col_numbers-output.tsv
+
+	local db_args=$(get_db_args $db)
+	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
+	[[ -n $chromcols ]] || return 1
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=2' || return 2
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file_without_header -o $output_file --input-col-names 'mz=1,rt=2' || return 3
+	! $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=4' || return 4
+}
+
 # Main {{{1
 ################################################################
 
@@ -531,6 +550,7 @@ fi
 for db in $DATABASES ; do
 
 	# Run generic tests
+	check test_generic_match_mzrt_col_numbers $db
 	check test_generic_match_mz_rt $db
 	check test_generic_match_mz_unused_rt $db
 	check test_generic_match_mz $db
