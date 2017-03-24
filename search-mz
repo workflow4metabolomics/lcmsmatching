@@ -4,10 +4,6 @@ args <- commandArgs(trailingOnly = F)
 script.path <- sub("--file=","",args[grep("--file=",args)])
 library(getopt)
 source(file.path(dirname(script.path), 'msdb-common.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'MsFileDb.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'MsPeakForestDb.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'MsXlsDb.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'Ms4TabSqlDb.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'MsDbLogger.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'MsDbInputDataFrameStream.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'MsDbOutputDataFrameStream.R'), chdir = TRUE)
@@ -33,6 +29,11 @@ MSDB.4TABSQL <- '4tabsql'
 MSDB.FILE <- 'file'
 MSDB.PEAKFOREST <- 'peakforest'
 MSDB.VALS <- c(MSDB.XLS, MSDB.4TABSQL, MSDB.FILE, MSDB.PEAKFOREST)
+DB.SRC.FILE <- list ()
+DB.SRC.FILE[[MSDB.FILE]] <- 'MsFileDb.R'
+DB.SRC.FILE[[MSDB.PEAKFOREST]] <- 'MsPeakForestDb.R'
+DB.SRC.FILE[[MSDB.XLS]] <- 'MsXlsDb.R'
+DB.SRC.FILE[[MSDB.4TABSQL]] <- 'Ms4TabSqlDb.R'
 
 # Authorized mode values
 POS_MODE <- 'pos'
@@ -430,6 +431,7 @@ if (is.null(opt$debug)) {
 }
 
 # Load database
+source(file.path(dirname(script.path), DB.SRC.FILE[[opt$database]]), chdir = TRUE)
 db <- .load.db(opt)
 
 # Print columns
