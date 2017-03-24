@@ -636,6 +636,69 @@ function test_generic_same_cols {
 	expect_has_columns $output_file "$input_cols" || return 4
 }
 
+# Test generic - same rows {{{1
+################################################################
+
+function test_generic_same_rows {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_generic_same_rows-output.tsv
+
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows || return 1
+	[[ $(get_nb_rows $input_file) -eq $(get_nb_rows $output_file) ]] || return 2
+}
+
+# Test generic - same rows with peaks output {{{1
+################################################################
+
+function test_generic_same_rows_with_peaks_output {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_generic_same_rows_with_peaks_output-output.tsv
+	local peak_output_file=$SCRIPT_PATH/test_generic_same_rows_with_peaks_output-peaks-output.tsv
+
+	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --same-rows --all-cols -x 5.0 -y 0.8 --peak-output-file $peak_output_file || return 1
+	[[ $(get_nb_rows $input_file) -eq $(get_nb_rows $output_file) ]] || return 2
+	[[ $(get_nb_rows $input_file) -le $(get_nb_rows $peak_output_file) ]] || return 3
+}
+
+# Test generic - peak output {{{1
+################################################################
+
+function test_generic_peak_output_file {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_generic_peak_output_file-output.tsv
+	local peak_output_file=$SCRIPT_PATH/test_generic_peak_output_file-peaks-output.tsv
+
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows --peak-output-file $peak_output_file || return 1
+	[[ $(get_nb_rows $input_file) -eq $(get_nb_rows $output_file) ]] || return 2
+	[[ $(get_nb_rows $input_file) -le $(get_nb_rows $peak_output_file) ]] || return 3
+	expect_has_columns $peak_output_file "mz rt" || return 4
+}
+
+# Test generic - html output {{{1
+################################################################
+
+function test_generic_html_output_file {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_generic_html_output_file-output.tsv
+	local peak_output_file=$SCRIPT_PATH/test_generic_html_output_file-peak-output.tsv
+	local html_output_file=$SCRIPT_PATH/test_generic_html_output_file-html-output.tsv
+
+	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file || return 1
+	[[ -f $html_output_file ]] || return 2
+}
+
 # Main {{{1
 ################################################################
 
@@ -652,6 +715,10 @@ fi
 for db in $DATABASES ; do
 
 	# Run generic tests
+	check test_generic_html_output_file $db
+	check test_generic_peak_output_file $db
+	check test_generic_same_rows_with_peaks_output $db
+	check test_generic_same_rows $db
 	check test_generic_same_cols $db
 	check test_generic_precursors_lists $db
 	check test_match_mzrt_2cols $db
