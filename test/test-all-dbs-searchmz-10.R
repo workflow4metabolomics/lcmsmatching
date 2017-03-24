@@ -1,30 +1,3 @@
-test.match.mzrt.col.numbers <- function() {   
-   # Match on mz/rt values, using column numbers instead of column names
-	call.search.mz(c('-m pos', '-c uplc-c8', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv', '--input-col-names mz=1,rt=2'))
-	call.search.mz(c('-m pos', '-c uplc-c8', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small-noheader.tsv', '-o', 'mzrt-output.tsv', '--input-col-names mz=1,rt=2'))
-	checkException(call.search.mz(c('-m pos', '-c uplc-c8', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv', '--input-col-names mz=1,rt=4'), silent = TRUE), silent = TRUE)
-}
-
-test.unknown.chrom.col <- function() {
-	# Unknown chrom column
-	call.search.mz(c('-m pos', '-c zap', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))
-	checkException(call.search.mz(c('-m pos', '-c zap', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv', '--check-cols'), silent = TRUE), silent = TRUE)
-}
-
-test.match.mzrt.2cols <- function() {
-	# Match on mz/rt values with two columns, and check that there are no duplicated lines
-	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))
-	df <- read.table(get.res.path('mzrt-output.tsv'), header = TRUE)
-	checkTrue( ! any(duplicated(df)))
-}
-
-zlong.test.match.mzrt.2cols <- function() {
-	# Match on mz/rt values with two columns, and check that there are no duplicated lines
-	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input.tsv', '-o', 'mzrt-output.tsv'))
-	df <- read.table(get.res.path('mzrt-output.tsv'), header = TRUE)
-	checkTrue( ! any(duplicated(df)))
-}
-
 test.match.mzrt.2cols.prec <- function() {
 	# Match on mz/rt values with two columns and precusor match, and check that there are no duplicated lines
 	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '--precursor-match', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))

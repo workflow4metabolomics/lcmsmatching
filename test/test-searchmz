@@ -148,6 +148,19 @@ function get_val {
 	echo $val
 }
 
+# List chrom cols {{{1
+################################################################
+
+function list_chrom_cols {
+
+	local db_args=$1
+
+	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
+	[[ -n $chromcols ]] || return 1
+
+	echo $chromcols
+}
+
 # Expect identical columns {{{1
 ################################################################
 
@@ -495,9 +508,7 @@ function test_generic_match_mz_rt {
 	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_match_mz_rt-output.tsv
 
-	local db_args=$(get_db_args $db)
-	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
-	[[ -n $chromcols ]] || return 1
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
 	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 2
 	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i  $input_file -o $output_file || return 3
@@ -513,6 +524,60 @@ function test_filedb_na_db_fields {
 	local main_output=$SCRIPT_PATH/test_filedb_na_db_fields-main.tsv
 
 	$SEARCHMZ -d file --url $db_file --db-fields chebiid=NA,keggid=NA -m pos -i $input_file -o $main_output --same-rows || return 1
+}
+
+# Test generic - mzrt matching with column numbers {{{1
+################################################################
+
+function test_generic_match_mzrt_col_numbers {   
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local input_file_without_header=$RES_DIR/inputs/mzrt-input-small-noheader.tsv
+	local output_file=$SCRIPT_PATH/test_generic_match_mzrt_col_numbers-output.tsv
+
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=2' || return 2
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file_without_header -o $output_file --input-col-names 'mz=1,rt=2' || return 3
+	! $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=4' || return 4
+}
+
+# Test generic - unknown chrom col {{{1
+################################################################
+
+function test_generic_unknown_chrom_col {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_generic_unknown_chrom_col-output.tsv
+
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
+
+	# Unknown chrom cols, without checking
+	$SEARCHMZ $(get_db_args $db) -m pos -c badaboum --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 2
+
+	# Unknown chrom cols, with checking
+	! $SEARCHMZ $(get_db_args $db) -m pos -c badaboum --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --check-cols || return 3
+}
+
+# Test generic - check that matching using 2 chrom cols does not output duplicated rows {{{1
+################################################################
+
+function test_match_mzrt_2cols {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_match_mzrt_2cols-output.tsv
+
+	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 2
+
+	# Check that there are no duplicated lines
+	nrows=$(cat $output_file | wc -l)
+	n_uniq_rows=$(sort -u $output_file | wc -l)
+	[[ $nrows -eq $n_uniq_rows ]] || return 3
 }
 
 # Main {{{1
@@ -531,6 +596,9 @@ fi
 for db in $DATABASES ; do
 
 	# Run generic tests
+	check test_match_mzrt_2cols $db
+	check test_generic_unknown_chrom_col $db
+	check test_generic_match_mzrt_col_numbers $db
 	check test_generic_match_mz_rt $db
 	check test_generic_match_mz_unused_rt $db
 	check test_generic_match_mz $db
