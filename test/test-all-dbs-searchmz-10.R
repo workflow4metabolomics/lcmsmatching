@@ -1,17 +1,3 @@
-test.match.mzrt.2cols <- function() {
-	# Match on mz/rt values with two columns, and check that there are no duplicated lines
-	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))
-	df <- read.table(get.res.path('mzrt-output.tsv'), header = TRUE)
-	checkTrue( ! any(duplicated(df)))
-}
-
-zlong.test.match.mzrt.2cols <- function() {
-	# Match on mz/rt values with two columns, and check that there are no duplicated lines
-	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '-i', 'mzrt-input.tsv', '-o', 'mzrt-output.tsv'))
-	df <- read.table(get.res.path('mzrt-output.tsv'), header = TRUE)
-	checkTrue( ! any(duplicated(df)))
-}
-
 test.match.mzrt.2cols.prec <- function() {
 	# Match on mz/rt values with two columns and precusor match, and check that there are no duplicated lines
 	call.search.mz(c('-m pos', '-c uplc-c8,uplc-c18', '--rttolx 5', '--rttoly 0.8', '--precursor-match', '-i', 'mzrt-input-small.tsv', '-o', 'mzrt-output.tsv'))

@@ -537,11 +537,11 @@ function test_generic_match_mzrt_col_numbers {
 # Test generic - unknown chrom col {{{1
 ################################################################
 
-function test_unknown_chrom_col {
+function test_generic_unknown_chrom_col {
 
 	local db=$1
 	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
-	local output_file=$SCRIPT_PATH/test_unknown_chrom_col-output.tsv
+	local output_file=$SCRIPT_PATH/test_generic_unknown_chrom_col-output.tsv
 
 	local db_args=$(get_db_args $db)
 	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
@@ -552,6 +552,27 @@ function test_unknown_chrom_col {
 
 	# Unknown chrom cols, with checking
 	! $SEARCHMZ $(get_db_args $db) -m pos -c badaboum --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --check-cols || return 3
+}
+
+# Test generic - check that matching using 2 chrom cols does not output duplicated rows {{{1
+################################################################
+
+function test_match_mzrt_2cols {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_match_mzrt_2cols-output.tsv
+
+	local db_args=$(get_db_args $db)
+	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
+	[[ -n $chromcols ]] || return 1
+
+	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 2
+
+	# Check that there are no duplicated lines
+	nrows=$(cat $output_file | wc -l)
+	n_uniq_rows=$(sort -u $output_file | wc -l)
+	[[ $nrows -eq $n_uniq_rows ]] || return 3
 }
 
 # Main {{{1
@@ -570,7 +591,8 @@ fi
 for db in $DATABASES ; do
 
 	# Run generic tests
-	check test_unknown_chrom_col $db
+	check test_match_mzrt_2cols $db
+	check test_generic_unknown_chrom_col $db
 	check test_generic_match_mzrt_col_numbers $db
 	check test_generic_match_mz_rt $db
 	check test_generic_match_mz_unused_rt $db
