@@ -1,7 +1,7 @@
 all:
 
 test:
-	$(MAKE) -C $@
+	bash-testthat/testthat.sh test/test-searchmz
 
 clean:
 	$(MAKE) -C $@

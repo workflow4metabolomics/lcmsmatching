@@ -4,89 +4,11 @@
 # Constants {{{1
 ################################################################
 
-PROG_NAME=$(basename $0)
-SCRIPT_PATH=$(dirname $0)
+SCRIPT_PATH=$(dirname $BASH_SOURCE)
 RES_DIR=$SCRIPT_PATH/res
 SEARCHMZ=$SCRIPT_PATH/../search-mz
 SEP="\t"
 PEAKFOREST_URL='https://peakforest-alpha.inra.fr/rest'
-
-# Global variables {{{1
-################################################################
-
-g_nb_test_context=0
-g_err_number=0
-declare -a g_err_msgs=()
-declare -a g_err_output_files=()
-
-# Test context {{{1
-################################################################
-
-function test_context {
-
-	local msg=$1
-
-	[[ $g_nb_test_context -gt 0 ]] && echo
-
-	echo -n "$msg "
-
-	((g_nb_test_context=g_nb_test_context+1))
-}
-
-# Test that {{{1
-################################################################
-
-function test_that {
-
-	local msg=$1
-	local test_fct=$2
-	shift 2
-	local params="$*"
-	local tmp_output_file=$(mktemp -t test-searchmz-output.XXXXXX)
-
-	# Run test
-	$test_fct $params 2>$tmp_output_file
-
-	# Failure
-	exit_code=$?
-	if [ $exit_code -gt 0 ] ; then
-		((g_err_number=g_err_number+1))
-		if [[ g_err_number -le 16 ]] ; then
-			printf %x $g_err_number
-		else
-			echo -n E
-		fi
-		g_err_msgs+=("Failure while asserting that \"$msg\".")
-		g_err_output_files+=($tmp_output_file)
-
-	# Success
-	else
-		rm $tmp_output_file
-	fi
-}
-
-# Test report {{{1
-################################################################
-
-function test_report {
-
-	[[ $g_nb_test_context -eq 0 ]] || echo
-
-	if [[ $g_err_number -gt 0 ]] ; then
-		echo '================================================================'
-		echo "$g_err_number error(s) encountered."
-
-		# Loop on all errors
-		for ((i = 0 ; i < g_err_number ; ++i)) ; do
-			echo
-			printf %x $((i+1))
-			echo . ${g_err_msgs[$i]}
-			cat ${g_err_output_files[$i]}
-			rm ${g_err_output_files[$i]}
-			echo '----------------------------------------------------------------'
-		done
-	fi
-}
 
 # Check {{{1
 ################################################################
@@ -105,7 +27,7 @@ function check {
 	# Failure
 	exit_code=$?
 	if [ $exit_code -gt 0 ] ; then
-		echo failure in $PROG_NAME with exit code $exit_code.
+		echo failure with exit code $exit_code.
 		cat $tmp_output_file
 		rm $tmp_output_file
 		exit 1
@@ -114,319 +36,6 @@ function check {
 	# Success
 	rm $tmp_output_file
 	echo success. 
-}
-
-# Get column index  {{{1
-################################################################
-
-function get_col_index {
-
-	local file=$1
-	local col_name=$2
-
-	n=$(head -n 1 "$file" | tr "$SEP" "\n" | egrep -n "^\"?${col_name}\"?\$" | sed 's/:.*$//')
-
-	if [[ -z $n ]] ; then
-		n=-1
-	fi
-
-	echo $n
-}
-
-# Count values {{{1
-################################################################
-
-function count_values {
-
-	local file=$1
-	local col=$2
-
-	col_index=$(get_col_index $file $col)
-	[[ $col_index -gt 0 ]] || return 1
-	nb_values=$(awk "BEGIN{FS=\"$SEP\"}{if (NR > 1 && \$$col_index != \"NA\") {++n}} END{print n}" $file)
-
-	echo $nb_values
-}
-
-# Get number of columns {{{1
-################################################################
-
-function get_nb_cols {
-
-	local file=$1
-
-	echo $(head -n 1 "$file" | tr "$SEP" "\n" | wc -l)
-}
-
-# Get column names {{{1
-################################################################
-
-function get_col_names {
-
-	local file=$1
-	local ncol=$2
-	local remove_quotes=$3
-	local cols=
-
-	if [[ -z $ncol || $ncol -le 0 ]] ; then
-		cols=$(head -n 1 "$file")
-	else
-		cols=$(head -n 1 "$file" | tr "$SEP" "\n" | head -n $ncol | tr "\n" "$SEP")
-	fi
-
-	# Remove quotes
-	if [[ $remove_quotes -eq 1 ]] ; then
-		cols=$(echo $cols | sed 's/"//g')
-	fi
-
-	echo $cols
-}
-
-# Get number of rows {{{1
-################################################################
-
-function get_nb_rows {
-
-	local file=$1
-
-	n=$(wc -l <$1)
-	((n=n-1)) # Deduct header line
-
-	echo $n
-}
-
-# Get value {{{1
-################################################################
-
-function get_val {
-
-	local file=$1
-	local col=$2
-	local row=$3
-
-	col_index=$(get_col_index $file $col)
-	[[ $col_index -gt 0 ]] || return 1
-	val=$(awk 'BEGIN{FS="'$SEP'"}{ if (NR == '$row' + 1) {print $'$col_index'} }' $file)
-
-	echo $val
-}
-
-# List chrom cols {{{1
-################################################################
-
-function list_chrom_cols {
-
-	local db_args=$1
-
-	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
-	[[ -n $chromcols ]] || return 1
-
-	echo $chromcols
-}
-
-# Print call stack {{{1
-################################################################
-
-function print_call_stack {
-
-	local frame=1
-	while caller $frame ; do
-		((frame++));
-	done
-}
-
-# Expect success {{{1
-################################################################
-
-function expect_success {
-
-	local cmd="$*"
-
-	$cmd >&2
-
-	if [ $? -gt 0 ] ; then
-		print_call_stack >&2
-		echo "Command \"$cmd\" failed." >&2
-		return 1
-	fi
-
-	echo -n .
-}
-
-# Expect failure {{{1
-################################################################
-
-function expect_failure {
-
-	local cmd="$*"
-
-	$cmd >&2
-
-	if [ $? -eq 0 ] ; then
-		print_call_stack >&2
-		echo "Command \"$cmd\" was successful, but expected failure." >&2
-		return 1
-	fi
-
-	echo -n .
-}
-
-# Expect numeric not equal {{{1
-################################################################
-
-function expect_num_ne {
-
-	local a=$1
-	local b=$2
-	local msg="$*"
-
-	if [[ $a -ne $b ]] ; then
-		print_call_stack >&2
-		echo "$a != $b not true ! $msg" >&2
-		return 1
-	fi
-
-	echo -n .
-}
-
-# Expect numeric lower or equal {{{1
-################################################################
-
-function expect_num_le {
-
-	local a=$1
-	local b=$2
-	local msg="$*"
-
-	if [[ $a -le $b ]] ; then
-		print_call_stack >&2
-		echo "$a <= $b not true ! $msg" >&2
-		return 1
-	fi
-
-	echo -n .
-}
-
-# Expect numeric greater than {{{1
-################################################################
-
-function expect_num_gt {
-
-	local a=$1
-	local b=$2
-	local msg="$*"
-
-	if [[ $a -gt $b ]] ; then
-		print_call_stack >&2
-		echo "$a > $b not true ! $msg" >&2
-		return 1
-	fi
-
-	echo -n .
-}
-
-# Expect file exists {{{1
-################################################################
-
-function expect_file_exists {
-
-	local file=$1
-
-	if [[ ! -f $file ]] ; then
-		print_call_stack >&2
-		echo "File \"$file\" does not exist." >&2
-		return 1
-	fi
-
-	echo -n .
-}
-
-# Expect has columns {{{1
-################################################################
-
-function expect_has_columns {
-
-	local file=$1
-	local expected_cols=$2
-	
-	# Get columns
-	cols=$(get_col_names $file 0 1)
-
-	# Loop on all expected columns
-	for c in $expected_cols ; do
-		if [[ " $cols " != *" $c "* && " $cols " != *" \"$c\" "* ]] ; then
-			print_call_stack >&2
-			echo "Column \"$c\" cannot be found inside columns of file \"$file\"." >&2
-			echo "Columns of file \"$file\" are: $cols." >&2
-			return 1
-		fi
-	done
-
-	echo -n .
-}
-
-# Expect same number of rows {{{1
-################################################################
-
-function expect_same_number_of_rows {
-
-	local file1=$1
-	local file2=$2
-
-	if [[ $(get_nb_rows $file1) -ne $(get_nb_rows $file2) ]] ; then
-		print_call_stack >&2
-		echo "\"$file1\" and \"$file2\" do not have the same number of rows." >&2
-		return 1
-	fi
-
-	echo -n .
-}
-
-# Expect identical columns {{{1
-################################################################
-
-function expect_identical_cols {
-
-	local col=$1
-	local file1=$2
-	local file2=$3
-
-	col1=$(get_col_index $file1 $col)
-	expect_num_gt $col1 0 "\"$file1\" does not contain column $col."
-	col2=$(get_col_index $file2 $col)
-	expect_num_gt $col2 0 "\"$file2\" does not contain column $col."
-	ncols_file1=$(get_nb_cols $file1)
-	((col2 = col2 + ncols_file1))
-	ident=$(paste $file1 $file2 | awk 'BEGIN{FS="'$SEP'";eq=1}{if ($'$col1' != $'$col2') {eq=0}}END{print eq}')
-	expect_num_ne $ident 1 "Files \"$file1\" and \"$file2\" do not have the same values in column \"$col\"."
-}
-
-# Expect float column equals {{{1
-################################################################
-
-function expect_float_col_equals {
-
-	local file=$1
-	local col=$2
-	local val=$3
-	local tol=$4
-
-	col_index=$(get_col_index $file $col)
-	ident=$(awk 'function abs(v) { return v < 0 ? -v : v }BEGIN{FS="'$SEP'";eq=1}{if (NR > 1 && abs($'$col_index' - '$val') > '$tol') {eq=0}}END{print eq}' $file)
-
-	[[ $ident -eq 1 ]] || return 1
-}
-
-# Expect no duplicated row {{{1
-################################################################
-
-function expect_no_duplicated_row {
-
-	local file=$1
-
-	nrows=$(cat $file | wc -l)
-	n_uniq_rows=$(sort -u $file | wc -l)
-	[[ $nrows -eq $n_uniq_rows ]] || return 1
 }
 
 # Get database arguments {{{1
@@ -450,6 +59,72 @@ function get_db_args {
 	fi
 
 	echo $args
+}
+
+# List chrom cols {{{1
+################################################################
+
+function list_chrom_cols {
+
+	local db_args=$1
+
+	local chromcols=$($SEARCHMZ $db_args --list-cols | awk 'BEGIN{FS="\t";ORS=","}{if (NR > 1 && NR < 3) { print $1 }}')
+	expect_str_null $chromcols || return 1
+
+	echo $chromcols
+}
+
+# Test Peakforest Estelle 14/03/2017 {{{1
+################################################################
+
+function test_peakforest_estelle_20170314 {
+
+	local input_file=$RES_DIR/peakforest.estelle.20170314-input.tsv
+	local main_output=$SCRIPT_PATH/peakforest.estelle.20170314-output.tsv
+	local peak_output=$SCRIPT_PATH/peakforest.estelle.20170314-output-peaks.tsv
+	local html_output=$SCRIPT_PATH/peakforest.estelle.20170314-output.html
+
+	expect_success $SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
+}
+
+# Test Peakforest Estelle 16/03/2017 {{{1
+################################################################
+
+function test_peakforest_estelle_20170316_rtunit {
+
+	local res_name=2017-03-16-estelle-rtunit
+	local res_dir=$RES_DIR/$res_name
+	local min_input=$res_dir/min-input.tsv
+	local min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
+	local min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
+	local min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
+	local sec_input=$res_dir/sec-input.tsv
+	local sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
+	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
+	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
+
+	expect_success $SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+
+	expect_success $SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+
+	# Check that output file contains at least same matches
+	local nb_sec_peak_compids=$(csv_count_values $sec_peak_output $SEP compoundid)
+	expect_num_gt $nb_sec_peak_compids 0 || return 1
+	local nb_min_peak_compids=$(csv_count_values $min_peak_output $SEP compoundid)
+	expect_num_gt $nb_min_peak_compids 0 || return 1
+	expect_same_number_of_rows $sec_peak_output $min_peak_output || return 1
+	csv_expect_identical_cols compoundid $sec_peak_output $min_peak_output $SEP || return 1
+
+	# Checkout RT output values
+	local err=1e-10
+	expect_num_eq $(get_nb_rows $min_input 1) 1 || return 1
+	local min_rtmed=$(csv_get_val $min_input $SEP rtmed 1)
+	expect_num_eq $(get_nb_rows $sec_input 1) 1 || return 1
+	local sec_rtmed=$(csv_get_val $sec_input $SEP rtmed 1)
+	csv_expect_float_col_equals $min_peak_output $SEP rtmed $min_rtmed $err || return 1
+	csv_expect_float_col_equals $sec_peak_output $SEP rtmed $sec_rtmed $err || return 1
+	csv_expect_float_col_equals $min_main_output $SEP rtmed $min_rtmed $err || return 10
+	csv_expect_float_col_equals $sec_main_output $SEP rtmed $sec_rtmed $err || return 11
 }
 
 # Test filedb RT unit {{{1
@@ -478,25 +153,25 @@ function test_filedb_rtunit {
 			html_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.html
 
 			# Run program
-			$SEARCHMZ -d file --url $db_file --db-rt-unit $db_rtunit -m pos -p 5 -s 0 -i $input_file --input-col-names 'mz=mz,rt=rt' -o $main_output --peak-output-file $peak_output --html-output-file $html_output --rtunit $input_rtunit --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+			expect_success $SEARCHMZ -d file --url $db_file --db-rt-unit $db_rtunit -m pos -p 5 -s 0 -i $input_file --input-col-names 'mz=mz,rt=rt' -o $main_output --peak-output-file $peak_output --html-output-file $html_output --rtunit $input_rtunit --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
 
 			# Check outputs
-			[[ -f $main_output ]] || return 1
-			[[ -f $peak_output ]] || return 1
-			[[ -f $html_output ]] || return 1
+			expect_file_exists $main_output || return 1
+			expect_file_exists $peak_output || return 1
+			expect_file_exists $html_output || return 1
 
 			# Check COMPOUND IDs NA values in main output
-			nb_main_compids=$(count_values $main_output compoundid)
-			[[ $nb_main_compids -gt 0 ]] || return 1
+			nb_main_compids=$(csv_count_values $main_output $SEP compoundid)
+			expect_num_gt $nb_main_compids 0 || return 1
 
 			# Check COMPOUND IDs NA values in peak output
-			nb_peak_compids=$(count_values $peak_output compoundid)
-			[[ $nb_peak_compids -gt 0 ]] || return 1
+			nb_peak_compids=$(csv_count_values $peak_output $SEP compoundid)
+			expect_num_gt $nb_peak_compids 0 || return 1
 
 			if [[ -z $nb_match ]] ; then
 				nb_match=$nb_peak_compids
 			else
-				[[ $nb_peak_compids -eq $nb_match ]] || return 1
+				expect_num_eq $nb_peak_compids $nb_match || return 1
 			fi
 		done
 	done
@@ -513,64 +188,10 @@ function test_filedb_ticket_2016031010000034 {
 	local peak_output=$SCRIPT_PATH/ticket-2016031010000034-output-peaks.tsv
 	local html_output=$SCRIPT_PATH/ticket-2016031010000034-output.html
 
-	$SEARCHMZ -d file --url $db_file -m pos -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
+	expect_success $SEARCHMZ -d file --url $db_file -m pos -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
 }
 
-# Test Peakforest Estelle 14/03/2017 {{{1
-################################################################
-
-function test_peakforest_estelle_20170314 {
-
-	local input_file=$RES_DIR/peakforest.estelle.20170314-input.tsv
-	local main_output=$SCRIPT_PATH/peakforest.estelle.20170314-output.tsv
-	local peak_output=$SCRIPT_PATH/peakforest.estelle.20170314-output-peaks.tsv
-	local html_output=$SCRIPT_PATH/peakforest.estelle.20170314-output.html
-
-	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
-}
-
-# Test Peakforest Estelle 16/03/2017 {{{1
-################################################################
-
-function test_peakforest_estelle_20170316_rtunit {
-
-	local res_name=2017-03-16-estelle-rtunit
-	local res_dir=$RES_DIR/$res_name
-	local min_input=$res_dir/min-input.tsv
-	local min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
-	local min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
-	local min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
-	local sec_input=$res_dir/sec-input.tsv
-	local sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
-	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
-	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
-
-	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
-
-	$SEARCHMZ -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
-
-	# Check that output file contains at least same matches
-	local nb_sec_peak_compids=$(count_values $sec_peak_output compoundid)
-	[[ $nb_sec_peak_compids -gt 0 ]] || return 1
-	local nb_min_peak_compids=$(count_values $min_peak_output compoundid)
-	[[ $nb_min_peak_compids -gt 0 ]] || return 1
-	[[ $(get_nb_cols $sec_peak_output) -eq $(get_nb_cols $min_peak_output) ]] || return 1
-	[[ $(get_nb_rows $sec_peak_output) -eq $(get_nb_rows $min_peak_output) ]] || return 1
-	expect_identical_cols compoundid $sec_peak_output $min_peak_output || return 1
-
-	# Checkout RT output values
-	local err=1e-10
-	[[ $(get_nb_rows $min_input) -eq 1 ]] || return 1
-	local min_rtmed=$(get_val $min_input rtmed 1)
-	[[ $(get_nb_rows $sec_input) -eq 1 ]] || return 1
-	local sec_rtmed=$(get_val $sec_input rtmed 1)
-	expect_float_col_equals $min_peak_output rtmed $min_rtmed $err || return 1
-	expect_float_col_equals $sec_peak_output rtmed $sec_rtmed $err || return 1
-	expect_float_col_equals $min_main_output rtmed $min_rtmed $err || return 10
-	expect_float_col_equals $sec_main_output rtmed $sec_rtmed $err || return 11
-}
-
-# Test no 'y' column in output {{{1
+# Test filedb no 'y' column in output {{{1
 ################################################################
 
 function test_filedb_no_y_col_in_output {
@@ -580,11 +201,10 @@ function test_filedb_no_y_col_in_output {
 	local main_output=$SCRIPT_PATH/test_filedb_no_y_col_in_output-main.tsv
 
 	# Run program
-	$SEARCHMZ -d file --url $db_file -m pos -i $input_file -o $main_output --same-rows || return 1
+	expect_success $SEARCHMZ -d file --url $db_file -m pos -i $input_file -o $main_output --same-rows || return 1
 
 	# Test that no 'y' column is added in output when running an MZ match
-	n=$(get_col_index $main_output y)
-	[[ $n -lt 0 ]] || return 1
+	csv_expect_has_columns $main_output $SEP y || return 1
 }
 
 # Test filedb Florence Castelli 18/01/2017 {{{1
@@ -602,12 +222,12 @@ function test_filedb_2017_01_18_florence_castelli {
 	local html_output=$SCRIPT_PATH/$res_name-peak.html
 
 	# Run program
-	$SEARCHMZ -d file --url $db_file --db-fields "mztheo=mztheo,chromcolrt=colrt,compoundid=molid,chromcol=col,msmode=mode,peakattr=attr,peakcomp=comp,fullnames=molnames,compoundmass=molmass,compoundcomp=molcomp,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchem,chebiid=chebi,hmdbid=hmdb,keggid=kegg" --db-ms-modes pos=POS,neg=NEG -i $input_file --input-col-names mz=mz,rt=rt -m neg -p 10.0 -s 0.0 -c "zicphilic-150*5*2.1-42min-shimadzuexactive" -x 5.0 -y 0.8 --precursor-match --precursor-rt-tol 5.0 --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' -o $main_output --peak-output-file $peak_output --html-output-file $html_output || return 1
+	expect_success $SEARCHMZ -d file --url $db_file --db-fields "mztheo=mztheo,chromcolrt=colrt,compoundid=molid,chromcol=col,msmode=mode,peakattr=attr,peakcomp=comp,fullnames=molnames,compoundmass=molmass,compoundcomp=molcomp,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchem,chebiid=chebi,hmdbid=hmdb,keggid=kegg" --db-ms-modes pos=POS,neg=NEG -i $input_file --input-col-names mz=mz,rt=rt -m neg -p 10.0 -s 0.0 -c "zicphilic-150*5*2.1-42min-shimadzuexactive" -x 5.0 -y 0.8 --precursor-match --precursor-rt-tol 5.0 --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' -o $main_output --peak-output-file $peak_output --html-output-file $html_output || return 1
 
 	# Test existence of output files
-	[[ -f $main_output ]] || return 1
-	[[ -f $peak_output ]] || return 1
-	[[ -f $html_output ]] || return 1
+	expect_file_exists $main_output || return 1
+	expect_file_exists $peak_output || return 1
+	expect_file_exists $html_output || return 1
 }
 
 # Test filedb W4M Sacurine PhenoMeNal 26/01/2017 {{{1
@@ -626,47 +246,24 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 	local peak_output=$SCRIPT_PATH/$res_name-peak.tsv
 	local html_output=$SCRIPT_PATH/$res_name-peak.html
 
-	$SEARCHMZ -d file --url $db_file --db-fields 'mztheo=peak.mz,chromcolrt=chromcolrt,compoundid=accession,chromcol=chromcol,msmode=msmode,peakcomp=peak.formula,fullnames=name,compoundmass=mass,compoundcomp=formula,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid' --db-ms-modes pos=pos,neg=neg -i $input_file --input-col-names mz=mass_to_charge,rt=retention_time -m neg -p 10.0 -s 0.0 --same-rows --same-cols -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
+	expect_success $SEARCHMZ -d file --url $db_file --db-fields 'mztheo=peak.mz,chromcolrt=chromcolrt,compoundid=accession,chromcol=chromcol,msmode=msmode,peakcomp=peak.formula,fullnames=name,compoundmass=mass,compoundcomp=formula,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid' --db-ms-modes pos=pos,neg=neg -i $input_file --input-col-names mz=mass_to_charge,rt=retention_time -m neg -p 10.0 -s 0.0 --same-rows --same-cols -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
 
 	# Check that output files exist
-	[[ -f $main_output ]] || return 1
-	[[ -f $peak_output ]] || return 1
-	[[ -f $html_output ]] || return 1
+	expect_file_exists $main_output || return 1
+	expect_file_exists $peak_output || return 1
+	expect_file_exists $html_output || return 1
 
 	# Test order of columns in output: we should get the same columns as input file first, then the new columns
-	local nb_input_cols=$(get_nb_cols $input_file)
-	local input_cols=$(get_col_names $input_file)
-	local main_cols=$(get_col_names $main_output $nb_input_cols 1)
-	[[ $main_cols == $input_cols ]] || return 1
-	local peak_cols=$(get_col_names $peak_output $nb_input_cols 1)
-	[[ $peak_cols == $input_cols ]] || return 1
+	local nb_input_cols=$(csv_get_nb_cols $input_file $SEP)
+	local input_cols=$(csv_get_col_names $input_file $SEP)
+	local main_cols=$(csv_get_col_names $main_output $SEP $nb_input_cols 1)
+	expect_str_eq $main_cols $input_cols || return 1
+	local peak_cols=$(csv_get_col_names $peak_output $SEP $nb_input_cols 1)
+	expect_str_eq $peak_cols $input_cols || return 1
 
 	# Check that outputs are identical
-	diff -q $main_output $main_ref_output || return 1
-	diff -q $peak_output $peak_ref_output || return 1
-}
-
-# Test generic - wrong input file in filedb {{{1
-################################################################
-
-function test_generic_wrong_input_file {
-
-	local db=$1
-
-	! $SEARCHMZ $(get_db_args $db) -m pos -i blabla.zut -o test_generic_wrong_input_file-output.tsv || return 1
-}
-
-# Test generic - empty files {{{1
-################################################################
-
-function test_generic_empty_files {	
-
-	local db=$1
-	local mzrt_empty=$RES_DIR/inputs/mzrt-empty.tsv
-	local empty=$RES_DIR/inputs/empty.tsv
-
-	$SEARCHMZ $(get_db_args $db) -m pos -i $mzrt_empty -o test_empty_files-mzrt-output.tsv || return 1
-	$SEARCHMZ $(get_db_args $db) -m pos -i $empty -o test_empty_files-output.tsv || return 1
+	expect_same_files $main_output $main_ref_output || return 1
+	expect_same_files $peak_output $peak_ref_output || return 1
 }
 
 # Test filedb - input file with number sign character (#) {{{1
@@ -678,7 +275,42 @@ function test_filedb_input_file_with_number_sign_char {
 	local db_file=$RES_DIR/filedb/filedb-number-sign.tsv
 	local input_file=$RES_DIR/inputs/mz-number-sign.tsv
 
-	$SEARCHMZ -d file --url $db_file -m pos -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
+	expect_success $SEARCHMZ -d file --url $db_file -m pos -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
+}
+
+# Test filedb - field names set to NA {{{1
+################################################################
+
+function test_filedb_na_db_fields {
+
+	local db_file=$RES_DIR/filedb/filedb-rtsec.tsv
+	local input_file=$RES_DIR/inputs/mzrt-sec.tsv
+	local main_output=$SCRIPT_PATH/test_filedb_na_db_fields-main.tsv
+
+	expect_success $SEARCHMZ -d file --url $db_file --db-fields chebiid=NA,keggid=NA -m pos -i $input_file -o $main_output --same-rows || return 1
+}
+
+# Test generic - wrong input file in filedb {{{1
+################################################################
+
+function test_generic_wrong_input_file {
+
+	local db=$1
+
+	expect_failure $SEARCHMZ $(get_db_args $db) -m pos -i blabla.zut -o test_generic_wrong_input_file-output.tsv || return 1
+}
+
+# Test generic - empty files {{{1
+################################################################
+
+function test_generic_empty_files {	
+
+	local db=$1
+	local mzrt_empty=$RES_DIR/inputs/mzrt-empty.tsv
+	local empty=$RES_DIR/inputs/empty.tsv
+
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $mzrt_empty -o test_empty_files-mzrt-output.tsv || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $empty -o test_empty_files-output.tsv || return 1
 }
 
 # Test generic - mz matching does not give rt col in output {{{1
@@ -689,10 +321,10 @@ function test_generic_match_mz_no_rt_in_output {
 	local db=$1
 	local output_file=$SCRIPT_PATH/test_generic_match_mz_no_rt_in_output-output.tsv
 
-	$SEARCHMZ $(get_db_args $db) -m pos -i $RES_DIR/inputs/mz-input-small.tsv -o $output_file
-	! expect_has_columns $output_file rt || return 1
-	$SEARCHMZ $(get_db_args $db) -m pos -i $RES_DIR/inputs/mzrt-input-small.tsv -o $output_file
-	! expect_has_columns $output_file rt || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $RES_DIR/inputs/mz-input-small.tsv -o $output_file
+	! csv_expect_has_columns $output_file $SEP rt || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $RES_DIR/inputs/mzrt-input-small.tsv -o $output_file
+	! csv_expect_has_columns $output_file $SEP rt || return 1
 }
 
 # Test generic - mzrt matching without rt input {{{1
@@ -704,7 +336,7 @@ function test_generic_match_mzrt_using_input_file_without_rt {
 	local input_file=$RES_DIR/inputs/mz-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_match_mzrt_using_input_file_without_rt-output.tsv
 
-	! $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --all-cols -x 5.0 -y 0.8 || return 1
+	expect_failure $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --all-cols -x 5.0 -y 0.8 || return 1
 }
 
 # Test generic - mz matching {{{1
@@ -716,9 +348,9 @@ function test_generic_match_mz {
 	local input_file=$RES_DIR/inputs/mz-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_match_mz-output.tsv
 
-	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file || return 1
-	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --mzprec 5 --mzshift 0 || return 1
-	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --mzprec 0.1 --mzshift 0 --mztolunit plain || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --mzprec 5 --mzshift 0 || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --mzprec 0.1 --mzshift 0 --mztolunit plain || return 1
 }
 
 # Test generic - mz matching with unused rt {{{1
@@ -730,7 +362,7 @@ function test_generic_match_mz_unused_rt {
 	local input_file=$RES_DIR/inputs/mz-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_match_mz_unused_rt-output.tsv
 
-	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file || return 1
 }
 
 # Test generic - mzrt matching {{{1
@@ -744,20 +376,8 @@ function test_generic_match_mz_rt {
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i  $input_file -o $output_file || return 1
-}
-
-# Test filedb - field names set to NA {{{1
-################################################################
-
-function test_filedb_na_db_fields {
-
-	local db_file=$RES_DIR/filedb/filedb-rtsec.tsv
-	local input_file=$RES_DIR/inputs/mzrt-sec.tsv
-	local main_output=$SCRIPT_PATH/test_filedb_na_db_fields-main.tsv
-
-	$SEARCHMZ -d file --url $db_file --db-fields chebiid=NA,keggid=NA -m pos -i $input_file -o $main_output --same-rows || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i  $input_file -o $output_file || return 1
 }
 
 # Test generic - mzrt matching with column numbers {{{1
@@ -772,9 +392,9 @@ function test_generic_match_mzrt_col_numbers {
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=2' || return 1
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file_without_header -o $output_file --input-col-names 'mz=1,rt=2' || return 1
-	! $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=4' || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=2' || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file_without_header -o $output_file --input-col-names 'mz=1,rt=2' || return 1
+	expect_failure $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=4' || return 1
 }
 
 # Test generic - unknown chrom col {{{1
@@ -789,10 +409,10 @@ function test_generic_unknown_chrom_col {
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
 	# Unknown chrom cols, without checking
-	$SEARCHMZ $(get_db_args $db) -m pos -c badaboum --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c badaboum --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
 
 	# Unknown chrom cols, with checking
-	! $SEARCHMZ $(get_db_args $db) -m pos -c badaboum --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --check-cols || return 1
+	expect_failure $SEARCHMZ $(get_db_args $db) -m pos -c badaboum --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --check-cols || return 1
 }
 
 # Test generic - check that matching using 2 chrom cols does not output duplicated rows {{{1
@@ -806,10 +426,10 @@ function test_match_mzrt_2cols {
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
 	expect_no_duplicated_row $output_file || return 1
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --precursor-match || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --precursor-match || return 1
 	expect_no_duplicated_row $output_file || return 1
 }
 
@@ -822,11 +442,11 @@ function test_generic_precursors_lists {
 	local input_file=$RES_DIR/inputs/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_precursors_lists-output.tsv
 
-	$SEARCHMZ $(get_db_args $db) -m pos --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' || return 1
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' || return 1
 }
 
 # Test generic - same cols {{{1
@@ -838,18 +458,18 @@ function test_generic_same_cols {
 	local input_file=$RES_DIR/inputs/mzrt-input-small-morecols.tsv
 	local output_file=$SCRIPT_PATH/test_generic_same_cols-output.tsv
 
-	local input_cols=$(get_col_names $input_file)
+	local input_cols=$(csv_get_col_names $input_file $SEP)
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
 	for c in $input_cols ; do
 		if [[ $c != mz && $c != rt ]] ; then
-			! expect_has_columns $output_file $c || return 1
+			! csv_expect_has_columns $output_file $SEP $c || return 1
 		fi
 	done
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-cols || return 1
-	expect_has_columns $output_file "$input_cols" || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-cols || return 1
+	csv_expect_has_columns $output_file $SEP "$input_cols" || return 1
 }
 
 # Test generic - same rows {{{1
@@ -863,8 +483,8 @@ function test_generic_same_rows {
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	$SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows || return 1
-	[[ $(get_nb_rows $input_file) -eq $(get_nb_rows $output_file) ]] || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows || return 1
+	expect_same_number_of_rows $input_file $output_file || return 1
 }
 
 # Test generic - same rows with peaks output {{{1
@@ -877,7 +497,7 @@ function test_generic_same_rows_with_peaks_output {
 	local output_file=$SCRIPT_PATH/test_generic_same_rows_with_peaks_output-output.tsv
 	local peak_output_file=$SCRIPT_PATH/test_generic_same_rows_with_peaks_output-peaks-output.tsv
 
-	$SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --same-rows --all-cols -x 5.0 -y 0.8 --peak-output-file $peak_output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --same-rows --all-cols -x 5.0 -y 0.8 --peak-output-file $peak_output_file || return 1
 	expect_same_number_of_rows $input_file $output_file || return 1
 	expect_num_le $(get_nb_rows $input_file) $(get_nb_rows $peak_output_file) || return 1
 }
@@ -894,10 +514,10 @@ function test_generic_peak_output_file {
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	expect_failure $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows --peak-output-file $peak_output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows --peak-output-file $peak_output_file || return 1
 	expect_same_number_of_rows $input_file $output_file || return 1
 	expect_num_le $(get_nb_rows $input_file) $(get_nb_rows $peak_output_file) || return 1
-	expect_has_columns $peak_output_file "mz rt" || return 1
+	csv_expect_has_columns $peak_output_file $SEP "mz rt" || return 1
 }
 
 # Test generic - html output {{{1
@@ -911,7 +531,7 @@ function test_generic_html_output_file {
 	local peak_output_file=$SCRIPT_PATH/test_generic_html_output_file-peak-output.tsv
 	local html_output_file=$SCRIPT_PATH/test_generic_html_output_file-html-output.tsv
 
-	expect_failure $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file || return 1
 	expect_file_exists $html_output_file || return 1
 }
 
@@ -935,10 +555,10 @@ for db in $DATABASES ; do
 	# Run generic tests
 	test_that "An HTML output file is written." test_generic_html_output_file $db
 	test_that "A peak output file contains the right number of rows and the right columns." test_generic_peak_output_file $db
-#	check test_generic_same_rows_with_peaks_output $db
-#	check test_generic_same_rows $db
-#	check test_generic_same_cols $db
-#	check test_generic_precursors_lists $db
+	test_that "Same rows option works also with peaks output enabled." test_generic_same_rows_with_peaks_output $db
+	test_that "Input and main output have the same number of rows." test_generic_same_rows $db
+	test_that "We find the same columns in output than the ones supplied in input." test_generic_same_cols $db
+	test_that "Custom list of precursors work." test_generic_precursors_lists $db
 #	check test_match_mzrt_2cols $db
 #	check test_generic_unknown_chrom_col $db
 #	check test_generic_match_mzrt_col_numbers $db
