@@ -113,7 +113,7 @@ function test_peakforest_estelle_20170316_rtunit {
 	local nb_min_peak_compids=$(csv_count_values $min_peak_output $SEP compoundid)
 	expect_num_gt $nb_min_peak_compids 0 || return 1
 	expect_same_number_of_rows $sec_peak_output $min_peak_output || return 1
-	csv_expect_identical_cols compoundid $sec_peak_output $min_peak_output $SEP || return 1
+	csv_expect_identical_col_values compoundid $sec_peak_output $min_peak_output $SEP || return 1
 
 	# Checkout RT output values
 	local err=1e-10
@@ -204,7 +204,7 @@ function test_filedb_no_y_col_in_output {
 	expect_success $SEARCHMZ -d file --url $db_file -m pos -i $input_file -o $main_output --same-rows || return 1
 
 	# Test that no 'y' column is added in output when running an MZ match
-	csv_expect_has_columns $main_output $SEP y || return 1
+	csv_expect_not_has_columns $main_output $SEP y || return 1
 }
 
 # Test filedb Florence Castelli 18/01/2017 {{{1
@@ -255,11 +255,8 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 
 	# Test order of columns in output: we should get the same columns as input file first, then the new columns
 	local nb_input_cols=$(csv_get_nb_cols $input_file $SEP)
-	local input_cols=$(csv_get_col_names $input_file $SEP)
-	local main_cols=$(csv_get_col_names $main_output $SEP $nb_input_cols 1)
-	expect_str_eq $main_cols $input_cols || return 1
-	local peak_cols=$(csv_get_col_names $peak_output $SEP $nb_input_cols 1)
-	expect_str_eq $peak_cols $input_cols || return 1
+	csv_expect_same_col_names $input_file $main_output $SEP $nb_input_cols 1
+	csv_expect_same_col_names $input_file $peak_output $SEP $nb_input_cols 1
 
 	# Check that outputs are identical
 	expect_same_files $main_output $main_ref_output || return 1
