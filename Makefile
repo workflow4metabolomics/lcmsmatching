@@ -17,8 +17,13 @@ planemo-test: $(CONDA_DIR)
 	$(SOURCE_VENV) && planemo conda_install --conda_prefix $(CONDA_DIR) $(TOOL_XML)
 	$(SOURCE_VENV) && planemo test --conda_prefix $(CONDA_DIR) --galaxy_branch $(GALAXY_BRANCH) --conda_dependency_resolution $(TOOL_XML)
 
-planemo-testtoolshed-diff: $(PLANEMO_VENV)
-	$(SOURCE_VENV) && planemo shed_diff --shed_target testtoolshed
+planemo-testtoolshed-diff: dist $(PLANEMO_VENV)
+	$(SOURCE_VENV) && cd $< && planemo shed_diff --shed_target testtoolshed
+
+dist:
+	$(RM) -rf dist
+	mkdir $@
+	cp -R .shed.yml *.R search-mz *.py *.xml README.* test-data $@/
 
 $(CONDA_DIR): $(PLANEMO_VENV)
 	$(SOURCE_VENV) && planemo conda_init --conda_prefix $(CONDA_DIR)
@@ -29,8 +34,6 @@ $(PLANEMO_VENV):
 	$(SOURCE_VENV) && pip install planemo
 
 clean:
-	$(RM) -r $(CONDA_DIR)
-	$(RM) -r $(PLANEMO_DIR)
-	$(RM) -r $(PLANEMO_VENV)
+	$(RM) -rf dist $(CONDA_DIR) $(PLANEMO_DIR) $(PLANEMO_VENV)
 
-.PHONY: all clean test planemo-lint planemo-test planemon-install
+.PHONY: all clean test planemo-lint planemo-test planemon-install planemo-testtoolshed-diff dist
