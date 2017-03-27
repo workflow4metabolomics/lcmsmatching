@@ -17,6 +17,9 @@ planemo-test: $(CONDA_DIR)
 	$(SOURCE_VENV) && planemo conda_install --conda_prefix $(CONDA_DIR) $(TOOL_XML)
 	$(SOURCE_VENV) && planemo test --conda_prefix $(CONDA_DIR) --galaxy_branch $(GALAXY_BRANCH) --conda_dependency_resolution $(TOOL_XML)
 
+planemo-testtoolshed-diff: $(PLANEMO_VENV)
+	$(SOURCE_VENV) && planemo shed_diff --shed_target testtoolshed
+
 $(CONDA_DIR): $(PLANEMO_VENV)
 	$(SOURCE_VENV) && planemo conda_init --conda_prefix $(CONDA_DIR)
 
