@@ -5,3 +5,8 @@ long_description: 'Part of the W4M project (http://workflow4metabolomics.org). A
 name: lcmsmatching
 owner: prog
 remote_repository_url: https://github.com/workflow4metabolomics/lcmsmatching.git
+exclude: 
+ - test
+ - java-msdb
+ - Makefile
+ - bash-testthat
