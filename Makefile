@@ -20,6 +20,15 @@ planemo-test: $(CONDA_DIR)
 planemo-testtoolshed-diff: dist $(PLANEMO_VENV)
 	$(SOURCE_VENV) && cd $< && planemo shed_diff --shed_target testtoolshed
 
+planemo-testtoolshed-update: dist $(PLANEMO_VENV)
+	$(SOURCE_VENV) && cd $< && planemo shed_update --check_diff --shed_target testtoolshed
+
+planemo-toolshed-diff: dist $(PLANEMO_VENV)
+	$(SOURCE_VENV) && cd $< && planemo shed_diff --shed_target toolshed
+
+planemo-toolshed-update: dist $(PLANEMO_VENV)
+	$(SOURCE_VENV) && cd $< && planemo shed_update --check_diff --shed_target toolshed
+
 dist:
 	$(RM) -rf dist
 	mkdir $@
@@ -36,4 +45,4 @@ $(PLANEMO_VENV):
 clean:
 	$(RM) -rf dist $(CONDA_DIR) $(PLANEMO_DIR) $(PLANEMO_VENV)
 
-.PHONY: all clean test planemo-lint planemo-test planemon-install planemo-testtoolshed-diff dist
+.PHONY: all clean test dist planemo-lint planemo-test planemon-install planemo-toolshed-diff planemo-toolshed-update planemo-testtoolshed-diff planemo-testtoolshed-update
