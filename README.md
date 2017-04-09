@@ -32,6 +32,10 @@ Please run `search-mz -h` for a help page listing all options and presenting som
 
 ## Updates
 
+### 3.3.1
+
+   * Correct a bug while trying to connect to Peakforest for getting the list of chromatographic columns.
+
 ### 3.3.0
 
    * The file database (in-house) field names are now presented in individual choice lists instead of a single text box where you had to insert a very long keys/values string.
