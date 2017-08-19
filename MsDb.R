@@ -467,14 +467,7 @@ if ( ! exists('MsDb')) { # Do not load again if already loaded
 			ids <- molids
 		}
 
-		return(.self$searchForMzRtBounds(mode,
-										 mz.low = mz * (1 + (- shift - prec) * 1e-6),
-										 mz.high = mz * (1 + (- shift + prec) * 1e-6),
-										 rt.low = rt.low,
-										 rt.high = rt.high,
-										 col = col,
-										 attribs = attribs,
-										 molids = ids))
+		return(.self$searchForMzRtBounds(mode, mz.low = mz.low, mz.high = mz.high, rt.low = rt.low, rt.high = rt.high, col = col, attribs = attribs, molids = ids))
 	})
 
 	# rt.low    Lower bound of the retention time in seconds.
