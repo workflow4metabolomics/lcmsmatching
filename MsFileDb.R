@@ -409,7 +409,10 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 		}
 
 		# Filter on mz
-		db <- db[db[[MSDB.TAG.MZTHEO]] >= mz.low & db[[MSDB.TAG.MZTHEO]] <= mz.high, ]
+		if (is.na(mz.low) || is.na(mz.high))
+			db <- db[integer(0), ]
+		else
+			db <- db[db[[MSDB.TAG.MZTHEO]] >= mz.low & db[[MSDB.TAG.MZTHEO]] <= mz.high, ]
 
 		return(db)
 	})
