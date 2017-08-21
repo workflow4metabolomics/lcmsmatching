@@ -32,8 +32,8 @@ if ( ! exists('.parse_chrom_col_desc')) { # Do not load again if already loaded
 	MSDB.TAG.KEGG <- 'keggid'
 
 	# Mode tags
-	MSDB.TAG.POS           <- 'neg'
-	MSDB.TAG.NEG           <- 'pos'
+	MSDB.TAG.POS           <- 'pos'
+	MSDB.TAG.NEG           <- 'neg'
 
 	# Fields containing multiple values
 	MSDB.MULTIVAL.FIELDS <- c(MSDB.TAG.MOLNAMES)
