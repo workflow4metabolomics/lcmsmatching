@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# vi: ft=R fdm=marker
+# vi: ft=r fdm=marker
 args <- commandArgs(trailingOnly = F)
 script.path <- sub("--file=","",args[grep("--file=",args)])
 library(getopt)
@@ -136,8 +136,10 @@ parse.arg.val <- function(opt) {
 		cust <- split.kv.list(opt[['db-fields']])
 		cust <- cust[cust != 'NA']
 		opt[['db-fields']] <- split.kv.list(MSDB.DFT[['db-fields']])
-		cust <- cust[names(cust) %in% names(opt[['db-fields']])]
-		opt[['db-fields']][names(cust)] <- cust
+		for (x in names(cust)) {
+			if ( ! is.na(cust[[x]]) && cust[[x]] != 'NA')
+				opt[['db-fields']][[x]] <- cust[[x]]
+		}
 	}
 
 	# Parse MS modes
