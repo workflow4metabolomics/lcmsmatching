@@ -391,7 +391,8 @@ output.html <- function(db, peaks, file) {
 	}
 
 	# Write HTML
-	html <- HtmlWriter(file = file)
+	html <- HtmlWriter()
+	html$open(file = file)
 	html$writeBegTag('html')
 	html$writeBegTag('header')
 	html$writeTag('meta', attr = c(charset = "UTF-8"))
@@ -420,6 +421,7 @@ output.html <- function(db, peaks, file) {
 
 	html$writeEndTag('body')
 	html$writeEndTag('html')
+	html$close()
 }
 
 # MAIN {{{1

@@ -6,22 +6,32 @@ if ( ! exists('HtmlWriter')) { # Do not load again if already loaded
 	# CLASS DECLARATION #
 	#####################
 	
-	HtmlWriter <- setRefClass("HtmlWriter", fields = list(.file = "character", .auto.indent = "numeric"))
-	
+	HtmlWriter <- setRefClass("HtmlWriter", fields = list(.con = "ANY", .auto.indent = "numeric"))
 	
 	###############
 	# CONSTRUCTOR #
 	###############
 	
-	HtmlWriter$methods( initialize = function(file = NA_character_, auto.indent = TRUE, ...) {
+	HtmlWriter$methods( initialize = function(auto.indent = TRUE, ...) {
 
-		.file <<- file
 		.auto.indent <<- if (auto.indent) 0 else NA_integer_
-
-		# Create empty file
-		cat('', file = .self$.file, append = FALSE)
+		.con <<- NULL
 
 		callSuper(...) # calls super-class initializer with remaining parameters
+	})
+
+	# Open {{{1
+	################################################################################
+
+	HtmlWriter$methods( open = function(file) {
+		.con <<- file(file, open = "w")
+	})
+
+	# Close {{{1
+	################################################################################
+
+	HtmlWriter$methods( close = function() {
+		close(.self$.con)
 	})
 
 	#########
@@ -34,7 +44,7 @@ if ( ! exists('HtmlWriter')) { # Do not load again if already loaded
 		if (is.na(indent))
 			indent <- if (is.na(.self$.auto.indent)) 0 else .self$.auto.indent
 
-		cat(rep("\t", indent), text, if (newline) "\n" else "", sep = '', file = .self$.file, append = TRUE)
+		cat(rep("\t", indent), text, if (newline) "\n" else "", sep = '', file = .self$.con)
 	})
 
 	#############
