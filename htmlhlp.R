@@ -1,12 +1,10 @@
 if ( ! exists('HtmlWriter')) { # Do not load again if already loaded
 
-	library(methods)
-
 	#####################
 	# CLASS DECLARATION #
 	#####################
 	
-	HtmlWriter <- setRefClass("HtmlWriter", fields = list(.con = "ANY", .auto.indent = "numeric"))
+	HtmlWriter <- methods::setRefClass("HtmlWriter", fields = list(.con = "ANY", .auto.indent = "numeric"))
 	
 	###############
 	# CONSTRUCTOR #
@@ -23,14 +21,14 @@ if ( ! exists('HtmlWriter')) { # Do not load again if already loaded
 	# Open {{{1
 	################################################################################
 
-	HtmlWriter$methods( open = function(file) {
+	HtmlWriter$methods( file.opn = function(file) {
 		.con <<- file(file, open = "w")
 	})
 
 	# Close {{{1
 	################################################################################
 
-	HtmlWriter$methods( close = function() {
+	HtmlWriter$methods( file.close = function() {
 		close(.self$.con)
 	})
 
