@@ -17,4 +17,4 @@ branches:
     - develop
    
 script:
- - make test
+ - DATABASES="file xls" make test
