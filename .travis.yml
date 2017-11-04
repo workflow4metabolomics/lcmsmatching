@@ -15,6 +15,9 @@ branches:
   only:
     - master
     - develop
+    - testing/travis-planemo
    
 script:
  - DATABASES="file xls" make test
+ - make planemolint
+ - make planemotest
