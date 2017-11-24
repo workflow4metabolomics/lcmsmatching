@@ -6,12 +6,12 @@
 		<!--<requirement type="package" version="3.3.3">r</requirement>-->
 		<requirement type="package" version="7.0">readline</requirement> <!-- Try readline 7.0 -->
 		<requirement type="package" version="1.20.0">r-getopt</requirement>
-		<requirement type="package" version="1.0.0">r-stringr</requirement>
-		<requirement type="package" version="1.8.3">r-plyr</requirement>
+		<requirement type="package" version="1.2.0">r-stringr</requirement>
+		<requirement type="package" version="1.8.4">r-plyr</requirement>
 		<requirement type="package" version="3.98">r-xml</requirement>
 		<requirement type="package" version="1.0_6">r-bitops</requirement>
 		<requirement type="package" version="1.95">r-rcurl</requirement>
-		<requirement type="package" version="1.1">r-jsonlite</requirement>
+		<requirement type="package" version="1.5">r-jsonlite</requirement>
 	</requirements>
 
 	<code file="list-chrom-cols.py"/>
