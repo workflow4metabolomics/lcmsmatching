@@ -8,7 +8,7 @@ SCRIPT_PATH=$(dirname $BASH_SOURCE)
 RES_DIR=$SCRIPT_PATH/res
 SEARCHMZ=$SCRIPT_PATH/../search-mz
 SEP="\t"
-PEAKFOREST_URL='https://peakforest-alpha.inra.fr/rest'
+PEAKFOREST_URL='https://rest.peakforest.org/'
 
 # Check {{{1
 ################################################################
