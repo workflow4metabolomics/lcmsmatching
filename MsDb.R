@@ -167,24 +167,6 @@ if ( ! exists('MsDb')) { # Do not load again if already loaded
 	MsDb$methods( handleCompounds = function() {
 		return(TRUE)
 	})
-
-	####################
-	# GET MOLECULE IDS #
-	####################
-	
-	# Returns an integer vector of all molecule IDs stored inside the database.
-	MsDb$methods( getMoleculeIds = function(max.results = NA_integer_) {
-		stop("Method getMoleculeIds() not implemented in concrete class.")
-	})
-
-	####################
-	# GET NB MOLECULES #
-	####################
-	
-	# Returns the number of molecules in the database.
-	MsDb$methods( getNbMolecules = function() {
-		stop("Method getNbMolecules() not implemented in concrete class.")
-	})
 	
 	#################
 	# GET MZ VALUES #
@@ -193,17 +175,6 @@ if ( ! exists('MsDb')) { # Do not load again if already loaded
 	# Returns a numeric vector of all masses stored inside the database.
 	MsDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
 		stop("Method getMzValues() not implemented in concrete class.")
-	})
-	
-	#####################
-	# GET MOLECULE NAME #
-	#####################
-	
-	# Get molecule names
-	# molid     An integer vector of molecule IDs.
-	# Returns a character vector containing the names of the molecule IDs, in the same order as the input vector.
-	MsDb$methods( getMoleculeName = function(molid) {
-		stop("Method getMoleculeName() not implemented in concrete class.")
 	})
 	
 	###############################

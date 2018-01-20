@@ -1,3 +1,5 @@
+# vi: fdm=marker
+
 if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 
 	library('methods')
@@ -52,57 +54,6 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 		conn <- .self$.get.connection() # Call it first separately, so library RPostgreSQL is loaded.
 		rs <- try(dbSendQuery(conn, query))
 		return(rs)
-	})
-
-	####################
-	# GET MOLECULE IDS #
-	####################
-	
-	Ms4TabSqlDb$methods( getMoleculeIds = function() {
-
-		rs <- .self$.send.query('select pkmol.molecule_id as id from peaklist_name as pkmol;')
-		ids <- fetch(rs,n=-1)
-		ids <- ids[['id']] # Get 'id' column
-		ids <- vapply(ids, function(x) { if (substring(x, 1, 1) == 'N') as.integer(substring(x, 2)) else as.integer(x) } , FUN.VALUE = 1, USE.NAMES = FALSE)
-		ids <- (sort(ids))
-
-		return(ids)
-	})
-
-	####################
-	# GET NB MOLECULES #
-	####################
-	
-	Ms4TabSqlDb$methods( getNbMolecules = function() {
-
-		rs <- .self$.send.query('select count(*) from peaklist_name;')
-		df <- fetch(rs,n=-1)
-		n <- df[[1]]
-
-		return(n)
-	})
-	
-	#####################
-	# GET MOLECULE NAME #
-	#####################
-	
-	Ms4TabSqlDb$methods( getMoleculeName = function(molid) {
-
-		# Build request
-		where <- paste0(vapply(molid, function(id) paste0("pkmol.molecule_id = 'N", id, "'"), FUN.VALUE = ''), collapse = ' or ')
-		request <- paste0('select pkmol.molecule_id as id, pkmol.name from peaklist_name as pkmol where ', where, ';')
-
-		# Run request
-		rs <- .self$.send.query(request)
-		df <- fetch(rs,n=-1)
-
-		# Get IDs
-		ids <- vapply(df[['id']], function(x) as.integer(substring(x, 2)), FUN.VALUE = 1, USE.NAMES = FALSE)
-
-		# Get names in the same order as the input vector
-		names <- df[['name']][order(ids)[order(molid)]]
-
-		return(if (is.null(names)) NA_character_ else names)
 	})
 
 	
@@ -346,6 +297,59 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 			df <- .get.empty.result.df(rt = ! is.null(col))
 
 		return(df)
+	})
+
+# UNUSED METHODS {{{1
+################################################################
+
+# TODO keep these methods in order to move them into biodb
+	
+# Get molecule name {{{2
+################################################################
+	
+	Ms4TabSqlDb$methods( getMoleculeName = function(molid) {
+
+		# Build request
+		where <- paste0(vapply(molid, function(id) paste0("pkmol.molecule_id = 'N", id, "'"), FUN.VALUE = ''), collapse = ' or ')
+		request <- paste0('select pkmol.molecule_id as id, pkmol.name from peaklist_name as pkmol where ', where, ';')
+
+		# Run request
+		rs <- .self$.send.query(request)
+		df <- fetch(rs,n=-1)
+
+		# Get IDs
+		ids <- vapply(df[['id']], function(x) as.integer(substring(x, 2)), FUN.VALUE = 1, USE.NAMES = FALSE)
+
+		# Get names in the same order as the input vector
+		names <- df[['name']][order(ids)[order(molid)]]
+
+		return(if (is.null(names)) NA_character_ else names)
+	})
+
+# Get molecule IDs {{{2
+################################################################
+	
+	Ms4TabSqlDb$methods( getMoleculeIds = function() {
+
+		rs <- .self$.send.query('select pkmol.molecule_id as id from peaklist_name as pkmol;')
+		ids <- fetch(rs,n=-1)
+		ids <- ids[['id']] # Get 'id' column
+		ids <- vapply(ids, function(x) { if (substring(x, 1, 1) == 'N') as.integer(substring(x, 2)) else as.integer(x) } , FUN.VALUE = 1, USE.NAMES = FALSE)
+		ids <- (sort(ids))
+
+		return(ids)
+	})
+
+# Get nb molecules {{{2
+################################################################
+	
+	Ms4TabSqlDb$methods( getNbMolecules = function() {
+
+		rs <- .self$.send.query('select count(*) from peaklist_name;')
+		df <- fetch(rs,n=-1)
+		n <- df[[1]]
+
+		return(n)
 	})
 	
 } # end of load safe guard

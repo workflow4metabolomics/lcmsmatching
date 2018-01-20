@@ -1,3 +1,5 @@
+# vi: fdm=marker
+
 if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 
 	library('methods')
@@ -50,42 +52,6 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 		.name_index <<- NULL
 	
 		callSuper(...)
-	})
-	
-	####################
-	# GET MOLECULE IDS #
-	####################
-	
-	MsXlsDb$methods( getMoleculeIds = function(max.results = NA_integer_) {
-	
-		# Init file list
-		.self$.init.file.list()
-
-		# Get IDs
-		mol.ids <- as.integer(which( ! is.na(.self$.files)))
-
-		# Cut
-		if ( ! is.na(max.results) && length(mol.ids) > max.results)
-			mol.ids <- mol.ids[max.results, ]
-
-		return(mol.ids)
-	})
-	
-	####################
-	# GET NB MOLECULES #
-	####################
-	
-	# Returns a list of all molecule names
-	MsXlsDb$methods( getNbMolecules = function() {
-		return(length(.self$getMoleculeIds()))
-	})
-
-	#####################
-	# GET MOLECULE NAME #
-	#####################
-	
-	MsXlsDb$methods( getMoleculeName = function(molid) {
-		return(vapply(molid, function(m) .self$.get.mol.name(m), FUN.VALUE = ""))
 	})
 	
 	###############################
@@ -848,5 +814,43 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 	
 		return(id)
 	}
+
+# UNUSED METHODS {{{1
+################################################################
+
+# TODO keep these methods in order to move them into biodb
+
+# Get molecule name {{{2
+################################################################
+	
+	MsXlsDb$methods( getMoleculeName = function(molid) {
+		return(vapply(molid, function(m) .self$.get.mol.name(m), FUN.VALUE = ""))
+	})
+
+# get molecule IDs {{{2
+################################################################
+	
+	MsXlsDb$methods( getMoleculeIds = function(max.results = NA_integer_) {
+	
+		# Init file list
+		.self$.init.file.list()
+
+		# Get IDs
+		mol.ids <- as.integer(which( ! is.na(.self$.files)))
+
+		# Cut
+		if ( ! is.na(max.results) && length(mol.ids) > max.results)
+			mol.ids <- mol.ids[max.results, ]
+
+		return(mol.ids)
+	})
+	
+# Get nb molecules {{{2
+################################################################
+	
+	# Returns a list of all molecule names
+	MsXlsDb$methods( getNbMolecules = function() {
+		return(length(.self$getMoleculeIds()))
+	})
 	
 } # end of load safe guard

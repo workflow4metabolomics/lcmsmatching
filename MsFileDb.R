@@ -156,44 +156,6 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 		#return(.self$.db[[.self$.fields[[col]]]])
 		return(.self$.db[[col]])
 	})
-
-	####################
-	# GET MOLECULE IDS #
-	####################
-	
-	MsFileDb$methods( getMoleculeIds = function(max.results = NA_integer_) {
-	
-		# Init db
-		.self$.init.db()
-
-		# Get IDs
-		mol.ids <- as.character(.self$.get.col(MSDB.TAG.MOLID))
-		mol.ids <- mol.ids[ ! duplicated(mol.ids)]
-		mol.ids <- sort(mol.ids)
-
-		# Cut results
-		if ( ! is.na(max.results) && length(mol.ids) > max.results)
-			mol.ids <- mol.ids[1:max.results]
-
-		return(mol.ids)
-	})
-
-	####################
-	# GET NB MOLECULES #
-	####################
-	
-	# Returns the number of molecules in the database.
-	MsFileDb$methods( getNbMolecules = function() {
-	
-		# Init db
-		.self$.init.db()
-
-		# Get IDs
-		mol.ids <- .self$.get.col(MSDB.TAG.MOLID)
-		mol.ids <- mol.ids[ ! duplicated(mol.ids)]
-
-		return(length(mol.ids))
-	})
 	
 	#####################
 	# GET MOLECULE NAME #
@@ -213,29 +175,6 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 		name <- strsplit(names, ';')[[1]][[1]]
 
 		return(name)
-	})
-
-	# Get molecule names
-	# molid     An integer vector of molecule IDs.
-	# Returns a character vector containing the names of the molecule IDs, in the same order as the input vector.
-	MsFileDb$methods( getMoleculeName = function(molid) {
-
-		if (is.null(molid))
-			return(NA_character_)
-
-		# Init db
-		.self$.init.db()
-
-		# Get database
-		db <- .self$.db[, c(MSDB.TAG.MOLID, MSDB.TAG.MOLNAMES)]
-
-		# Remove duplicates
-		db <- db[! duplicated(db[[MSDB.TAG.MOLID]]), ]
-
-		# Look for ids
-		names <- vapply(molid, function(i) .self$.get.name.from.id(db, i), FUN.VALUE = '')
-
-		return(names)
 	})
 
 	###################

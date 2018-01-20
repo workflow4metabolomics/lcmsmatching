@@ -1,3 +1,5 @@
+# vi: fdm=marker
+
 if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 
 	library(methods)
@@ -71,28 +73,6 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 
 		return(res)
 	})
-
-	####################
-	# GET MOLECULE IDS #
-	####################
-	
-	MsPeakForestDb$methods( getMoleculeIds = function() {
-
-		ids <- as.character(.self$.get.url(url = 'compounds/all/ids'))
-
-		return(ids)
-	})
-
-	####################
-	# GET NB MOLECULES #
-	####################
-	
-	MsPeakForestDb$methods( getNbMolecules = function() {
-
-		n <- .self$.get.url(url = 'compounds/all/count', ret.type = 'integer')
-
-		return(n)
-	})
 	
 	###############################
 	# GET CHROMATOGRAPHIC COLUMNS #
@@ -149,34 +129,6 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 		}
 
 		return(rt)
-	})
-	
-	#####################
-	# GET MOLECULE NAME #
-	#####################
-
-	MsPeakForestDb$methods( getMoleculeName = function(molid) {
-
-		library(RJSONIO)
-
-		if (is.null(molid))
-			return(NA_character_)
-
-		# Initialize names
-		names <- as.character(molid)
-
-		# Get non NA values
-		non.na.molid <- molid[ ! is.na(molid)]
-
-		if (length(non.na.molid) > 0) {
-			# Set URL
-			params <- c(molids = paste(non.na.molid, collapse = ','))
-
-			# Call webservice
-			names[ ! is.na(molid)] <- .self$.get.url(url = 'compounds/all/names', params = params)
-		}
-
-		return(names)
 	})
 
 	################

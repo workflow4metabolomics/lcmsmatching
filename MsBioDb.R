@@ -1,15 +1,15 @@
+# vi: fdm=marker
+
 if ( ! exists('MsBioDb')) { # Do not load again if already loaded
 
 	library(methods)
 	source('MsDb.R')
-	source('BiodbObject.R', chdir = TRUE)
-	source('BiodbFactory.R', chdir = TRUE)
 
 	#####################
 	# CLASS DECLARATION #
 	#####################
 	
-	MsBioDb <- setRefClass("MsBioDb", contains = "MsDb", fields = list(.massdb = "ANY"))
+	MsBioDb <- setRefClass("MsBioDb", contains = "MsDb", fields = list(.biodb = "ANY", .massdb = "ANY"))
 	
 	###############
 	# CONSTRUCTOR #
@@ -19,34 +19,11 @@ if ( ! exists('MsBioDb')) { # Do not load again if already loaded
 
 		# Check bio database
 		! is.null(massdb) || stop("You must set a bio database.")
-		inherits(massdb, "MassdbConn") || stop("The bio database must inherit from MassdbConn class.")
-		.massdb <<- massdb
+		inherits(massdb, "biodb::MassdbConn") || stop("The bio database must inherit from MassdbConn class.")
+		.biodb <<- biodb::Biodb$new()
+		.massdb <<- .self$.biodb$getFactory()$createConn(massdb)
 
 		callSuper(...)
-	})
-
-	####################
-	# HANDLE COMPOUNDS #
-	####################
-	
-	MsBioDb$methods( handleCompounds = function() {
-		return(.self$.massdb$handlesEntryType(BIODB.COMPOUND))
-	})
-
-	####################
-	# GET MOLECULE IDS #
-	####################
-	
-	MsBioDb$methods( getMoleculeIds = function(max.results = NA_integer_) {
-		return(.self$.massdb$getEntryIds(type = BIODB.COMPOUND, max.results = max.results))
-	})
-
-	####################
-	# GET NB MOLECULES #
-	####################
-	
-	MsBioDb$methods( getNbMolecules = function() {
-		return(.self$.massdb$getNbEntries(type = BIODB.COMPOUND))
 	})
 
 	#################
@@ -55,14 +32,6 @@ if ( ! exists('MsBioDb')) { # Do not load again if already loaded
 
 	MsBioDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
 		return(.self$.massdb$getMzValues(mode = mode, max.results = max.results))
-	})
-
-	#####################
-	# GET MOLECULE NAME #
-	#####################
-
-	MsBioDb$methods( getMoleculeName = function(molid) {
-		return(.self$.massdb$getMoleculeName(molid))
 	})
 
 	###############################
