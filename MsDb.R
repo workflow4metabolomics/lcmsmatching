@@ -186,17 +186,6 @@ if ( ! exists('MsDb')) { # Do not load again if already loaded
 	MsDb$methods( getChromCol = function(molid = NULL) {
 		stop("Method getChromCol() not implemented in concrete class.")
 	})
-
-	################
-	# FIND BY NAME #
-	################
-
-	# Find a molecule by name
-	# name  A vector of molecule names to search for.
-	# Return an integer vector of the same size as the name input vector, containing the found molecule IDs, in the same order.
-	MsDb$methods( findByName = function(name) {
-		stop("Method findByName() not implemented in concrete class.")
-	})
 	
 	#######################
 	# GET RETENTION TIMES #

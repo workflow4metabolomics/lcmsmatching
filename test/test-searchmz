@@ -538,7 +538,7 @@ function test_generic_html_output_file {
 	local peak_output_file=$SCRIPT_PATH/test_generic_html_output_file-peak-output.tsv
 	local html_output_file=$SCRIPT_PATH/test_generic_html_output_file-html-output.tsv
 
-	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file || return 1
+	expect_success $SEARCHMZ $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file --debug || return 1
 	expect_file_exists $html_output_file || return 1
 }
 

@@ -95,39 +95,6 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 
 		return(cols)
 	})
-
-	################
-	# FIND BY NAME #
-	################
-
-	Ms4TabSqlDb$methods( findByName = function(name) {
-
-		if (is.null(name)) return(NA_integer_)
-
-		# Put names in uppercase
-		uname <- toupper(name)
-
-		# Build request
-		where <- paste0(vapply(uname, function(n) paste0("upper(pkmol.name) = '", gsub("'", "''", n, perl = TRUE), "'"), FUN.VALUE = '', USE.NAMES = FALSE), collapse = ' or ')
-		request <- paste0('select pkmol.molecule_id as id, pkmol.name from peaklist_name as pkmol where ', where, ';')
-
-		# Run request
-		rs <- .self$.send.query(request)
-		df <- fetch(rs,n=-1)
-
-		# Adds missing names/IDs
-		missing_names <- uname[ ! uname %in% toupper(df[['name']])]
-		df <- rbind(df, data.frame(id = rep(NA_integer_, length(missing_names)), name = missing_names))
-
-		# Get IDs and names
-		ids <- vapply(df[['id']], function(x) as.integer(substring(x, 2)), FUN.VALUE = 1, USE.NAMES = FALSE)
-		names <- toupper(as.character(df[['name']]))
-
-		# Get IDs in the same order as the input vector
-		ids[order(uname)] <- ids[order(names)]
-
-		return(if (is.null(ids)) NA_integer_ else ids)
-	})
 	
 	#######################
 	# GET RETENTION TIMES #
@@ -303,6 +270,38 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 ################################################################
 
 # TODO keep these methods in order to move them into biodb
+
+# Find by name {{{2
+################################################################
+
+	Ms4TabSqlDb$methods( findByName = function(name) {
+
+		if (is.null(name)) return(NA_integer_)
+
+		# Put names in uppercase
+		uname <- toupper(name)
+
+		# Build request
+		where <- paste0(vapply(uname, function(n) paste0("upper(pkmol.name) = '", gsub("'", "''", n, perl = TRUE), "'"), FUN.VALUE = '', USE.NAMES = FALSE), collapse = ' or ')
+		request <- paste0('select pkmol.molecule_id as id, pkmol.name from peaklist_name as pkmol where ', where, ';')
+
+		# Run request
+		rs <- .self$.send.query(request)
+		df <- fetch(rs,n=-1)
+
+		# Adds missing names/IDs
+		missing_names <- uname[ ! uname %in% toupper(df[['name']])]
+		df <- rbind(df, data.frame(id = rep(NA_integer_, length(missing_names)), name = missing_names))
+
+		# Get IDs and names
+		ids <- vapply(df[['id']], function(x) as.integer(substring(x, 2)), FUN.VALUE = 1, USE.NAMES = FALSE)
+		names <- toupper(as.character(df[['name']]))
+
+		# Get IDs in the same order as the input vector
+		ids[order(uname)] <- ids[order(names)]
+
+		return(if (is.null(ids)) NA_integer_ else ids)
+	})
 	
 # Get molecule name {{{2
 ################################################################

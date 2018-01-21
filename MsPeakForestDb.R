@@ -131,31 +131,6 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 		return(rt)
 	})
 
-	################
-	# FIND BY NAME #
-	################
-
-	MsPeakForestDb$methods( findByName = function(name) {
-
-		if (is.null(name))
-			return(NA_character_)
-
-		ids <- list()
-
-		for (n in name) {
-
-			if (is.na(n))
-				ids <- c(ids, NA_character_)
-
-			else {
-				compounds <- .self$.get.url(url = paste0('search/compounds/name/', curlEscape(n)))$compoundNames
-				ids <- c(ids, list(vapply(compounds, function(c) as.character(c$compound$id), FUN.VALUE = '')))
-			}
-		}
-
-		return(ids)
-	})
-
 	#################
 	# GET NB PEAKS #
 	#################
@@ -273,5 +248,32 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 		colnames(results) <- vapply(colnames(results), function(s) eval(parse(text=s)), FUN.VALUE = '')
 
 		return(results)
+	})
+
+# UNUSED METHODS {{{1
+################################################################
+
+# Find by name {{{2
+################################################################
+
+	MsPeakForestDb$methods( findByName = function(name) {
+
+		if (is.null(name))
+			return(NA_character_)
+
+		ids <- list()
+
+		for (n in name) {
+
+			if (is.na(n))
+				ids <- c(ids, NA_character_)
+
+			else {
+				compounds <- .self$.get.url(url = paste0('search/compounds/name/', curlEscape(n)))$compoundNames
+				ids <- c(ids, list(vapply(compounds, function(c) as.character(c$compound$id), FUN.VALUE = '')))
+			}
+		}
+
+		return(ids)
 	})
 }

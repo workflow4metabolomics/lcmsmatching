@@ -84,40 +84,6 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 
 		return(cn)
 	})
-
-	################
-	# FIND BY NAME #
-	################
-
-	MsXlsDb$methods( findByName = function(name) {
-
-		# NULL entry
-		if (is.null(name))
-			return(NA_integer_)
-	
-		# Initialize output list
-		ids <- NULL
-
-		for (n in name) {
-
-			id <- NA_integer_
-
-			if ( ! is.na(n)) {
-
-				# Get index
-				index <- .self$.get.name.index()
-
-				# Search for name in index
-				i <- binary.search(toupper(n), index[['name']])
-
-				id <- if (is.na(i)) NA_integer_ else index[i, 'id']
-			}
-
-			ids <- c(ids, id)
-		}
-
-		return(ids)
-	})
 	
 	#######################
 	# GET RETENTION TIMES #
@@ -851,6 +817,39 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 	# Returns a list of all molecule names
 	MsXlsDb$methods( getNbMolecules = function() {
 		return(length(.self$getMoleculeIds()))
+	})
+
+# Find by name {{{2
+################################################################
+
+	MsXlsDb$methods( findByName = function(name) {
+
+		# NULL entry
+		if (is.null(name))
+			return(NA_integer_)
+	
+		# Initialize output list
+		ids <- NULL
+
+		for (n in name) {
+
+			id <- NA_integer_
+
+			if ( ! is.na(n)) {
+
+				# Get index
+				index <- .self$.get.name.index()
+
+				# Search for name in index
+				i <- binary.search(toupper(n), index[['name']])
+
+				id <- if (is.na(i)) NA_integer_ else index[i, 'id']
+			}
+
+			ids <- c(ids, id)
+		}
+
+		return(ids)
 	})
 	
 } # end of load safe guard

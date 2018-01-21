@@ -226,26 +226,6 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 
 		return(id)
 	})
-
-	################
-	# FIND BY NAME #
-	################
-
-	# Find a molecule by name
-	# name  A vector of molecule names to search for.
-	# Return a vector of the same size as the name input vector, containing the found molecule IDs, in the same order.
-	MsFileDb$methods( findByName = function(name) {
-
-		if (is.null(name))
-			return(NA_character_)
-
-		# Look for molecules with this name
-		ids <- list()
-		for (n in name)
-			ids <- c(ids, list(.self$.get.id.from.name(n)))
-
-		return(ids)
-	})
 	
 	###############################
 	# GET CHROMATOGRAPHIC COLUMNS #
