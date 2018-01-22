@@ -96,44 +96,6 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 		return(cols)
 	})
 	
-	#######################
-	# GET RETENTION TIMES #
-	#######################
-	
-	Ms4TabSqlDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
-
-		if (is.null(molid) || is.na(molid) || length(molid)  != 1)
-			stop("The parameter molid must consist only in a single integer.")
-			
-		# Build request
-		request <- paste0("select distinct method.name as col, (pkret.retention * 60) as ret from peaklist as pk, peaklist_name as pkmol, peaklist_ret as pkret, method where pkret.id_peak = pk.id and pkmol.id = pk.name_id and pkret.id_method = method.id and pkmol.molecule_id = 'N", molid, "'")
-		if ( ! is.na(col)) {
-			where_cols <- paste0(vapply(col, function(c) paste0("method.name = '", c, "'"), FUN.VALUE = ''), collapse = ' or ')
-			request <- paste0(request, ' and (', where_cols, ')')
-		}
-		request <- paste0(request, ';')
-
-		# Run request
-		rs <- .self$.send.query(request)
-		df <- fetch(rs,n=-1)
-
-		# Remove FIA
-		df <- df[df[['col']] != 'FIA', ]
-
-		# Normalize names
-		df[['col']] <- vapply(df[['col']], .normalize_column_name, FUN.VALUE = '', USE.NAMES = FALSE)
- 
-		# Build output list
-		lst <- list()
-		if (nrow(df) > 0)
-			for (i in 1:nrow(df)) {
-				c <- df[i, 'col']
-				lst[[c]] <- c(lst[[c]], df[i, 'ret'])
-			}
-
-		return(lst)
-	})
-	
 	###############################
 	# GET CHROMATOGRAPHIC COLUMNS #
 	###############################
@@ -267,6 +229,43 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 		df <- fetch(rs, n=-1)
 
 		return(df[[MSDB.TAG.MZTHEO]])
+	})
+	
+# Get retention times {{{2
+################################################################
+	
+	Ms4TabSqlDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
+
+		if (is.null(molid) || is.na(molid) || length(molid)  != 1)
+			stop("The parameter molid must consist only in a single integer.")
+			
+		# Build request
+		request <- paste0("select distinct method.name as col, (pkret.retention * 60) as ret from peaklist as pk, peaklist_name as pkmol, peaklist_ret as pkret, method where pkret.id_peak = pk.id and pkmol.id = pk.name_id and pkret.id_method = method.id and pkmol.molecule_id = 'N", molid, "'")
+		if ( ! is.na(col)) {
+			where_cols <- paste0(vapply(col, function(c) paste0("method.name = '", c, "'"), FUN.VALUE = ''), collapse = ' or ')
+			request <- paste0(request, ' and (', where_cols, ')')
+		}
+		request <- paste0(request, ';')
+
+		# Run request
+		rs <- .self$.send.query(request)
+		df <- fetch(rs,n=-1)
+
+		# Remove FIA
+		df <- df[df[['col']] != 'FIA', ]
+
+		# Normalize names
+		df[['col']] <- vapply(df[['col']], .normalize_column_name, FUN.VALUE = '', USE.NAMES = FALSE)
+ 
+		# Build output list
+		lst <- list()
+		if (nrow(df) > 0)
+			for (i in 1:nrow(df)) {
+				c <- df[i, 'col']
+				lst[[c]] <- c(lst[[c]], df[i, 'ret'])
+			}
+
+		return(lst)
 	})
 
 # Find by name {{{2

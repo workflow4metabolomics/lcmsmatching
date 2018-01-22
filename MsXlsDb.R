@@ -85,121 +85,6 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 		return(cn)
 	})
 	
-	#######################
-	# GET RETENTION TIMES #
-	#######################
-	
-	MsXlsDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
-
-		if (is.null(molid) || is.na(molid))
-			return(NULL)
-
-		# Find it in memory
-		rt <- .self$.mem.get(molid, 'rt')
-
-		if (is.null(rt)) {
-	
-			# Call observers
-			if ( ! is.null(.self$.observers))
-				for (obs in .self$.observers)
-					obs$progress(paste0("Loading retention times of file", .self$.get.file(molid), "."), level = 2)
-		
-			rt <- NULL
-		
-			# Load from cache file
-			cache_file <- NA_character_
-			if ( ! is.na(.self$.get.cache.dir())) {
-				cache_file <- file.path(.self$.get.cache.dir(), paste0('rt-', molid, '.bin'))
-				if (file.exists(cache_file))
-					load(file = cache_file) # load rt
-			}
-		
-			if (is.null(rt)) {
-		
-				# Get retention times of both positive and negative mode tabs
-				mspos_rt <- .self$.parse_retention_times(molid, .XLS_MSPOS_TAB)
-				msneg_rt <- .self$.parse_retention_times(molid, .XLS_MSNEG_TAB)
-		
-				# Retention times stored in negative and positive modes
-				if ( ! is.null(mspos_rt) && ! is.null(msneg_rt)) {
-
-					# Warn observers when both retention time lists are not identical
-					if ( ! identical(mspos_rt, msneg_rt))
-						for (obs in .self$.observers)
-							obs$warning(paste0("Retention times in negative and positive modes are different in file ", .self$.get.file(molid), "."))
-		
-					# Merge both lists
-					rt <- mspos_rt
-					for (c in names(msneg_rt))
-						if (c %in% names(rt)) {
-							v <- c(rt[[c]], msneg_rt[[c]])
-							rt[[c]] <- v[ ! duplicated(v)]
-						}
-						else
-							rt[[c]] <- msneg_rt[[c]]
-				}
-				else
-					# Set retention times
-					rt <- if (is.null(mspos_rt)) msneg_rt else mspos_rt
-
-				if (is.null(rt)) rt <- list()
-		
-				# Write in cache
-				if ( ! is.na(cache_file)) {
-		
-					# Call observers
-					if ( ! is.null(.self$.observers))
-						for (obs in .self$.observers)
-							obs$progress(paste0("Caching retention times of file ", .self$.get.file(molid), "."))
-
-					save(rt, file = cache_file)
-				}
-			}
-
-			# Store in memory
-			.self$.mem.set(rt, molid, 'rt')
-		}
-
-		# Select only one column if asked
-		if ( ! is.na(col)) rt <- rt[[col]]
-
-		return(rt)
-	})
-
-	##################
-	# GET PEAK TABLE #
-	##################
-
-	MsXlsDb$methods( getPeakTable = function(molid = NA_integer_, mode = NA_character_) {
-
-		peaks <- NULL
-
-		# Set default molecule IDs
-		if (is.null(molid) || (length(molid) == 1 && is.na(molid)))
-			molid <- .self$getMoleculeIds()
-
-		# Set default modes
-		if (is.null(mode) || (length(mode) == 1 && is.na(mode)))
-			mode <- c(MSDB.TAG.POS, MSDB.TAG.NEG)
-
-		# Loop on all molecules
-		for (mol in molid) {
-
-			# Loop on all modes
-			for (mod in mode) {
-				m.peaks <- .self$.get.peaks(mol, mod)
-				if ( ! is.null(m.peaks) && nrow(m.peaks) > 0) {
-					m.peaks[[MSDB.TAG.MOLID]] <- mol
-					m.peaks[[MSDB.TAG.MODE]] <- mod
-					peaks <- if (is.null(peaks)) m.peaks else rbind(peaks, m.peaks)
-					peaks <- df.move.col.first(peaks, c(MSDB.TAG.MOLID, MSDB.TAG.MODE))
-				}
-			}
-		}
-
-		return(peaks)
-	})
-	
 	#############
 	# GET PEAKS #
 	#############
@@ -848,6 +733,119 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 			mz <- mz[1:max.results]
 
 		return(mz)
+	})
+
+# Get peak table {{{2
+################################################################
+
+	MsXlsDb$methods( getPeakTable = function(molid = NA_integer_, mode = NA_character_) {
+
+		peaks <- NULL
+
+		# Set default molecule IDs
+		if (is.null(molid) || (length(molid) == 1 && is.na(molid)))
+			molid <- .self$getMoleculeIds()
+
+		# Set default modes
+		if (is.null(mode) || (length(mode) == 1 && is.na(mode)))
+			mode <- c(MSDB.TAG.POS, MSDB.TAG.NEG)
+
+		# Loop on all molecules
+		for (mol in molid) {
+
+			# Loop on all modes
+			for (mod in mode) {
+				m.peaks <- .self$.get.peaks(mol, mod)
+				if ( ! is.null(m.peaks) && nrow(m.peaks) > 0) {
+					m.peaks[[MSDB.TAG.MOLID]] <- mol
+					m.peaks[[MSDB.TAG.MODE]] <- mod
+					peaks <- if (is.null(peaks)) m.peaks else rbind(peaks, m.peaks)
+					peaks <- df.move.col.first(peaks, c(MSDB.TAG.MOLID, MSDB.TAG.MODE))
+				}
+			}
+		}
+
+		return(peaks)
+	})
+	
+# Get retention times {{{2
+################################################################
+	
+	MsXlsDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
+
+		if (is.null(molid) || is.na(molid))
+			return(NULL)
+
+		# Find it in memory
+		rt <- .self$.mem.get(molid, 'rt')
+
+		if (is.null(rt)) {
+	
+			# Call observers
+			if ( ! is.null(.self$.observers))
+				for (obs in .self$.observers)
+					obs$progress(paste0("Loading retention times of file", .self$.get.file(molid), "."), level = 2)
+		
+			rt <- NULL
+		
+			# Load from cache file
+			cache_file <- NA_character_
+			if ( ! is.na(.self$.get.cache.dir())) {
+				cache_file <- file.path(.self$.get.cache.dir(), paste0('rt-', molid, '.bin'))
+				if (file.exists(cache_file))
+					load(file = cache_file) # load rt
+			}
+		
+			if (is.null(rt)) {
+		
+				# Get retention times of both positive and negative mode tabs
+				mspos_rt <- .self$.parse_retention_times(molid, .XLS_MSPOS_TAB)
+				msneg_rt <- .self$.parse_retention_times(molid, .XLS_MSNEG_TAB)
+		
+				# Retention times stored in negative and positive modes
+				if ( ! is.null(mspos_rt) && ! is.null(msneg_rt)) {
+
+					# Warn observers when both retention time lists are not identical
+					if ( ! identical(mspos_rt, msneg_rt))
+						for (obs in .self$.observers)
+							obs$warning(paste0("Retention times in negative and positive modes are different in file ", .self$.get.file(molid), "."))
+		
+					# Merge both lists
+					rt <- mspos_rt
+					for (c in names(msneg_rt))
+						if (c %in% names(rt)) {
+							v <- c(rt[[c]], msneg_rt[[c]])
+							rt[[c]] <- v[ ! duplicated(v)]
+						}
+						else
+							rt[[c]] <- msneg_rt[[c]]
+				}
+				else
+					# Set retention times
+					rt <- if (is.null(mspos_rt)) msneg_rt else mspos_rt
+
+				if (is.null(rt)) rt <- list()
+		
+				# Write in cache
+				if ( ! is.na(cache_file)) {
+		
+					# Call observers
+					if ( ! is.null(.self$.observers))
+						for (obs in .self$.observers)
+							obs$progress(paste0("Caching retention times of file ", .self$.get.file(molid), "."))
+
+					save(rt, file = cache_file)
+				}
+			}
+
+			# Store in memory
+			.self$.mem.set(rt, molid, 'rt')
+		}
+
+		# Select only one column if asked
+		if ( ! is.na(col)) rt <- rt[[col]]
+
+		return(rt)
 	})
 	
 } # end of load safe guard

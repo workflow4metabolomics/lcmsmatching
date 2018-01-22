@@ -33,13 +33,5 @@ if ( ! exists('MsBioDb')) { # Do not load again if already loaded
 	MsBioDb$methods( getChromCol = function(molid = NULL) {
 		return(.self$.massdb$getChromCol(molid))
 	})
-	
-	#######################
-	# GET RETENTION TIMES #
-	#######################
-	
-	MsBioDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
-		return(.self$.massdb$getRetentionTimes(molid, chrom.cols = col))
-	})
 
 }

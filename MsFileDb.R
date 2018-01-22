@@ -304,9 +304,11 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 		return(db)
 	})
 	
-	#######################
-	# GET RETENTION TIMES #
-	#######################
+# UNUSED METHODS {{{1
+################################################################
+	
+# Get retention times {{{2
+################################################################
 	
 	# Get the retention times of a molecule.
 	# Returns a list of numeric vectors. The list has for keys/names the columns, and for values vectors of numerics (the retention times). If no retention times are registered for this molecule, then returns an empty list.
@@ -340,9 +342,6 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 
 		return(rt)
 	})
-	
-# UNUSED METHODS {{{1
-################################################################
 
 # Get nb peaks {{{2
 ################################################################

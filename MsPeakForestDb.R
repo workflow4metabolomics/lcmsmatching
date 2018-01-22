@@ -95,41 +95,6 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 
 		return(cols)
 	})
-	
-	#######################
-	# GET RETENTION TIMES #
-	#######################
-	
-	MsPeakForestDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
-
-		if (is.null(molid) || is.na(molid) || length(molid)  != 1)
-			stop("The parameter molid must consist only in a single value.")
-
-		rt <- list()
-
-		# Set URL
-		params <- NULL
-		if ( ! is.null(molid))
-			params <- list(molids = paste(molid, collapse = ','))
-
-		# Call webservice
-		spectra <- .self$.get.url(url = 'spectra/lcms/search', params = params)
-		if (class(spectra) == 'list' && length(spectra) > 0) {
-			for (s in spectra)
-				if (is.na(col) || s$liquidChromatography$columnCode %in% col) {
-					ret.time <- (s$RTmin + s$RTmax) / 2
-					ret.time <- ret.time * 60 # Retention time are in minutes in Peakforest, but we want them in seconds
-					c <- s$liquidChromatography$columnCode
-					if (c %in% names(rt)) {
-						if ( ! ret.time %in% rt[[c]])
-							rt[[c]] <- c(rt[[c]], ret.time)
-					} else
-						rt[[c]] <- ret.time
-				}
-		}
-
-		return(rt)
-	})
 
 	##############################
 	# DO SEARCH FOR MZ RT BOUNDS #
@@ -273,5 +238,39 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 			mz <- mz[1:max.results]
 
 		return(mz)
+	})
+	
+# Get retention times {{{2
+################################################################
+	
+	MsPeakForestDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
+
+		if (is.null(molid) || is.na(molid) || length(molid)  != 1)
+			stop("The parameter molid must consist only in a single value.")
+
+		rt <- list()
+
+		# Set URL
+		params <- NULL
+		if ( ! is.null(molid))
+			params <- list(molids = paste(molid, collapse = ','))
+
+		# Call webservice
+		spectra <- .self$.get.url(url = 'spectra/lcms/search', params = params)
+		if (class(spectra) == 'list' && length(spectra) > 0) {
+			for (s in spectra)
+				if (is.na(col) || s$liquidChromatography$columnCode %in% col) {
+					ret.time <- (s$RTmin + s$RTmax) / 2
+					ret.time <- ret.time * 60 # Retention time are in minutes in Peakforest, but we want them in seconds
+					c <- s$liquidChromatography$columnCode
+					if (c %in% names(rt)) {
+						if ( ! ret.time %in% rt[[c]])
+							rt[[c]] <- c(rt[[c]], ret.time)
+					} else
+						rt[[c]] <- ret.time
+				}
+		}
+
+		return(rt)
 	})
 }

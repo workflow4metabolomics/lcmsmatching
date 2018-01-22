@@ -158,15 +158,6 @@ if ( ! exists('MsDb')) { # Do not load again if already loaded
 	MsDb$methods( getRtUnit = function(unit) {
 		return(.self$.rt.unit)
 	})
-
-	####################
-	# HANDLE COMPOUNDS #
-	####################
-	
-	# Returns TRUE if this database handles compounds directly (by IDs)
-	MsDb$methods( handleCompounds = function() {
-		return(TRUE)
-	})
 	
 	###############################
 	# GET CHROMATOGRAPHIC COLUMNS #
@@ -176,24 +167,6 @@ if ( ! exists('MsDb')) { # Do not load again if already loaded
 	# Returns a vector of character listing the chromatographic column names. The name must be formatted in lowercase as following: uplc(-c8)?(-20min)?.
 	MsDb$methods( getChromCol = function(molid = NULL) {
 		stop("Method getChromCol() not implemented in concrete class.")
-	})
-	
-	#######################
-	# GET RETENTION TIMES #
-	#######################
-	
-	# Get the retention times of a molecule.
-	# Returns a list of numeric vectors. The list has for keys/names the columns, and for values vectors of numerics (the retention times). If no retention times are registered for this molecule, then returns an empty list.
-	MsDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
-		stop("Method getRetentionTimes() not implemented in concrete class.")
-	})
-
-	##################
-	# GET PEAK TABLE #
-	##################
-
-	MsDb$methods( getPeakTable = function(molid = NA_integer_, mode = NA_character_) {
-		stop("Method getPeakTable() not implemented in concrete class.")
 	})
 
 	##########
