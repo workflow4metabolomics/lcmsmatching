@@ -168,15 +168,6 @@ if ( ! exists('MsDb')) { # Do not load again if already loaded
 		return(TRUE)
 	})
 	
-	#################
-	# GET MZ VALUES #
-	#################
-	
-	# Returns a numeric vector of all masses stored inside the database.
-	MsDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
-		stop("Method getMzValues() not implemented in concrete class.")
-	})
-	
 	###############################
 	# GET CHROMATOGRAPHIC COLUMNS #
 	###############################

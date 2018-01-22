@@ -200,30 +200,6 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 		return(peaks)
 	})
 	
-	#################
-	# GET MZ VALUES #
-	#################
-	
-	# Returns a numeric vector of all masses stored inside the database.
-	MsXlsDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
-
-		mz <- numeric()
-
-		# Get all mz values of all molecules
-		for(molid in .self$getMoleculeIds())
-			for (m in (if (is.null(mode) || is.na(mode)) c(MSDB.TAG.POS, MSDB.TAG.NEG) else mode))
-				mz <- c(mz, .self$.get.peaks(molid, m)[[MSDB.TAG.MZTHEO]])
-
-		# Remove duplicated
-		mz <- mz[ ! duplicated(mz)]
-
-		# Apply cut-off
-		if ( ! is.na(max.results))
-			mz <- mz[1:max.results]
-
-		return(mz)
-	})
-	
 	#############
 	# GET PEAKS #
 	#############
@@ -849,6 +825,29 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 			type <- c(MSDB.TAG.POS, MSDB.TAG.NEG)
 
 		return(sum(vapply(molid, function(m) { if (is.na(m)) 0 else sum(vapply(type, function(t) { peaks <- .self$.get.peaks(m, t) ; if (is.null(peaks)) 0 else nrow(peaks) }, FUN.VALUE = 1)) }, FUN.VALUE = 1)))
+	})
+	
+# Get mz values {{{2
+################################################################
+	
+	# Returns a numeric vector of all masses stored inside the database.
+	MsXlsDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
+
+		mz <- numeric()
+
+		# Get all mz values of all molecules
+		for(molid in .self$getMoleculeIds())
+			for (m in (if (is.null(mode) || is.na(mode)) c(MSDB.TAG.POS, MSDB.TAG.NEG) else mode))
+				mz <- c(mz, .self$.get.peaks(molid, m)[[MSDB.TAG.MZTHEO]])
+
+		# Remove duplicated
+		mz <- mz[ ! duplicated(mz)]
+
+		# Apply cut-off
+		if ( ! is.na(max.results))
+			mz <- mz[1:max.results]
+
+		return(mz)
 	})
 	
 } # end of load safe guard

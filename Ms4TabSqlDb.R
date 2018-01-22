@@ -154,33 +154,6 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 
 		return(dbcols[normcols == tolower(col)])
 	})
-	
-	#################
-	# GET MZ VALUES #
-	#################
-	
-	# Returns a numeric vector of all masses stored inside the database.
-	Ms4TabSqlDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
-
-		# Build request
-		select <- paste0("select distinct pk.mass as ", MSDB.TAG.MZTHEO)
-		from <- " from peaklist as pk"
-		where <- ""
-		if ( ! is.null(mode))
-			where <- paste0(" where ", if (mode == MSDB.TAG.POS) '' else 'not ', 'pk.ion_pos')
-		limit <- ""
-		if ( ! is.na(NA_integer_))
-			limit <- paste(" limit", max.results)
-
-		# Assemble request
-		request <- paste0(select, from, where, ';')
-
-		# Run request
-		rs <- .self$.send.query(request)
-		df <- fetch(rs, n=-1)
-
-		return(df[[MSDB.TAG.MZTHEO]])
-	})
 
 	##########
 	# SEARCH #
@@ -268,6 +241,32 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 		df <- fetch(rs,n=-1)
 
 		return(df[1,1])
+	})
+	
+# Get mz values {{{2
+################################################################
+	
+	# Returns a numeric vector of all masses stored inside the database.
+	Ms4TabSqlDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
+
+		# Build request
+		select <- paste0("select distinct pk.mass as ", MSDB.TAG.MZTHEO)
+		from <- " from peaklist as pk"
+		where <- ""
+		if ( ! is.null(mode))
+			where <- paste0(" where ", if (mode == MSDB.TAG.POS) '' else 'not ', 'pk.ion_pos')
+		limit <- ""
+		if ( ! is.na(NA_integer_))
+			limit <- paste(" limit", max.results)
+
+		# Assemble request
+		request <- paste0(select, from, where, ';')
+
+		# Run request
+		rs <- .self$.send.query(request)
+		df <- fetch(rs, n=-1)
+
+		return(df[[MSDB.TAG.MZTHEO]])
 	})
 
 # Find by name {{{2

@@ -304,37 +304,6 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 		return(db)
 	})
 	
-	#################
-	# GET MZ VALUES #
-	#################
-	
-	# Returns a numeric vector of all masses stored inside the database.
-	MsFileDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
-
-		# Init db
-		.self$.init.db()
-		db <- .self$.db
-
-		# Filter on mode
-		if ( ! is.null(mode) && ! is.na(mode)) {
-			mode.tag <- if (mode == MSDB.TAG.POS) .self$.modes$pos else .self$.modes$neg
-			selected.lines <- (.self$.get(db, col = MSDB.TAG.MODE) == mode.tag)
-			db <- db[selected.lines, ]
-		}
-
-		# Get masses
-		mz <- .self$.get(db, col = MSDB.TAG.MZTHEO)
-
-		# Remove duplicates
-		mz <- mz[ ! duplicated(mz)]
-
-		# Apply cut-off
-		if ( ! is.na(max.results))
-			mz <- mz[1:max.results]
-
-		return(mz)
-	})
-	
 	#######################
 	# GET RETENTION TIMES #
 	#######################
@@ -404,6 +373,36 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 		n <- sum(as.integer(! duplicated(mz)))
 
 		return(n)
+	})
+	
+# Get mz values {{{2
+################################################################
+
+	# Returns a numeric vector of all masses stored inside the database.
+	MsFileDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
+
+		# Init db
+		.self$.init.db()
+		db <- .self$.db
+
+		# Filter on mode
+		if ( ! is.null(mode) && ! is.na(mode)) {
+			mode.tag <- if (mode == MSDB.TAG.POS) .self$.modes$pos else .self$.modes$neg
+			selected.lines <- (.self$.get(db, col = MSDB.TAG.MODE) == mode.tag)
+			db <- db[selected.lines, ]
+		}
+
+		# Get masses
+		mz <- .self$.get(db, col = MSDB.TAG.MZTHEO)
+
+		# Remove duplicates
+		mz <- mz[ ! duplicated(mz)]
+
+		# Apply cut-off
+		if ( ! is.na(max.results))
+			mz <- mz[1:max.results]
+
+		return(mz)
 	})
 
 } # end of load safe guard

@@ -26,14 +26,6 @@ if ( ! exists('MsBioDb')) { # Do not load again if already loaded
 		callSuper(...)
 	})
 
-	#################
-	# GET MZ VALUES #
-	#################
-
-	MsBioDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
-		return(.self$.massdb$getMzValues(mode = mode, max.results = max.results))
-	})
-
 	###############################
 	# GET CHROMATOGRAPHIC COLUMNS #
 	###############################

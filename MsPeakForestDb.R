@@ -130,27 +130,6 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 
 		return(rt)
 	})
-	
-	#################
-	# GET MZ VALUES #
-	#################
-	
-	MsPeakForestDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
-
-		# Query params
-		params <- NULL
-		if ( ! is.null(mode))
-			params <- c(params, mode = if (mode == MSDB.TAG.POS) 'positive' else 'negative')
-
-		# Get MZ valuels
-		mz <- .self$.get.url(url = 'spectra/lcms/peaks/list-mz', params = params)
-
-		# Apply cut-off
-		if ( ! is.na(max.results))
-			mz <- mz[1:max.results]
-
-		return(mz)
-	})
 
 	##############################
 	# DO SEARCH FOR MZ RT BOUNDS #
@@ -274,5 +253,25 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 		}
 
 		return(ids)
+	})
+	
+# Get mz values {{{2
+################################################################
+	
+	MsPeakForestDb$methods( getMzValues = function(mode = NULL, max.results = NA_integer_) {
+
+		# Query params
+		params <- NULL
+		if ( ! is.null(mode))
+			params <- c(params, mode = if (mode == MSDB.TAG.POS) 'positive' else 'negative')
+
+		# Get MZ valuels
+		mz <- .self$.get.url(url = 'spectra/lcms/peaks/list-mz', params = params)
+
+		# Apply cut-off
+		if ( ! is.na(max.results))
+			mz <- mz[1:max.results]
+
+		return(mz)
 	})
 }
