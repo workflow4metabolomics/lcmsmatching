@@ -49,13 +49,5 @@ if ( ! exists('MsBioDb')) { # Do not load again if already loaded
 	MsBioDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
 		return(.self$.massdb$getRetentionTimes(molid, chrom.cols = col))
 	})
-	
-	################
-	# GET NB PEAKS #
-	################
-	
-	MsBioDb$methods( getNbPeaks = function(molid = NA_integer_, mode = NA_character_) {
-		return(.self$.massdb$getNbPeaks(compound.ids = molid, mode = mode))
-	})
 
 }

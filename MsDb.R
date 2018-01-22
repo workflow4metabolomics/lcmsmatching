@@ -196,17 +196,6 @@ if ( ! exists('MsDb')) { # Do not load again if already loaded
 	MsDb$methods( getRetentionTimes = function(molid, col = NA_character_) {
 		stop("Method getRetentionTimes() not implemented in concrete class.")
 	})
-	
-	################
-	# GET NB PEAKS #
-	################
-	
-	# Get the total number of MS peaks stored inside the database.
-	# molid     The ID of the molecule.
-	# type      The MS type.
-	MsDb$methods( getNbPeaks = function(molid = NA_integer_, type = NA_character_) {
-		stop("Method getNbPeaks() not implemented in concrete class.")
-	})
 
 	##################
 	# GET PEAK TABLE #

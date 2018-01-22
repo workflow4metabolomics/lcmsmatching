@@ -130,25 +130,6 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 
 		return(rt)
 	})
-
-	#################
-	# GET NB PEAKS #
-	#################
-	
-	MsPeakForestDb$methods( getNbPeaks = function(molid = NA_integer_, type = NA_character_) {
-
-		# Build URL
-		params <- NULL
-		if ( ! is.na(type))
-			params <- c(params, mode = if (type == MSDB.TAG.POS) 'pos' else 'neg')
-		if ( ! is.null(molid) && (length(molid) > 1 || ! is.na(molid)))
-			params <- c(params, molids = paste(molid, collapse = ','))
-
-		# Run request
-		n <- .self$.get.url(url = 'spectra/lcms/count-peaks', params = params, ret.type = 'integer')
-
-		return(sum(n))
-	})
 	
 	#################
 	# GET MZ VALUES #
@@ -252,6 +233,24 @@ if ( ! exists('MsPeakForestDb')) { # Do not load again if already loaded
 
 # UNUSED METHODS {{{1
 ################################################################
+
+# Get nb peaks {{{2
+################################################################
+	
+	MsPeakForestDb$methods( getNbPeaks = function(molid = NA_integer_, type = NA_character_) {
+
+		# Build URL
+		params <- NULL
+		if ( ! is.na(type))
+			params <- c(params, mode = if (type == MSDB.TAG.POS) 'pos' else 'neg')
+		if ( ! is.null(molid) && (length(molid) > 1 || ! is.na(molid)))
+			params <- c(params, molids = paste(molid, collapse = ','))
+
+		# Run request
+		n <- .self$.get.url(url = 'spectra/lcms/count-peaks', params = params, ret.type = 'integer')
+
+		return(sum(n))
+	})
 
 # Find by name {{{2
 ################################################################

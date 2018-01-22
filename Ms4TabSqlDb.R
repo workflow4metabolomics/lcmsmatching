@@ -134,30 +134,6 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 		return(lst)
 	})
 	
-	################
-	# GET NB PEAKS #
-	################
-	
-	Ms4TabSqlDb$methods( getNbPeaks = function(molid = NA_integer_, type = NA_character_) {
-
-		# Build request
-		request <- paste0("select count(*) from peaklist as pk, peaklist_name as pkmol where pkmol.id = pk.name_id")
-		if ( length(molid) > 1 || ! is.na(molid)) {
-			where_molids <- paste0(vapply(molid, function(id) paste0("pkmol.molecule_id = 'N", id, "'"), FUN.VALUE = ''), collapse = ' or ')
-			request <- paste0(request, ' and (', where_molids, ')')
-		}
-		if ( ! is.na(type)) {
-			request <- paste0(request, ' and ', if (type == MSDB.TAG.POS) '' else 'not ', 'ion_pos')
-		}
-		request <- paste0(request, ';')
-
-		# Run request
-		rs <- .self$.send.query(request)
-		df <- fetch(rs,n=-1)
-
-		return(df[1,1])
-	})
-	
 	###############################
 	# GET CHROMATOGRAPHIC COLUMNS #
 	###############################
@@ -270,6 +246,29 @@ if ( ! exists('Ms4TabSqlDb')) { # Do not load again if already loaded
 ################################################################
 
 # TODO keep these methods in order to move them into biodb
+	
+# Get nb peaks {{{2
+################################################################
+	
+	Ms4TabSqlDb$methods( getNbPeaks = function(molid = NA_integer_, type = NA_character_) {
+
+		# Build request
+		request <- paste0("select count(*) from peaklist as pk, peaklist_name as pkmol where pkmol.id = pk.name_id")
+		if ( length(molid) > 1 || ! is.na(molid)) {
+			where_molids <- paste0(vapply(molid, function(id) paste0("pkmol.molecule_id = 'N", id, "'"), FUN.VALUE = ''), collapse = ' or ')
+			request <- paste0(request, ' and (', where_molids, ')')
+		}
+		if ( ! is.na(type)) {
+			request <- paste0(request, ' and ', if (type == MSDB.TAG.POS) '' else 'not ', 'ion_pos')
+		}
+		request <- paste0(request, ';')
+
+		# Run request
+		rs <- .self$.send.query(request)
+		df <- fetch(rs,n=-1)
+
+		return(df[1,1])
+	})
 
 # Find by name {{{2
 ################################################################

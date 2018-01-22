@@ -166,21 +166,6 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 		return(rt)
 	})
 
-	#################
-	# GET NB PEAKS #
-	#################
-	
-	MsXlsDb$methods( getNbPeaks = function(molid = NA_integer_, type = NA_character_) {
-
-		# Initialize parameters
-		if (is.null(molid) || (length(molid) == 1 && is.na(molid)))
-			molid <- .self$getMoleculeIds()
-		if (is.na(type))
-			type <- c(MSDB.TAG.POS, MSDB.TAG.NEG)
-
-		return(sum(vapply(molid, function(m) { if (is.na(m)) 0 else sum(vapply(type, function(t) { peaks <- .self$.get.peaks(m, t) ; if (is.null(peaks)) 0 else nrow(peaks) }, FUN.VALUE = 1)) }, FUN.VALUE = 1)))
-	})
-
 	##################
 	# GET PEAK TABLE #
 	##################
@@ -850,6 +835,20 @@ if ( ! exists('MsXlsDb')) { # Do not load again if already loaded
 		}
 
 		return(ids)
+	})
+
+# Get nb peaks {{{2
+################################################################
+	
+	MsXlsDb$methods( getNbPeaks = function(molid = NA_integer_, type = NA_character_) {
+
+		# Initialize parameters
+		if (is.null(molid) || (length(molid) == 1 && is.na(molid)))
+			molid <- .self$getMoleculeIds()
+		if (is.na(type))
+			type <- c(MSDB.TAG.POS, MSDB.TAG.NEG)
+
+		return(sum(vapply(molid, function(m) { if (is.na(m)) 0 else sum(vapply(type, function(t) { peaks <- .self$.get.peaks(m, t) ; if (is.null(peaks)) 0 else nrow(peaks) }, FUN.VALUE = 1)) }, FUN.VALUE = 1)))
 	})
 	
 } # end of load safe guard

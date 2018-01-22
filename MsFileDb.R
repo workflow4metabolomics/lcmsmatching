@@ -254,38 +254,6 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 
 		return(cols)
 	})
-	
-	################
-	# GET NB PEAKS #
-	################
-	
-	# Get the total number of MS peaks stored inside the database.
-	# molid     The ID of the molecule.
-	# type      The MS type.
-	MsFileDb$methods( getNbPeaks = function(molid = NA_integer_, type = NA_character_) {
-
-		# Init db
-		.self$.init.db()
-
-		# Get database
-		db <- .self$.db[, c(MSDB.TAG.MOLID, MSDB.TAG.MODE, MSDB.TAG.MZTHEO)]
-
-		# Filter on mode
-		if ( ! is.null(type) && ! is.na(type))
-			db <- db[db[[MSDB.TAG.MODE]] == (if (type == MSDB.TAG.POS) .self$.modes$pos else .self$.modes$neg), ]
-
-		# Filter on molecule IDs
-		if ( ! is.null(molid) && ! is.na(molid))
-			db <- db[db[[MSDB.TAG.MOLID]] %in% molid,]
-
-		# Get mz values
-		mz <- db[[MSDB.TAG.MZTHEO]]
-
-		# Count number of unique values
-		n <- sum(as.integer(! duplicated(mz)))
-
-		return(n)
-	})
 
 	##########
 	# SEARCH #
@@ -402,6 +370,40 @@ if ( ! exists('MsFileDb')) { # Do not load again if already loaded
 			rt <- 60 * rt
 
 		return(rt)
+	})
+	
+# UNUSED METHODS {{{1
+################################################################
+
+# Get nb peaks {{{2
+################################################################
+	
+	# Get the total number of MS peaks stored inside the database.
+	# molid     The ID of the molecule.
+	# type      The MS type.
+	MsFileDb$methods( getNbPeaks = function(molid = NA_integer_, type = NA_character_) {
+
+		# Init db
+		.self$.init.db()
+
+		# Get database
+		db <- .self$.db[, c(MSDB.TAG.MOLID, MSDB.TAG.MODE, MSDB.TAG.MZTHEO)]
+
+		# Filter on mode
+		if ( ! is.null(type) && ! is.na(type))
+			db <- db[db[[MSDB.TAG.MODE]] == (if (type == MSDB.TAG.POS) .self$.modes$pos else .self$.modes$neg), ]
+
+		# Filter on molecule IDs
+		if ( ! is.null(molid) && ! is.na(molid))
+			db <- db[db[[MSDB.TAG.MOLID]] %in% molid,]
+
+		# Get mz values
+		mz <- db[[MSDB.TAG.MZTHEO]]
+
+		# Count number of unique values
+		n <- sum(as.integer(! duplicated(mz)))
+
+		return(n)
 	})
 
 } # end of load safe guard
