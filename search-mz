@@ -3,6 +3,7 @@
 args <- commandArgs(trailingOnly = F)
 script.path <- sub("--file=","",args[grep("--file=",args)])
 library(getopt)
+
 source(file.path(dirname(script.path), 'msdb-common.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'MsDbLogger.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'MsDbInputDataFrameStream.R'), chdir = TRUE)
@@ -21,7 +22,7 @@ if (as.integer(R.Version()$major) == 2 && as.numeric(R.Version()$minor) < 15)
 ################################################################
 
 PROG <- sub('^.*/([^/]+)$', '\\1', commandArgs()[4], perl = TRUE)
-USERAGENT <- 'search-mz ; pierrick.roger@gmail.com'
+USERAGENT <- 'search-mz ; pk.roger@icloud.com'
 
 # Authorized database types
 MSDB.XLS <- 'xls'
@@ -244,7 +245,8 @@ make.getopt.spec <- function(sections = NULL) {
 	if (is.null(sections) || 'misc' %in% sections)
 		spec <- c(spec,
 			'help',             'h',            0,  'logical',      'Print this help.',
-			'debug',            'g',            0,  'logical',      'Set debug mode.'
+			'debug',            'g',            0,  'logical',      'Set debug mode.',
+			'v3',               '3',            0,  'logical',      'Use old version 3 (without biodb).'
 		)
 
 	return(spec)
@@ -253,7 +255,7 @@ make.getopt.spec <- function(sections = NULL) {
 # Read args {{{1
 ################################################################
 
-read_args <- function() {
+read.args <- function() {
 
 	# Get options
 	opt <- getopt(matrix(make.getopt.spec(), byrow = TRUE, ncol = 5))
@@ -266,9 +268,6 @@ read_args <- function() {
 
 	opt <- set.dft.arg.val(opt) # Set default values
 	opt <- parse.arg.val(opt) # Parse list values
-
-	# Check values
-	error <- check.args(opt)
 
 	return(opt)
 }
@@ -424,15 +423,66 @@ output.html <- function(db, peaks, file) {
 	html$file.close()
 }
 
+# Get database connector {{{1
+################################################################
+
+get.db.conn <- function(db.name, url, token) {
+
+	# Set biodb database name
+	if (db.name == MSDB.FILE)
+		biodb.db.name <- 'mass.csv.file'
+	else if (db.name == MSDB.PEAKFOREST)
+		biodb.db.name <- 'peakforest.mass'
+	else
+		stop(paste0('Unknown database "', db.name, '".'))
+
+	# Set URL & token
+	if (is.null(url))
+		url <- NA_character_
+	if (is.null(token))
+		token <- NA_character_
+
+	# Create connector
+	biodb <- biodb::Biodb$new()
+	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
+
+	return(conn)
+}
+
+# Print chrom cols {{{1
+################################################################
+
+print.chrom.cols <- function(conn) {
+	print(conn$getChromCol())
+}
+
 # MAIN {{{1
 ################################################################
 
 # Read command line arguments
-opt <- read_args()
+opt <- read.args()
 
 if (is.null(opt$debug)) {
 	options(error = function() { quit(status = 1) }, warn = 0 )
 }
+
+# biodb
+if (is.null(opt$v3)) {
+
+	# Get database connector
+	conn <- get.db.conn(opt$database, url = opt$url, token = opt[['db-token']])
+
+	# Print columns
+	if ( ! is.null(opt[['list-cols']]))
+		print.chrom.cols(conn)
+
+	quit(status = 0)
+}
+
+# OLD SCHEME {{{2
+
+# Check values
+error <- check.args(opt)
 
 # Load database
 source(file.path(dirname(script.path), DB.SRC.FILE[[opt$database]]), chdir = TRUE)
