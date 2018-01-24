@@ -246,6 +246,7 @@ make.getopt.spec <- function(sections = NULL) {
 		spec <- c(spec,
 			'help',             'h',            0,  'logical',      'Print this help.',
 			'debug',            'g',            0,  'logical',      'Set debug mode.',
+			'quiet',            'q',            0,  'logical',      'Quiet mode.',
 			'v3',               '3',            0,  'logical',      'Use old version 3 (without biodb).'
 		)
 
@@ -426,7 +427,10 @@ output.html <- function(db, peaks, file) {
 # Get database connector {{{1
 ################################################################
 
-get.db.conn <- function(db.name, url, token, fields) {
+get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
+
+	if (is.null(quiet))
+		quiet <- FALSE
 
 	# Set biodb database name
 	if (db.name == MSDB.FILE)
@@ -443,7 +447,7 @@ get.db.conn <- function(db.name, url, token, fields) {
 		token <- NA_character_
 
 	# Create connector
-	biodb <- biodb::Biodb$new()
+	biodb <- biodb::Biodb$new(logger = ! quiet)
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
 
 	# Set fields for file database
@@ -477,8 +481,14 @@ get.db.conn <- function(db.name, url, token, fields) {
 # Print chrom cols {{{1
 ################################################################
 
-print.chrom.cols <- function(conn) {
-	print(conn$getChromCol())
+print.chrom.cols <- function(conn, output = NULL) {
+	df.write.tsv(conn$getChromCol(), file = if (is.null(output)) stdout() else output)
+}
+
+# Search {{{1
+################################################################
+
+search <- function(conn) {
 }
 
 # MAIN {{{1
@@ -495,11 +505,15 @@ if (is.null(opt$debug)) {
 if (is.null(opt$v3)) {
 
 	# Get database connector
-	conn <- get.db.conn(opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']])
+	conn <- get.db.conn(opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']], quiet = opt$quiet)
 
 	# Print columns
 	if ( ! is.null(opt[['list-cols']]))
-		print.chrom.cols(conn)
+		print.chrom.cols(conn, opt[['output-file']])
+
+	# Search
+	else
+		search(conn)
 
 	quit(status = 0)
 }
