@@ -426,7 +426,7 @@ output.html <- function(db, peaks, file) {
 # Get database connector {{{1
 ################################################################
 
-get.db.conn <- function(db.name, url, token) {
+get.db.conn <- function(db.name, url, token, fields) {
 
 	# Set biodb database name
 	if (db.name == MSDB.FILE)
@@ -445,6 +445,31 @@ get.db.conn <- function(db.name, url, token) {
 	# Create connector
 	biodb <- biodb::Biodb$new()
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
+
+	# Set fields for file database
+	if (db.name == MSDB.FILE) {
+
+		# Set fields
+		conn$setField('accession', fields[[MSDB.TAG.MOLID]])
+		conn$setField('fullnames', fields[[MSDB.TAG.MOLNAMES]], ignore.if.missing = TRUE)
+		conn$setField('compound.id', fields[[MSDB.TAG.MOLID]], ignore.if.missing = TRUE)
+		conn$setField('ms.mode', fields[[MSDB.TAG.MODE]])
+		conn$setField('peak.mztheo', fields[[MSDB.TAG.MZTHEO]])
+		conn$setField('chrom.col.rt', fields[[MSDB.TAG.COLRT]], ignore.if.missing = TRUE)
+		conn$setField('chrom.col', fields[[MSDB.TAG.COL]], ignore.if.missing = TRUE)
+		conn$setField('peak.attr', fields[[MSDB.TAG.ATTR]], ignore.if.missing = TRUE)
+		conn$setField('peak.comp', fields[[MSDB.TAG.COMP]], ignore.if.missing = TRUE)
+		conn$setField('formula', fields[[MSDB.TAG.MOLCOMP]], ignore.if.missing = TRUE)
+		conn$setField('molecular.mass', fields[[MSDB.TAG.MOLMASS]])
+		conn$setField('inchi', fields[[MSDB.TAG.INCHI]], ignore.if.missing = TRUE)
+		conn$setField('inchikey', fields[[MSDB.TAG.INCHIKEY]], ignore.if.missing = TRUE)
+		conn$setField('chebi.id', fields[[MSDB.TAG.CHEBI]], ignore.if.missing = TRUE)
+		conn$setField('ncbi.pubchem.comp.id', fields[[MSDB.TAG.PUBCHEM]], ignore.if.missing = TRUE)
+		conn$setField('hmdb.metabolites.id', fields[[MSDB.TAG.HMDB]], ignore.if.missing = TRUE)
+		conn$setField('kegg.compound.id', fields[[MSDB.TAG.KEGG]], ignore.if.missing = TRUE)
+
+		# Set MS mode values
+	}
 
 	return(conn)
 }
@@ -470,7 +495,7 @@ if (is.null(opt$debug)) {
 if (is.null(opt$v3)) {
 
 	# Get database connector
-	conn <- get.db.conn(opt$database, url = opt$url, token = opt[['db-token']])
+	conn <- get.db.conn(opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']])
 
 	# Print columns
 	if ( ! is.null(opt[['list-cols']]))
