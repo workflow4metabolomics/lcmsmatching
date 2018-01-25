@@ -424,6 +424,35 @@ output.html <- function(db, peaks, file) {
 	html$file.close()
 }
 
+# Load input file {{{1
+################################################################
+
+load.input.file <- function(file, col.names) {
+
+	if ( ! is.null(file) && ! file.exists(file))
+		stop(paste0("Input file \"", file, "\" does not exist."))
+	if (file.info(file)$size > 0) {
+
+		# Load file into data frame
+		input <- read.table(file = file, header = TRUE, sep = "\t", stringsAsFactor = FALSE, check.names = FALSE, comment.char = '')
+
+		# Convert each column that is identified by a number into a name
+		for (field in names(col.names)) {
+			if ( ! col.names[[field]] %in% colnames(input) && length(grep('^[0-9]+$', col.names[[field]])) > 0) {
+				col.index <- as.integer(col.names[[field]])
+				if (col.index < 1 || col.index > length(colnames(input)))
+					stop(paste0("No column n°", col.index, " for input field ", field, "."))
+				col.names[[field]] <- colnames(input)[[col.index]]
+			}
+		}
+	} else {
+		input <- data.frame()
+		input[[col.names[['mz']]]] <- double()
+		input[[col.names[['rt']]]] <- double()
+	}
+
+	return(input)
+}
 # Get database connector {{{1
 ################################################################
 
@@ -472,6 +501,10 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 		conn$setField('hmdb.metabolites.id', fields[[MSDB.TAG.HMDB]], ignore.if.missing = TRUE)
 		conn$setField('kegg.compound.id', fields[[MSDB.TAG.KEGG]], ignore.if.missing = TRUE)
 
+		# Set MS level
+		if ( ! conn$hasField('ms.level'))
+			conn$addField('ms.level', 1)
+
 		# Set MS mode values
 	}
 
@@ -488,7 +521,21 @@ print.chrom.cols <- function(conn, output = NULL) {
 # Search {{{1
 ################################################################
 
-search <- function(conn) {
+search <- function(conn, input.file, input.colnames, mz.tol, mz.tol.unit, mz.shift) {
+
+	# TODO M/Z shift mz.shift = - mz.shift
+	input <- load.input.file(opt[['input-file']], col.names = opt[['input-col-names']])
+
+	# Loop on all M/Z values
+	results <- NULL
+	for (i in seq(nrow(input))) {
+		df <- conn$searchMsPeaks(input[i, input.colnames$mz], mz.tol = mz.tol, mz.tol.unit = mz.tol.unit)
+		lines <- if (is.null(df)) input[i, ] else cbind(input[i, ], df)
+		results <- plyr::rbind.fill(results, lines)
+	}
+
+	# Write output
+	df.write.tsv(results, file = opt[['peak-output-file']], row.names = FALSE)
 }
 
 # MAIN {{{1
@@ -513,7 +560,7 @@ if (is.null(opt$v3)) {
 
 	# Search
 	else
-		search(conn)
+		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift)
 
 	quit(status = 0)
 }
@@ -535,27 +582,7 @@ if ( ! is.null(opt[['list-cols']])) {
 }
 
 # Read input
-if ( ! is.null(opt[['input-file']]) && ! file.exists(opt[['input-file']]))
-	stop(paste0("Input file \"", opt[['input-file']], "\" does not exist."))
-if (file.info(opt[['input-file']])$size > 0) {
-
-	# Load file into data frame
-	input <- read.table(file = opt[['input-file']], header = TRUE, sep = "\t", stringsAsFactor = FALSE, check.names = FALSE, comment.char = '')
-
-	# Convert each column that is identified by a number into a name
-	for (field in names(opt[['input-col-names']])) {
-		if ( ! opt[['input-col-names']][[field]] %in% colnames(input) && length(grep('^[0-9]+$', opt[['input-col-names']][[field]])) > 0) {
-			col.index <- as.integer(opt[['input-col-names']][[field]])
-			if (col.index < 1 || col.index > length(colnames(input)))
-				stop(paste0("No column n°", col.index, " for input field ", field, "."))
-			opt[['input-col-names']][[field]] <- colnames(input)[[col.index]]
-		}
-	}
-} else {
-	input <- data.frame()
-	input[[opt[['input-col-names']][['mz']]]] <- double()
-	input[[opt[['input-col-names']][['rt']]]] <- double()
-}
+input <- load.input.file(opt[['input-file']], col.names = opt[['input-col-names']])
 
 # Check mz column
 if ( ! opt[['input-col-names']][['mz']] %in% colnames(input))
