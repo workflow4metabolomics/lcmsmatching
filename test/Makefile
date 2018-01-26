@@ -1,6 +1,6 @@
 all:
 	./test-list-chrom-cols
-	./test-searchmz
+	./test-lcmsmatching
 
 clean:
 
