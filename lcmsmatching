@@ -523,18 +523,31 @@ print.chrom.cols <- function(conn, output = NULL) {
 
 search <- function(conn, input.file, input.colnames, mz.tol, mz.tol.unit, mz.shift) {
 
+	print('-------------------------------- search 01')
 	# TODO M/Z shift mz.shift = - mz.shift
 	input <- load.input.file(opt[['input-file']], col.names = opt[['input-col-names']])
+	print('-------------------------------- search 02')
 
 	# Loop on all M/Z values
 	results <- NULL
+	print('-------------------------------- search 03')
 	for (i in seq(nrow(input))) {
+	print('-------------------------------- search 04')
 		df <- conn$searchMsPeaks(input[i, input.colnames$mz], mz.tol = mz.tol, mz.tol.unit = mz.tol.unit)
-		lines <- if (is.null(df)) input[i, ] else cbind(input[i, ], df)
+	print('-------------------------------- search 05')
+	print(class(input[i, , drop = FALSE]))
+	print(input[i, , drop = FALSE])
+	print('-------------------------------- search 05.1')
+	print(df)
+	print('-------------------------------- search 05.2')
+		lines <- if (is.null(df)) input[i, , drop = FALSE] else cbind(input[i, , drop = FALSE], df)
+	print('-------------------------------- search 06')
 		results <- plyr::rbind.fill(results, lines)
+	print('-------------------------------- search 07')
 	}
 
 	# Write output
+	print('-------------------------------- search 08')
 	df.write.tsv(results, file = opt[['peak-output-file']], row.names = FALSE)
 }
 
