@@ -475,8 +475,11 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 	if (is.null(token))
 		token <- NA_character_
 
-	# Create connector
+	# Create biodb instance
 	biodb <- biodb::Biodb$new(logger = ! quiet)
+	biodb$getConfig()$set('factory.cache', TRUE)
+
+	# Create connector
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
 
 	# Set fields for file database
@@ -515,7 +518,8 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 ################################################################
 
 print.chrom.cols <- function(conn, output = NULL) {
-	df.write.tsv(conn$getChromCol(), file = if (is.null(output)) stdout() else output)
+	file <- if (is.null(output)) stdout() else output
+	write.table(conn$getChromCol(), file = file, row.names = FALSE, sep = "\t")
 }
 
 # Search {{{1
@@ -523,32 +527,43 @@ print.chrom.cols <- function(conn, output = NULL) {
 
 search <- function(conn, input.file, input.colnames, mz.tol, mz.tol.unit, mz.shift) {
 
-	print('-------------------------------- search 01')
 	# TODO M/Z shift mz.shift = - mz.shift
 	input <- load.input.file(opt[['input-file']], col.names = opt[['input-col-names']])
-	print('-------------------------------- search 02')
 
 	# Loop on all M/Z values
-	results <- NULL
-	print('-------------------------------- search 03')
+	peaks <- NULL
+	main <- NULL
 	for (i in seq(nrow(input))) {
-	print('-------------------------------- search 04')
 		df <- conn$searchMsPeaks(input[i, input.colnames$mz], mz.tol = mz.tol, mz.tol.unit = mz.tol.unit)
-	print('-------------------------------- search 05')
-	print(class(input[i, , drop = FALSE]))
-	print(input[i, , drop = FALSE])
-	print('-------------------------------- search 05.1')
-	print(df)
-	print('-------------------------------- search 05.2')
-		lines <- if (is.null(df)) input[i, , drop = FALSE] else cbind(input[i, , drop = FALSE], df)
-	print('-------------------------------- search 06')
-		results <- plyr::rbind.fill(results, lines)
-	print('-------------------------------- search 07')
+		if (is.null(df)) {
+			peaks.lines <- input[i, , drop = FALSE]
+			main.line <- peaks.lines
+		}
+		else {
+			names(df) <- paste('lcmsmatching', names(df), sep = '.')
+			if (nrow(df) == 0)
+				df[1, ] <- NA
+			peaks.lines <- cbind(input[i, , drop = FALSE], df)
+			if (nrow(df) == 1)
+				main.line <- peaks.lines
+			else {
+				df.one.row <- df[1,]
+				for (col in names(df))
+					df.one.row[[col]] <- paste(df[[col]], collapse = ope[['molids-sep']])
+				main.line <- cbind(input[i, , drop = FALSE], df)
+			}
+		}
+		peaks <- plyr::rbind.fill(peaks, peaks.lines)
+		main <- plyr::rbind.fill(main, main.line)
 	}
 
-	# Write output
-	print('-------------------------------- search 08')
-	df.write.tsv(results, file = opt[['peak-output-file']], row.names = FALSE)
+	# Write main output
+	if ( ! is.null(opt[['output-file']]))
+		write.table(main, file = opt[['output-file']], row.names = FALSE, sep = "\t")
+
+	# Write peaks output
+	if ( ! is.null(opt[['peak-output-file']]))
+		write.table(peaks, file = opt[['peak-output-file']], row.names = FALSE, sep = "\t")
 }
 
 # MAIN {{{1
@@ -590,7 +605,7 @@ db <- .load.db(opt)
 # Print columns
 if ( ! is.null(opt[['list-cols']])) {
 	cols <- db$getChromCol()
-	df.write.tsv(cols, file = if (is.null(opt[['output-file']])) stdout() else opt[['output-file']])
+	write.table(cols, file = if (is.null(opt[['output-file']])) stdout() else opt[['output-file']], row.names = FALSE, sep = "\t")
 	q(status = 0)
 }
 
@@ -641,10 +656,10 @@ db$searchForMzRtList(mode = mode, shift = opt$mzshift, prec = opt$mzprec, rt.tol
 main.output$moveColumnsToBeginning(colnames(input))
 peaks.output$moveColumnsToBeginning(colnames(input))
 # TODO Create a class MsDbOutputCsvFileStream
-df.write.tsv(main.output$getDataFrame(), file = opt[['output-file']], row.names = FALSE)
+write.table(main.output$getDataFrame(), file = opt[['output-file']], row.names = FALSE, sep = "\t")
 if ( ! is.null(opt[['peak-output-file']]))
 	# TODO Create a class MsDbOutputCsvFileStream
-	df.write.tsv(peaks.output$getDataFrame(), file = opt[['peak-output-file']], row.names = FALSE)
+	write.table(peaks.output$getDataFrame(), file = opt[['peak-output-file']], row.names = FALSE, sep = "\t")
 if ( ! is.null(opt[['html-output-file']]))
 	# TODO Create a class MsDbOutputHtmlFileStream
 	output.html(db = db, peaks = peaks.output$getDataFrame(), file = opt[['html-output-file']])

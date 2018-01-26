@@ -67,14 +67,6 @@ if ( ! exists('remove.na.rows')) { # Do not load again if already loaded
 		return(df)
 	}
 
-	##################
-	# WRITE TSV FILE #
-	##################
-
-	df.write.tsv <- function(df, file, row.names = FALSE, col.names = TRUE) {
-		write.table(df, file = file, row.names = row.names, col.names = col.names, sep = "\t")
-	}
-
 	####################
 	# CLEAN DATA FRAME #
 	####################
