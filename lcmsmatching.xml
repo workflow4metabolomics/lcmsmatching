@@ -25,7 +25,7 @@
 	<command>
 		<![CDATA[
 		## @@@BEGIN_CHEETAH@@@
-		$__tool_directory__/search-mz
+		$__tool_directory__/lcmsmatching
 
 		## Input file
 		-i "$mzrtinput"
