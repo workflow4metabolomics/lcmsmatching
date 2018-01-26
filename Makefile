@@ -8,7 +8,7 @@ SOURCE_VENV=source $(PLANEMO_VENV)/bin/activate
 all:
 
 test:
-	bash-testthat/testthat.sh test/test-searchmz
+	$(MAKE) -C $@
 
 planemo-lint: $(PLANEMO_VENV)
 	$(SOURCE_VENV) && planemo lint --no_xsd $(TOOL_XML)
@@ -32,7 +32,7 @@ planemo-toolshed-update: dist $(PLANEMO_VENV)
 dist:
 	$(RM) -rf dist
 	mkdir $@
-	cp -R .shed.yml *.R search-mz *.py *.xml README.* test-data $@/
+	cp -R .shed.yml *.R lcmsmatching *.py *.xml README.* test-data $@/
 
 $(CONDA_DIR): $(PLANEMO_VENV)
 	$(SOURCE_VENV) && planemo conda_init --conda_prefix $(CONDA_DIR)

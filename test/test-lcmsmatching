@@ -539,6 +539,7 @@ function test_generic_html_output_file {
 	local html_output_file=$SCRIPT_PATH/test_generic_html_output_file-html-output.tsv
 
 	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file --debug || return 1
+	echo "html_output_file=$html_output_file"
 	expect_file_exists $html_output_file || return 1
 }
 
@@ -561,39 +562,39 @@ for db in $DATABASES ; do
 
 	# Run generic tests
 	test_that "An HTML output file is written." test_generic_html_output_file $db
-	test_that "A peak output file contains the right number of rows and the right columns." test_generic_peak_output_file $db
-	test_that "Same rows option works also with peaks output enabled." test_generic_same_rows_with_peaks_output $db
-	test_that "Input and main output have the same number of rows." test_generic_same_rows $db
-	test_that "We find the same columns in output than the ones supplied in input." test_generic_same_cols $db
-	test_that "Custom list of precursors work." test_generic_precursors_lists $db
-	test_that "Matching using 2 chrom cols does not output duplicated rows." test_match_mzrt_2cols $db
-	test_that "Program fails if an unknown chrom col is submitted." test_generic_unknown_chrom_col $db
-	test_that "We can submit indices instead of names for input file columns." test_generic_match_mzrt_col_numbers $db
-	test_that "MZ/RT matching works correctly." test_generic_match_mz_rt $db
-	test_that "MZ matching with unused RT values input file works correctly." test_generic_match_mz_unused_rt $db
-	test_that "MZ matching works correctly." test_generic_match_mz $db
-	test_that "MZ/RT matching using an input file without RT values fails." test_generic_match_mzrt_using_input_file_without_rt $db
-	test_that "MZ matching does not give rt col in output." test_generic_match_mz_no_rt_in_output $db
-	test_that "Program fails when submitting a wrong input file." test_generic_wrong_input_file $db
-	test_that "Program does not fail when submitting an empty input file." test_generic_empty_files $db
-	test_that "We can submit an input file with a number sign character." test_generic_input_file_with_number_sign_char $db
-
-	# Run filedb tests
-	if [[ $db == file ]] ; then
-		test_that "Setting some file database column names to NA does not make program fails." test_filedb_na_db_fields
-		test_that "We can use number sign char in a file database." test_filedb_with_number_sign_char
-		test_that "Bug Sacurine PhenoMeNal demo 26/01/2017 does not come back." test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
-		test_that "Bug Florence Castelli 18/01/2017 does not come back." test_filedb_2017_01_18_florence_castelli
-		test_that "We do not find an unexpected 'y' column in output." test_filedb_no_y_col_in_output
-		test_that "Bug ticket 2016031010000034 does not come back." test_filedb_ticket_2016031010000034
-		test_that "Use of different RT units give the same results." test_filedb_rtunit
-	fi
-
-	# Run Peakforest tests
-	if [[ $db == peakforest ]] ; then
-		test_that "Bug Estelle 20170316 does not come back." test_peakforest_estelle_20170316_rtunit
-		test_that "Bug Estelle 20170314 does not come back." test_peakforest_estelle_20170314
-	fi
+#	test_that "A peak output file contains the right number of rows and the right columns." test_generic_peak_output_file $db
+#	test_that "Same rows option works also with peaks output enabled." test_generic_same_rows_with_peaks_output $db
+#	test_that "Input and main output have the same number of rows." test_generic_same_rows $db
+#	test_that "We find the same columns in output than the ones supplied in input." test_generic_same_cols $db
+#	test_that "Custom list of precursors work." test_generic_precursors_lists $db
+#	test_that "Matching using 2 chrom cols does not output duplicated rows." test_match_mzrt_2cols $db
+#	test_that "Program fails if an unknown chrom col is submitted." test_generic_unknown_chrom_col $db
+#	test_that "We can submit indices instead of names for input file columns." test_generic_match_mzrt_col_numbers $db
+#	test_that "MZ/RT matching works correctly." test_generic_match_mz_rt $db
+#	test_that "MZ matching with unused RT values input file works correctly." test_generic_match_mz_unused_rt $db
+#	test_that "MZ matching works correctly." test_generic_match_mz $db
+#	test_that "MZ/RT matching using an input file without RT values fails." test_generic_match_mzrt_using_input_file_without_rt $db
+#	test_that "MZ matching does not give rt col in output." test_generic_match_mz_no_rt_in_output $db
+#	test_that "Program fails when submitting a wrong input file." test_generic_wrong_input_file $db
+#	test_that "Program does not fail when submitting an empty input file." test_generic_empty_files $db
+#	test_that "We can submit an input file with a number sign character." test_generic_input_file_with_number_sign_char $db
+#
+#	# Run filedb tests
+#	if [[ $db == file ]] ; then
+#		test_that "Setting some file database column names to NA does not make program fails." test_filedb_na_db_fields
+#		test_that "We can use number sign char in a file database." test_filedb_with_number_sign_char
+#		test_that "Bug Sacurine PhenoMeNal demo 26/01/2017 does not come back." test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
+#		test_that "Bug Florence Castelli 18/01/2017 does not come back." test_filedb_2017_01_18_florence_castelli
+#		test_that "We do not find an unexpected 'y' column in output." test_filedb_no_y_col_in_output
+#		test_that "Bug ticket 2016031010000034 does not come back." test_filedb_ticket_2016031010000034
+#		test_that "Use of different RT units give the same results." test_filedb_rtunit
+#	fi
+#
+#	# Run Peakforest tests
+#	if [[ $db == peakforest ]] ; then
+#		test_that "Bug Estelle 20170316 does not come back." test_peakforest_estelle_20170316_rtunit
+#		test_that "Bug Estelle 20170314 does not come back." test_peakforest_estelle_20170314
+#	fi
 done
 
 test_report

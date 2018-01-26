@@ -1,7 +1,10 @@
-all:
+all: clean
 	./test-list-chrom-cols
-	./test-lcmsmatching
+	../bash-testthat/testthat.sh test-lcmsmatching
 
 clean:
+	$(RM) *-output.tsv
+	$(RM) *-output-peaks.tsv
+	$(RM) *.html *-main.tsv *-peak.tsv *.txt *.log
 
 .PHONY: all clean
