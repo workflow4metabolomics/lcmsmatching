@@ -447,8 +447,11 @@ load.input.file <- function(file, col.names, same.cols) {
 		}
 
 		# Restrict to essential columns
-		if ( ! same.cols)
-			input <- input[, unlist(col.names)]
+		if ( ! same.cols) {
+			cols <- unlist(col.names)
+			cols <- cols[cols %in% names(input)]
+			input <- input[, cols]
+		}
 	} else {
 		input <- data.frame()
 		input[[col.names[['mz']]]] <- double()
