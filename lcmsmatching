@@ -436,10 +436,6 @@ load.input.file <- function(file, col.names, same.cols) {
 		# Load file into data frame
 		input <- read.table(file = file, header = TRUE, sep = "\t", stringsAsFactor = FALSE, check.names = FALSE, comment.char = '')
 
-		# Restrict to essential columns
-		if ( ! same.cols)
-			input <- input[, unlist(col.names)]
-
 		# Convert each column that is identified by a number into a name
 		for (field in names(col.names)) {
 			if ( ! col.names[[field]] %in% colnames(input) && length(grep('^[0-9]+$', col.names[[field]])) > 0) {
@@ -449,6 +445,10 @@ load.input.file <- function(file, col.names, same.cols) {
 				col.names[[field]] <- colnames(input)[[col.index]]
 			}
 		}
+
+		# Restrict to essential columns
+		if ( ! same.cols)
+			input <- input[, unlist(col.names)]
 	} else {
 		input <- data.frame()
 		input[[col.names[['mz']]]] <- double()
