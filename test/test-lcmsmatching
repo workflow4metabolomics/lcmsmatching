@@ -470,7 +470,9 @@ function test_generic_same_cols {
 
 	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file || return 1
 	for c in $input_cols ; do
-		if [[ $c != mz && $c != rt ]] ; then
+		if [ $c == 'rt' -o $c == 'mz' ] ; then
+			csv_expect_has_columns $output_file $SEP $c || return 1
+		else
 			! csv_expect_has_columns $output_file $SEP $c || return 1
 		fi
 	done
@@ -536,10 +538,9 @@ function test_generic_html_output_file {
 	local input_file=$RES_DIR/inputs/mzrt-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_html_output_file-output.tsv
 	local peak_output_file=$SCRIPT_PATH/test_generic_html_output_file-peak-output.tsv
-	local html_output_file=$SCRIPT_PATH/test_generic_html_output_file-html-output.tsv
+	local html_output_file=$SCRIPT_PATH/test_generic_html_output_file-html-output.html
 
 	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file --debug || return 1
-	echo "html_output_file=$html_output_file"
 	expect_file_exists $html_output_file || return 1
 }
 
@@ -562,16 +563,16 @@ for db in $DATABASES ; do
 
 	# Run generic tests
 	test_that "An HTML output file is written." test_generic_html_output_file $db
-#	test_that "A peak output file contains the right number of rows and the right columns." test_generic_peak_output_file $db
-#	test_that "Same rows option works also with peaks output enabled." test_generic_same_rows_with_peaks_output $db
-#	test_that "Input and main output have the same number of rows." test_generic_same_rows $db
-#	test_that "We find the same columns in output than the ones supplied in input." test_generic_same_cols $db
-#	test_that "Custom list of precursors work." test_generic_precursors_lists $db
-#	test_that "Matching using 2 chrom cols does not output duplicated rows." test_match_mzrt_2cols $db
-#	test_that "Program fails if an unknown chrom col is submitted." test_generic_unknown_chrom_col $db
-#	test_that "We can submit indices instead of names for input file columns." test_generic_match_mzrt_col_numbers $db
-#	test_that "MZ/RT matching works correctly." test_generic_match_mz_rt $db
-#	test_that "MZ matching with unused RT values input file works correctly." test_generic_match_mz_unused_rt $db
+	test_that "A peak output file contains the right number of rows and the right columns." test_generic_peak_output_file $db
+	test_that "Same rows option works also with peaks output enabled." test_generic_same_rows_with_peaks_output $db
+	test_that "Input and main output have the same number of rows." test_generic_same_rows $db
+	test_that "We find the same columns in output than the ones supplied in input." test_generic_same_cols $db
+	test_that "Custom list of precursors work." test_generic_precursors_lists $db
+	test_that "Matching using 2 chrom cols does not output duplicated rows." test_match_mzrt_2cols $db
+	test_that "Program fails if an unknown chrom col is submitted." test_generic_unknown_chrom_col $db
+	test_that "We can submit indices instead of names for input file columns." test_generic_match_mzrt_col_numbers $db
+	test_that "MZ/RT matching works correctly." test_generic_match_mz_rt $db
+	test_that "MZ matching with unused RT values input file works correctly." test_generic_match_mz_unused_rt $db
 #	test_that "MZ matching works correctly." test_generic_match_mz $db
 #	test_that "MZ/RT matching using an input file without RT values fails." test_generic_match_mzrt_using_input_file_without_rt $db
 #	test_that "MZ matching does not give rt col in output." test_generic_match_mz_no_rt_in_output $db

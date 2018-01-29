@@ -427,7 +427,7 @@ output.html <- function(db, peaks, file) {
 # Load input file {{{1
 ################################################################
 
-load.input.file <- function(file, col.names) {
+load.input.file <- function(file, col.names, same.cols) {
 
 	if ( ! is.null(file) && ! file.exists(file))
 		stop(paste0("Input file \"", file, "\" does not exist."))
@@ -435,6 +435,10 @@ load.input.file <- function(file, col.names) {
 
 		# Load file into data frame
 		input <- read.table(file = file, header = TRUE, sep = "\t", stringsAsFactor = FALSE, check.names = FALSE, comment.char = '')
+
+		# Restrict to essential columns
+		if ( ! same.cols)
+			input <- input[, unlist(col.names)]
 
 		# Convert each column that is identified by a number into a name
 		for (field in names(col.names)) {
@@ -525,10 +529,18 @@ print.chrom.cols <- function(conn, output = NULL) {
 # Search {{{1
 ################################################################
 
-search <- function(conn, input.file, input.colnames, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output) {
+search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, check.cols, rt.cols) {
 
 	# TODO M/Z shift mz.shift = - mz.shift
-	input <- load.input.file(input.file, col.names = input.colnames)
+	input <- load.input.file(input.file, col.names = input.colnames, same.cols = same.cols)
+
+	# Check chromatographic columns
+	if (check.cols && ! is.null(rt.cols)) {
+		dbcols <- conn$getchromcol()[['id']]
+		unknown.cols <- rt.cols[ ! rt.cols %in% dbcols]
+		if (length(unknown.cols) > 0)
+			stop(paste0("unknown chromatographic column", (if (length(unknown.cols) > 1) 's' else ''), ': ', paste(unknown.cols, collapse = ', '), ".\nallowed chromatographic column names are:\n", paste(dbcols, collapse = "\n")))
+	}
 
 	# Loop on all M/Z values
 	peaks <- NULL
@@ -559,11 +571,11 @@ search <- function(conn, input.file, input.colnames, mz.tol, mz.tol.unit, mz.shi
 
 	# Write main output
 	if ( ! is.null(main.output))
-		write.table(main, file = main.output, row.names = FALSE, sep = "\t")
+		write.table(main, file = main.output, row.names = FALSE, sep = "\t", quote = FALSE)
 
 	# Write peaks output
 	if ( ! is.null(peaks.output))
-		write.table(peaks, file = peaks.output, row.names = FALSE, sep = "\t")
+		write.table(peaks, file = peaks.output, row.names = FALSE, sep = "\t", quote = FALSE)
 
 	# Write HTML output
 	if ( ! is.null(html.output))
@@ -592,7 +604,8 @@ if (is.null(opt$v3)) {
 
 	# Search
 	else
-		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift,
+		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift,
+		       check.cols = ! is.null(opt[['check-cols']]), rt.cols = opt$rtcol,
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
 
 	quit(status = 0)
@@ -625,12 +638,12 @@ if ( ! opt[['input-col-names']][['mz']] %in% colnames(input))
 if ( ! is.null(opt[['all-cols']]))
 	opt$rtcol <- db$getChromCol()[['id']]
 
-# Check chrom columns
+# check chrom columns
 if ( ! is.null(opt[['check-cols']]) && ! is.null(opt$rtcol)) {
-	dbcols <- db$getChromCol()[['id']]
+	dbcols <- db$getchromcol()[['id']]
 	unknown.cols <- opt$rtcol[ ! opt$rtcol %in% dbcols]
 	if (length(unknown.cols) > 0) {
-		stop(paste0("Unknown chromatographic column", (if (length(unknown.cols) > 1) 's' else ''), ': ', paste(unknown.cols, collapse = ', '), ".\nAllowed chromatographic column names are:\n", paste(dbcols, collapse = "\n")))
+		stop(paste0("unknown chromatographic column", (if (length(unknown.cols) > 1) 's' else ''), ': ', paste(unknown.cols, collapse = ', '), ".\nallowed chromatographic column names are:\n", paste(dbcols, collapse = "\n")))
 	}
 }
 
