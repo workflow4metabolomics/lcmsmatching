@@ -427,39 +427,60 @@ output.html <- function(db, peaks, file) {
 # Load input file {{{1
 ################################################################
 
-load.input.file <- function(file, col.names, same.cols) {
+load.input.file <- function(file, col.names) {
 
 	if ( ! is.null(file) && ! file.exists(file))
 		stop(paste0("Input file \"", file, "\" does not exist."))
-	if (file.info(file)$size > 0) {
 
-		# Load file into data frame
-		input <- read.table(file = file, header = TRUE, sep = "\t", stringsAsFactor = FALSE, check.names = FALSE, comment.char = '')
-
-		# Convert each column that is identified by a number into a name
-		for (field in names(col.names)) {
-			if ( ! col.names[[field]] %in% colnames(input) && length(grep('^[0-9]+$', col.names[[field]])) > 0) {
-				col.index <- as.integer(col.names[[field]])
-				if (col.index < 1 || col.index > length(colnames(input)))
-					stop(paste0("No column n°", col.index, " for input field ", field, "."))
-				col.names[[field]] <- colnames(input)[[col.index]]
-			}
-		}
-
-		# Restrict to essential columns
-		if ( ! same.cols) {
-			cols <- unlist(col.names)
-			cols <- cols[cols %in% names(input)]
-			input <- input[, cols]
-		}
-	} else {
+	# Empty file
+	if (file.info(file)$size == 0) {
 		input <- data.frame()
 		input[[col.names[['mz']]]] <- double()
 		input[[col.names[['rt']]]] <- double()
 	}
 
+	# Non-empty file
+	else
+		# Load file into data frame
+		input <- read.table(file = file, header = TRUE, sep = "\t", stringsAsFactor = FALSE, check.names = FALSE, comment.char = '')
+
 	return(input)
 }
+
+# Check input column names {{{1
+################################################################
+
+check.input.colnames <- function(col.names, input) {
+
+	# Convert each column that is identified by a number into a name
+	for (field in names(col.names)) {
+		if ( ! col.names[[field]] %in% colnames(input) && length(grep('^[0-9]+$', col.names[[field]])) > 0) {
+			col.index <- as.integer(col.names[[field]])
+			if (col.index < 1 || col.index > length(colnames(input)))
+				stop(paste0("No column n°", col.index, " for input field ", field, "."))
+			col.names[[field]] <- colnames(input)[[col.index]]
+		}
+	}
+
+	return(col.names)
+}
+
+# Restrict input to essential columns {{{1
+################################################################
+
+restrict.input.cols <- function(input, col.names, same.cols) {
+
+	# Restrict to essential columns
+	if ( ! same.cols) {
+		cols <- unlist(col.names)
+		names(cols) <- NULL
+		cols <- cols[cols %in% names(input)]
+		input <- input[, cols, drop = FALSE]
+	}
+
+	return(input)
+}
+
 # Get database connector {{{1
 ################################################################
 
@@ -532,18 +553,34 @@ print.chrom.cols <- function(conn, output = NULL) {
 # Search {{{1
 ################################################################
 
-search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, check.cols, rt.cols) {
+search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, check.cols, rt.cols, all.cols) {
 
 	# TODO M/Z shift mz.shift = - mz.shift
-	input <- load.input.file(input.file, col.names = input.colnames, same.cols = same.cols)
+
+	# Load input file
+	input <- load.input.file(input.file, col.names = input.colnames)
+
+	# Check input column names
+	input.colnames <- check.input.colnames(input.colnames, input = input)
+
+	# Restrict input to essential columns
+	input <- restrict.input.cols(input, col.names = input.colnames, same.cols = same.cols)
 
 	# Check chromatographic columns
-	if (check.cols && ! is.null(rt.cols)) {
-		dbcols <- conn$getchromcol()[['id']]
+	if (all.cols)
+		rt.cols <- conn$getChromCol()[['id']]
+	else if (check.cols && ! is.null(rt.cols)) {
+		dbcols <- conn$getChromCol()[['id']]
 		unknown.cols <- rt.cols[ ! rt.cols %in% dbcols]
 		if (length(unknown.cols) > 0)
 			stop(paste0("unknown chromatographic column", (if (length(unknown.cols) > 1) 's' else ''), ': ', paste(unknown.cols, collapse = ', '), ".\nallowed chromatographic column names are:\n", paste(dbcols, collapse = "\n")))
 	}
+
+	# Check that we have MZ and RT values
+	if ( ! input.colnames$mz %in% names(input))
+		stop(paste('No M/Z column named "', input.colnames$mz, '" inside input file "', input.file, '".', sep = ''))
+	if ( ! input.colnames$rt %in% names(input) && ! is.null(rt.cols))
+		stop(paste('No retention time column named "', input.colnames$rt, '" inside input file "', input.file, '".', sep = ''))
 
 	# Loop on all M/Z values
 	peaks <- NULL
@@ -608,7 +645,7 @@ if (is.null(opt$v3)) {
 	# Search
 	else
 		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift,
-		       check.cols = ! is.null(opt[['check-cols']]), rt.cols = opt$rtcol,
+		       check.cols = ! is.null(opt[['check-cols']]), rt.cols = opt$rtcol, all.cols = ! is.null(opt[['all-cols']]),
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
 
 	quit(status = 0)
