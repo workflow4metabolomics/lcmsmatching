@@ -514,17 +514,30 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 	if (db.name == MSDB.FILE) {
 
 		# Set fields
-		conn$setField('accession', fields[[MSDB.TAG.MOLID]])
-		conn$setField('fullnames', fields[[MSDB.TAG.MOLNAMES]], ignore.if.missing = TRUE)
-		conn$setField('compound.id', fields[[MSDB.TAG.MOLID]], ignore.if.missing = TRUE)
+		if ( ! MSDB.TAG.MODE %in% names(fields))
+			stop("MS mode field is not defined for file database.")
+		if ( ! MSDB.TAG.MZTHEO %in% names(fields))
+			stop("M/Z field is not defined for file database.")
+		if ( 'accession' %in% names(fields))
+			accession <- fields[['accession']]
+		else {
+			cols <- character()
+			for (c in c(MSDB.TAG.MOLID, MSDB.TAG.MODE, MSDB.TAG.COL, MSDB.TAG.COLRT))
+				if (c %in% names(fields))
+					cols <- c(cols, c)
+			accession <- cols
+		}
+		conn$setField('accession', accession)
 		conn$setField('ms.mode', fields[[MSDB.TAG.MODE]])
 		conn$setField('peak.mztheo', fields[[MSDB.TAG.MZTHEO]])
+		conn$setField('fullnames', fields[[MSDB.TAG.MOLNAMES]], ignore.if.missing = TRUE)
+		conn$setField('compound.id', fields[[MSDB.TAG.MOLID]], ignore.if.missing = TRUE)
 		conn$setField('chrom.col.rt', fields[[MSDB.TAG.COLRT]], ignore.if.missing = TRUE)
 		conn$setField('chrom.col', fields[[MSDB.TAG.COL]], ignore.if.missing = TRUE)
 		conn$setField('peak.attr', fields[[MSDB.TAG.ATTR]], ignore.if.missing = TRUE)
 		conn$setField('peak.comp', fields[[MSDB.TAG.COMP]], ignore.if.missing = TRUE)
 		conn$setField('formula', fields[[MSDB.TAG.MOLCOMP]], ignore.if.missing = TRUE)
-		conn$setField('molecular.mass', fields[[MSDB.TAG.MOLMASS]])
+		conn$setField('molecular.mass', fields[[MSDB.TAG.MOLMASS]], ignore.if.missing = TRUE)
 		conn$setField('inchi', fields[[MSDB.TAG.INCHI]], ignore.if.missing = TRUE)
 		conn$setField('inchikey', fields[[MSDB.TAG.INCHIKEY]], ignore.if.missing = TRUE)
 		conn$setField('chebi.id', fields[[MSDB.TAG.CHEBI]], ignore.if.missing = TRUE)
