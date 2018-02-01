@@ -55,7 +55,7 @@ if ( ! exists('.parse_chrom_col_desc')) { # Do not load again if already loaded
 	MSDB.DFT.PREC[[MSDB.TAG.NEG]] <- c("[(M-H)]-", "[M-H]-", "[(M+Cl)]-", "[M+Cl]-")
 	MSDB.DFT.OUTPUT.MULTIVAL.FIELD.SEP <- MSDB.MULTIVAL.FIELD.SEP
 	MSDB.DFT.MATCH.FIELDS <- list( molids = 'molid', molnames = 'molnames')
-	MSDB.DFT.MATCH.SEP <- ','
+	MSDB.DFT.MATCH.SEP <- '|'
 	MSDB.DFT.MODES <- list( pos = 'POS', neg = 'NEG')
 	MSDB.DFT.MZTOLUNIT <- MSDB.MZTOLUNIT.PPM
 
