@@ -634,14 +634,14 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 			names(df) <- paste('lcmsmatching', names(df), sep = '.')
 			if (nrow(df) == 0)
 				df[1, ] <- NA
-			peaks.lines <- cbind(input[i, , drop = FALSE], df)
+			peaks.lines <- cbind(input[i, , drop = FALSE], df, row.names = NULL)
 			if (nrow(df) == 1)
 				main.line <- peaks.lines
 			else {
 				df.one.row <- df[1,]
 				for (col in names(df))
-					df.one.row[[col]] <- paste(df[[col]], collapse = ope[['molids-sep']])
-				main.line <- cbind(input[i, , drop = FALSE], df)
+					df.one.row[[col]] <- paste(df[[col]], collapse = opt[['molids-sep']])
+				main.line <- cbind(input[i, , drop = FALSE], df, row.names = NULL)
 			}
 		}
 		peaks <- plyr::rbind.fill(peaks, peaks.lines)
