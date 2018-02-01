@@ -450,15 +450,27 @@ load.input.file <- function(file, col.names) {
 # Check input column names {{{1
 ################################################################
 
-check.input.colnames <- function(col.names, input) {
+check.input.colnames <- function(col.names, input, needs.rt) {
 
-	# Convert each column that is identified by a number into a name
+	# Loop on all fields
 	for (field in names(col.names)) {
-		if ( ! col.names[[field]] %in% colnames(input) && length(grep('^[0-9]+$', col.names[[field]])) > 0) {
-			col.index <- as.integer(col.names[[field]])
-			if (col.index < 1 || col.index > length(colnames(input)))
-				stop(paste0("No column n°", col.index, " for input field ", field, "."))
-			col.names[[field]] <- colnames(input)[[col.index]]
+
+		# Is the column not inside the input?
+		if ( ! col.names[[field]] %in% colnames(input)) {
+
+			# Is the column name an index?
+			if (length(grep('^[0-9]+$', col.names[[field]])) > 0) {
+				# Convert each column that is identified by a number into a name
+				col.index <- as.integer(col.names[[field]])
+				if (col.index < 1 || col.index > length(colnames(input)))
+					stop(paste0("No column n°", col.index, " for input field ", field, "."))
+				col.names[[field]] <- colnames(input)[[col.index]]
+			}
+
+			# Unknown column
+			else
+				if (field == 'mz' || (needs.rt && fields == 'rt'))
+					stop(paste("Column ",  col.names[[field]], ' for ', field, ' values cannot be found inside input file.', sep = ''))
 		}
 	}
 
@@ -468,13 +480,23 @@ check.input.colnames <- function(col.names, input) {
 # Restrict input to essential columns {{{1
 ################################################################
 
-restrict.input.cols <- function(input, col.names, same.cols) {
+restrict.input.cols <- function(input, col.names, same.cols, keep.rt) {
 
 	# Restrict to essential columns
 	if ( ! same.cols) {
+
+		# Get selected column names
 		cols <- unlist(col.names)
 		names(cols) <- NULL
+
+		# Only keep columns present in input
 		cols <- cols[cols %in% names(input)]
+
+		# Remove retention time column
+		if ( ! keep.rt)
+			cols <- cols[cols != col.names$rt]
+
+		# Restrict input columns
 		input <- input[, cols, drop = FALSE]
 	}
 
@@ -563,10 +585,30 @@ print.chrom.cols <- function(conn, output = NULL) {
 	write.table(conn$getChromCol(), file = file, row.names = FALSE, sep = "\t")
 }
 
+# Get chrom cols {{{1
+################################################################
+
+get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
+
+	# Get all chromatopgrahic columns
+	if (all.cols)
+		chrom.cols <- conn$getChromCol()[['id']]
+
+	# Check chromatographic columns
+	else if (check.cols && ! is.null(chrom.cols)) {
+		dbcols <- conn$getChromCol()[['id']]
+		unknown.cols <- chrom.cols[ ! chrom.cols %in% dbcols]
+		if (length(unknown.cols) > 0)
+			stop(paste0("unknown chromatographic column", (if (length(unknown.cols) > 1) 's' else ''), ': ', paste(unknown.cols, collapse = ', '), ".\nallowed chromatographic column names are:\n", paste(dbcols, collapse = "\n")))
+	}
+
+	return(chrom.cols)
+}
+
 # Search {{{1
 ################################################################
 
-search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, check.cols, rt.cols, all.cols) {
+search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, chrom.cols) {
 
 	# TODO M/Z shift mz.shift = - mz.shift
 
@@ -574,26 +616,10 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	input <- load.input.file(input.file, col.names = input.colnames)
 
 	# Check input column names
-	input.colnames <- check.input.colnames(input.colnames, input = input)
+	input.colnames <- check.input.colnames(input.colnames, input = input, needs.rt = ! is.null(chrom.cols))
 
 	# Restrict input to essential columns
-	input <- restrict.input.cols(input, col.names = input.colnames, same.cols = same.cols)
-
-	# Check chromatographic columns
-	if (all.cols)
-		rt.cols <- conn$getChromCol()[['id']]
-	else if (check.cols && ! is.null(rt.cols)) {
-		dbcols <- conn$getChromCol()[['id']]
-		unknown.cols <- rt.cols[ ! rt.cols %in% dbcols]
-		if (length(unknown.cols) > 0)
-			stop(paste0("unknown chromatographic column", (if (length(unknown.cols) > 1) 's' else ''), ': ', paste(unknown.cols, collapse = ', '), ".\nallowed chromatographic column names are:\n", paste(dbcols, collapse = "\n")))
-	}
-
-	# Check that we have MZ and RT values
-	if ( ! input.colnames$mz %in% names(input))
-		stop(paste('No M/Z column named "', input.colnames$mz, '" inside input file "', input.file, '".', sep = ''))
-	if ( ! input.colnames$rt %in% names(input) && ! is.null(rt.cols))
-		stop(paste('No retention time column named "', input.colnames$rt, '" inside input file "', input.file, '".', sep = ''))
+	input <- restrict.input.cols(input, col.names = input.colnames, same.cols = same.cols, keep.rt = ! is.null(chrom.cols))
 
 	# Loop on all M/Z values
 	peaks <- NULL
@@ -656,10 +682,14 @@ if (is.null(opt$v3)) {
 		print.chrom.cols(conn, opt[['output-file']])
 
 	# Search
-	else
-		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift,
-		       check.cols = ! is.null(opt[['check-cols']]), rt.cols = opt$rtcol, all.cols = ! is.null(opt[['all-cols']]),
+	else {
+		# Select chromatographic columns
+		chrom.cols <- get.chrom.cols(conn, check.cols = ! is.null(opt[['check-cols']]), chrom.cols = opt$rtcol, all.cols = ! is.null(opt[['all-cols']]))
+
+		# Search
+		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift, chrom.cols = chrom.cols,
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
+	}
 
 	quit(status = 0)
 }

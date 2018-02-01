@@ -329,9 +329,9 @@ function test_generic_match_mz_no_rt_in_output {
 	local output_file=$SCRIPT_PATH/test_generic_match_mz_no_rt_in_output-output.tsv
 
 	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $RES_DIR/inputs/mz-small.tsv -o $output_file
-	! csv_expect_has_columns $output_file $SEP rt || return 1
+	csv_expect_not_has_columns $output_file $SEP rt || return 1
 	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $RES_DIR/inputs/mzrt-small.tsv -o $output_file
-	! csv_expect_has_columns $output_file $SEP rt || return 1
+	csv_expect_not_has_columns $output_file $SEP rt || return 1
 }
 
 # Test generic - mzrt matching without rt input {{{1
@@ -577,7 +577,7 @@ for db in $DATABASES ; do
 	test_that "MZ matching with unused RT values input file works correctly." test_generic_match_mz_unused_rt $db
 	test_that "MZ matching works correctly." test_generic_match_mz $db
 	test_that "MZ/RT matching using an input file without RT values fails." test_generic_match_mzrt_using_input_file_without_rt $db
-	test_that "MZ matching does not give rt col in output." test_generic_match_mz_no_rt_in_output $db
+	test_that "MZ matching does not output rt col." test_generic_match_mz_no_rt_in_output $db
 	test_that "Program fails when submitting a wrong input file." test_generic_wrong_input_file $db
 #	test_that "Program does not fail when submitting an empty input file." test_generic_empty_files $db
 #	test_that "We can submit an input file with a number sign character." test_generic_input_file_with_number_sign_char $db
