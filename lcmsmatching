@@ -526,7 +526,13 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 		token <- NA_character_
 
 	# Create biodb instance
-	biodb <- biodb::Biodb$new(logger = ! quiet)
+	if (quiet)
+		biodb <- biodb::Biodb$new(logger = FALSE)
+	else {
+		logger = biodb::BiodbLogger$new()
+		logger$includeMsgType('debug')
+		biodb <- biodb::Biodb$new(logger = FALSE, observers = logger)
+	}
 	biodb$getConfig()$set('factory.cache', TRUE)
 
 	# Create connector
@@ -608,7 +614,7 @@ get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 # Search {{{1
 ################################################################
 
-search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, chrom.cols) {
+search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, chrom.cols, results.sep) {
 
 	# TODO M/Z shift mz.shift = - mz.shift
 
@@ -624,27 +630,40 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	# Loop on all M/Z values
 	peaks <- NULL
 	main <- NULL
-	for (i in seq(nrow(input))) {
+	for (i in seq_along(input[[1]])) {
 		df <- conn$searchMsPeaks(input[i, input.colnames$mz], mz.tol = mz.tol, mz.tol.unit = mz.tol.unit)
+
+		# No results
 		if (is.null(df)) {
 			peaks.lines <- input[i, , drop = FALSE]
 			main.line <- peaks.lines
 		}
+
+		# Found results
 		else {
 			names(df) <- paste('lcmsmatching', names(df), sep = '.')
+
+			# Empty result data frame
 			if (nrow(df) == 0)
 				df[1, ] <- NA
+
+			# Make multiple lines results
 			peaks.lines <- cbind(input[i, , drop = FALSE], df, row.names = NULL)
+
+			# Build one line result
 			if (nrow(df) == 1)
 				main.line <- peaks.lines
 			else {
-				df.one.row <- df[1,]
+				df.one.row <- df[1, ]
 				for (col in names(df))
-					df.one.row[[col]] <- paste(df[[col]], collapse = opt[['molids-sep']])
-				main.line <- cbind(input[i, , drop = FALSE], df, row.names = NULL)
+					df.one.row[[col]] <- paste(df[[col]], collapse = results.sep)
+				main.line <- cbind(input[i, , drop = FALSE], df.one.row, row.names = NULL)
 			}
 		}
 		peaks <- plyr::rbind.fill(peaks, peaks.lines)
+
+		if (nrow(main.line) != 1)
+			stop(paste("More than one match line for main output with M/Z value ", input[i, input.colnames$mz], ".", sep = ''))
 		main <- plyr::rbind.fill(main, main.line)
 	}
 
@@ -688,6 +707,7 @@ if (is.null(opt$v3)) {
 
 		# Search
 		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift, chrom.cols = chrom.cols,
+		       results.sep = opt[['molids-sep']],
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
 	}
 
