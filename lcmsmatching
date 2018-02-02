@@ -552,7 +552,7 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 			cols <- character()
 			for (c in c(MSDB.TAG.MOLID, MSDB.TAG.MODE, MSDB.TAG.COL, MSDB.TAG.COLRT))
 				if (c %in% names(fields))
-					cols <- c(cols, c)
+					cols <- c(cols, fields[[c]])
 			accession <- cols
 		}
 		conn$setField('accession', accession)
@@ -617,7 +617,6 @@ get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, chrom.cols, results.sep) {
 
 	# TODO M/Z shift mz.shift = - mz.shift
-
 	# Load input file
 	input <- load.input.file(input.file, col.names = input.colnames)
 

@@ -188,7 +188,7 @@ function test_filedb_ticket_2016031010000034 {
 	local peak_output=$SCRIPT_PATH/ticket-2016031010000034-output-peaks.tsv
 	local html_output=$SCRIPT_PATH/ticket-2016031010000034-output.html
 
-	expect_success $LCMSMATCHING -d file --url $db_file -m pos -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
+	expect_success $LCMSMATCHING -d file --url $db_file --db-fields 'mztheo=mz,chromcolrt=rt,compoundid=molid,chromcol=col,msmode=mode,peakattr=attr,peakcomp=comp,fullnames=molnames,compoundmass=molmass,compoundcomp=molcomp,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchem,chebiid=chebi,hmdbid=hmdb,keggid=kegg' -m pos -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
 }
 
 # Test filedb no 'y' column in output {{{1
@@ -246,7 +246,7 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 	local peak_output=$SCRIPT_PATH/$res_name-peak.tsv
 	local html_output=$SCRIPT_PATH/$res_name-peak.html
 
-	expect_success $LCMSMATCHING -d file --url $db_file --db-fields 'mztheo=peak.mz,chromcolrt=chromcolrt,compoundid=accession,chromcol=chromcol,msmode=msmode,peakcomp=peak.formula,fullnames=name,compoundmass=mass,compoundcomp=formula,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid' --db-ms-modes pos=pos,neg=neg -i $input_file --input-col-names mz=mass_to_charge,rt=retention_time -m neg -p 10.0 -s 0.0 --same-rows --same-cols -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
+	expect_success $LCMSMATCHING -d file --url $db_file --db-fields 'accession=accession,mztheo=peak.mz,chromcolrt=chromcolrt,compoundid=accession,chromcol=chromcol,msmode=msmode,peakcomp=peak.formula,fullnames=name,compoundmass=mass,compoundcomp=formula,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid' --db-ms-modes pos=pos,neg=neg -i $input_file --input-col-names mz=mass_to_charge,rt=retention_time -m neg -p 10.0 -s 0.0 --same-rows --same-cols -o $main_output --peak-output-file $peak_output --html-output-file $html_output --debug || return 1
 
 	# Check that output files exist
 	expect_file_exists $main_output || return 1
@@ -579,25 +579,25 @@ for db in $DATABASES ; do
 	test_that "MZ/RT matching using an input file without RT values fails." test_generic_match_mzrt_using_input_file_without_rt $db
 	test_that "MZ matching does not output rt col." test_generic_match_mz_no_rt_in_output $db
 	test_that "Program fails when submitting a wrong input file." test_generic_wrong_input_file $db
-#	test_that "Program does not fail when submitting an empty input file." test_generic_empty_files $db
-#	test_that "We can submit an input file with a number sign character." test_generic_input_file_with_number_sign_char $db
-#
-#	# Run filedb tests
-#	if [[ $db == file ]] ; then
-#		test_that "Setting some file database column names to NA does not make program fails." test_filedb_na_db_fields
-#		test_that "We can use number sign char in a file database." test_filedb_with_number_sign_char
-#		test_that "Bug Sacurine PhenoMeNal demo 26/01/2017 does not come back." test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
-#		test_that "Bug Florence Castelli 18/01/2017 does not come back." test_filedb_2017_01_18_florence_castelli
-#		test_that "We do not find an unexpected 'y' column in output." test_filedb_no_y_col_in_output
-#		test_that "Bug ticket 2016031010000034 does not come back." test_filedb_ticket_2016031010000034
-#		test_that "Use of different RT units give the same results." test_filedb_rtunit
-#	fi
-#
-#	# Run Peakforest tests
-#	if [[ $db == peakforest ]] ; then
-#		test_that "Bug Estelle 20170316 does not come back." test_peakforest_estelle_20170316_rtunit
-#		test_that "Bug Estelle 20170314 does not come back." test_peakforest_estelle_20170314
-#	fi
+	test_that "Program does not fail when submitting an empty input file." test_generic_empty_files $db
+	test_that "We can submit an input file with a number sign character." test_generic_input_file_with_number_sign_char $db
+
+	# Run filedb tests
+	if [[ $db == file ]] ; then
+		test_that "Setting some file database column names to NA does not make program fails." test_filedb_na_db_fields
+		test_that "We can use number sign char in a file database." test_filedb_with_number_sign_char
+		test_that "Bug Sacurine PhenoMeNal demo 26/01/2017 does not come back." test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo
+		test_that "Bug Florence Castelli 18/01/2017 does not come back." test_filedb_2017_01_18_florence_castelli
+		test_that "We do not find an unexpected 'y' column in output." test_filedb_no_y_col_in_output
+		test_that "Bug ticket 2016031010000034 does not come back." test_filedb_ticket_2016031010000034
+		test_that "Use of different RT units give the same results." test_filedb_rtunit
+	fi
+
+	# Run Peakforest tests
+	if [[ $db == peakforest ]] ; then
+		test_that "Bug Estelle 20170316 does not come back." test_peakforest_estelle_20170316_rtunit
+		test_that "Bug Estelle 20170314 does not come back." test_peakforest_estelle_20170314
+	fi
 done
 
 test_report
