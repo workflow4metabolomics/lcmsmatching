@@ -525,7 +525,7 @@ function test_generic_peak_output_file {
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)")
 
-	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows --peak-output-file $peak_output_file || return 1
+	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -c "$chromcols" --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --same-rows --peak-output-file $peak_output_file || return 1
 	expect_same_number_of_rows $input_file $output_file || return 1
 	expect_num_le $(get_nb_rows $input_file) $(get_nb_rows $peak_output_file) || return 1
 	csv_expect_has_columns $peak_output_file $SEP "mz rt" || return 1
@@ -550,10 +550,10 @@ function test_generic_html_output_file {
 ################################################################
 
 # Set databases
-[[ -n $DATABASES ]] || DATABASES="file xls peakforest"
+[[ -n $DATABASES ]] || DATABASES="file,xls,peakforest"
 
 # Test peakforest token
-if [[ " $DATABASES " == *" peakforest "* && -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
+if [[ ",$DATABASES," == *",peakforest,"* && -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
 	echo "No Peakforest defined in env var RMSBD_PEAKFOREST_TOKEN." >&2
 	exit 1
 fi

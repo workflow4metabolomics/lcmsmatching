@@ -217,7 +217,7 @@ make.getopt.spec <- function(sections = NULL) {
 
 	if (is.null(sections) || 'output' %in% sections)
 		spec <- c(spec,
-			'output-file',      'o',            1,  'character',    'Set file to use for the main output.',
+			'output-file',      'o',            1,  'character',    'Set file to use for the main output. If undefined, standard output will be used.',
 			'peak-output-file', 'O',            1,  'character',    'If set and if --same-rows is set, then output all matches inside the specified file, with one mz match per line. The output columns are: mz, rt, id, col, colrt, composition, attribution. This means that if an mz value is matched several times, then it will repeated on several lines, with one match description per line.',
 			'html-output-file', 'H',            1,  'character',    'Set file to use for the HTML output.',
 			'no-main-table-in-html-output',  't',  0,  'logical',   'Do not display main table in HTML output.',
