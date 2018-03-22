@@ -1,3 +1,5 @@
+export BIODB_CACHE_DIRECTORY=$(CURDIR)/../lcms.biodb.cache
+
 all: clean
 	./test-list-chrom-cols
 	../bash-testthat/testthat.sh test-lcmsmatching

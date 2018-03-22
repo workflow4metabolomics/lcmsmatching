@@ -7,3 +7,4 @@ dist
 dist-test
 .DS_Store
 tool_test_output.*
+lcms.biodb.cache

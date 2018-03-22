@@ -1,3 +1,4 @@
+export BIODB_CACHE_DIRECTORY=$(CURDIR)/lcms.biodb.cache
 TOOL_XML=lcmsmatching.xml
 GALAXY_BRANCH=release_16.01
 CONDA_DIR=$(HOME)/w4mcnd
