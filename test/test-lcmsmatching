@@ -152,8 +152,14 @@ function test_filedb_rtunit {
 			peak_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.tsv
 			html_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.html
 
+			if [[ $input_rtunit == 'sec' ]] ; then
+				rttol=30 # tolerance for seconds
+			else
+				rttol=0.5 # tolerance for minutes
+			fi
+
 			# Run program
-			expect_success $LCMSMATCHING -d file --url $db_file --db-rt-unit $db_rtunit -m pos -p 5 -s 0 -i $input_file --input-col-names 'mz=mz,rt=rt' -o $main_output --peak-output-file $peak_output --html-output-file $html_output --rtunit $input_rtunit --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+			expect_success $LCMSMATCHING -d file --url $db_file --db-rt-unit $db_rtunit -m pos -p 5 -s 0 -i $input_file --input-col-names 'mz=mz,rt=rt' -o $main_output --peak-output-file $peak_output --html-output-file $html_output --rtunit $input_rtunit --all-cols --rttol $rttol --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
 
 			# Check outputs
 			expect_file_exists $main_output || return 1
@@ -161,17 +167,17 @@ function test_filedb_rtunit {
 			expect_file_exists $html_output || return 1
 
 			# Check COMPOUND IDs NA values in main output
-			nb_main_compids=$(csv_count_values $main_output $SEP compoundid)
-			expect_num_gt $nb_main_compids 0 || return 1
+			nb_main_compids=$(csv_count_values $main_output $SEP lcmsmatching.compound.id)
+			expect_num_gt "$nb_main_compids" 0 "No compound IDs found in $main_output." || return 1
 
 			# Check COMPOUND IDs NA values in peak output
-			nb_peak_compids=$(csv_count_values $peak_output $SEP compoundid)
-			expect_num_gt $nb_peak_compids 0 || return 1
+			nb_peak_compids=$(csv_count_values $peak_output $SEP lcmsmatching.compound.id)
+			expect_num_gt "$nb_peak_compids" 0 || return 1
 
 			if [[ -z $nb_match ]] ; then
 				nb_match=$nb_peak_compids
 			else
-				expect_num_eq $nb_peak_compids $nb_match || return 1
+				expect_num_eq "$nb_peak_compids" "$nb_match" || return 1
 			fi
 		done
 	done
