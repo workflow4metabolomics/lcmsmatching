@@ -633,6 +633,10 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	input.colnames <- check.input.colnames(input.colnames, input = input, needs.rt = rt.search)
 
 	# Restrict input to essential columns
+	print('---------------------------------------------------------------- search')
+	print(chrom.cols)
+	print(rt.search)
+	print('---------------------------------------------------------------- search')
 	input <- restrict.input.cols(input, col.names = input.colnames, same.cols = same.cols, keep.rt = rt.search)
 
 	# Update RT search flag
