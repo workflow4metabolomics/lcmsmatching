@@ -471,7 +471,7 @@ check.input.colnames <- function(col.names, input, needs.rt) {
 
 			# Unknown column
 			else
-				if (field == 'mz' || (needs.rt && fields == 'rt'))
+				if (field == 'mz' || (needs.rt && field == 'rt'))
 					stop(paste("Column ",  col.names[[field]], ' for ', field, ' values cannot be found inside input file.', sep = ''))
 		}
 	}
@@ -535,7 +535,10 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 		logger$includeMsgType('debug')
 		biodb <- biodb::Biodb$new(logger = FALSE, observers = logger)
 	}
-	biodb$getConfig()$set('factory.cache', TRUE)
+
+	# Configure cache
+	biodb$getConfig()$disable('cache.system')
+	biodb$getConfig()$disable('factory.cache')
 
 	# Create connector
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
@@ -620,20 +623,24 @@ get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 
 search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, chrom.cols, rt.unit, rt.tol, rt.tol.exp, results.sep) {
 
+	rt.search <- ! is.null(chrom.cols) && ! all(is.na(chrom.cols))
+
 	# TODO M/Z shift mz.shift = - mz.shift
 	# Load input file
 	input <- load.input.file(input.file, col.names = input.colnames)
 
 	# Check input column names
-	input.colnames <- check.input.colnames(input.colnames, input = input, needs.rt = ! is.null(chrom.cols))
+	input.colnames <- check.input.colnames(input.colnames, input = input, needs.rt = rt.search)
 
 	# Restrict input to essential columns
-	input <- restrict.input.cols(input, col.names = input.colnames, same.cols = same.cols, keep.rt = ! is.null(chrom.cols))
+	input <- restrict.input.cols(input, col.names = input.colnames, same.cols = same.cols, keep.rt = rt.search)
+
+	# Update RT search flag
+	rt.search <- rt.search && 'rt' %in% names(input.colnames) && input.colnames$rt %in% names(input)
 
 	# Loop on all M/Z values
 	peaks <- NULL
 	main <- NULL
-	rt.search <- ! all(is.na(chrom.cols)) && 'rt' %in% names(input.colnames) && input.colnames$rt %in% names(input)
 	rts <- NA_real_
 	rt.unit <- if (rt.search) (if (rt.unit == MSDB.RTUNIT.SEC) 's' else 'min') else NA_character_
 	rt.tol <- if (rt.search) rt.tol else NA_real_
