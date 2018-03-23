@@ -601,8 +601,6 @@ print.chrom.cols <- function(conn, output = NULL) {
 
 get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 
-	chrom.cols <- NA_character_
-
 	# Get all chromatopgrahic columns
 	if (all.cols)
 		chrom.cols <- conn$getChromCol()[['id']]
@@ -614,6 +612,8 @@ get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 		if (length(unknown.cols) > 0)
 			stop(paste0("unknown chromatographic column", (if (length(unknown.cols) > 1) 's' else ''), ': ', paste(unknown.cols, collapse = ', '), ".\nallowed chromatographic column names are:\n", paste(dbcols, collapse = "\n")))
 	}
+	else if (is.null(chrom.cols))
+		chrom.cols <- NA_character_
 
 	return(chrom.cols)
 }
@@ -633,10 +633,6 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	input.colnames <- check.input.colnames(input.colnames, input = input, needs.rt = rt.search)
 
 	# Restrict input to essential columns
-	print('---------------------------------------------------------------- search')
-	print(chrom.cols)
-	print(rt.search)
-	print('---------------------------------------------------------------- search')
 	input <- restrict.input.cols(input, col.names = input.colnames, same.cols = same.cols, keep.rt = rt.search)
 
 	# Update RT search flag
