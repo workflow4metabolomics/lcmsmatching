@@ -195,6 +195,7 @@ make.getopt.spec <- function(sections = NULL) {
 			'mztolunit',        'u',            1,  'character',    paste0('Unit used for tolerance values (options -s and -p) on M/Z. Default is ', MSDB.DFT$mztolunit,'.')
 		)
 
+	# Retention time
 	if (is.null(sections) || 'rt' %in% sections)
 		spec <- c(spec,
 			'all-cols',         'A',            0,  'logical',      'Use all available chromatographic columns to match retention times.',
@@ -228,6 +229,7 @@ make.getopt.spec <- function(sections = NULL) {
 			'excel2011comp',    'X',            0,  'logical',      'Excel 2011 compatiblity mode. Output ASCII text files instead of UTF-8 files, where greek letters are replaced with their latin names, plusminus sign is replaced with +- and apostrophe is replaced with \"prime\". All other non-ASCII characters are repladed with underscore.'
 		)
 
+	# Database
 	if (is.null(sections) || 'database' %in% sections)
 		spec <- c(spec,
 			'database',         'd',            1,  'character',    paste0('Set database to use: "xls" for an Excel database, "file" for a single file database, "4tabsql" for a 4Tab SQL database, and "peakforest" for a connection to PeakForest database.'),
@@ -538,7 +540,7 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 	# Create connector
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
 
-	# Set fields for file database
+	# Set up file database
 	if (db.name == MSDB.FILE) {
 
 		# Set fields
@@ -596,6 +598,8 @@ print.chrom.cols <- function(conn, output = NULL) {
 
 get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 
+	chrom.cols <- NA_character_
+
 	# Get all chromatopgrahic columns
 	if (all.cols)
 		chrom.cols <- conn$getChromCol()[['id']]
@@ -614,7 +618,7 @@ get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 # Search {{{1
 ################################################################
 
-search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, chrom.cols, results.sep) {
+search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, chrom.cols, rt.unit, rt.tol, rt.tol.exp, results.sep) {
 
 	# TODO M/Z shift mz.shift = - mz.shift
 	# Load input file
@@ -629,8 +633,18 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	# Loop on all M/Z values
 	peaks <- NULL
 	main <- NULL
+	rt.search <- ! all(is.na(chrom.cols)) && 'rt' %in% names(input.colnames) && input.colnames$rt %in% names(input)
+	rts <- NA_real_
+	rt.unit <- if (rt.search) (if (rt.unit == MSDB.RTUNIT.SEC) 's' else 'min') else NA_character_
+	rt.tol <- if (rt.search) rt.tol else NA_real_
+	rt.tol.exp <- if (rt.search) rt.tol.exp else NA_real_
 	for (i in seq_along(input[[1]])) {
-		df <- conn$searchMsPeaks(input[i, input.colnames$mz], mz.tol = mz.tol, mz.tol.unit = mz.tol.unit)
+
+		if (rt.search)
+			rts <- input[i, input.colnames$rt]
+
+		# Search for MS peaks
+		df <- conn$searchMsPeaks(mzs = input[i, input.colnames$mz], mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = , chrom.col.ids = chrom.cols, rts = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp)
 
 		# No results
 		if (is.null(df)) {
@@ -701,11 +715,18 @@ if (is.null(opt$v3)) {
 
 	# Search
 	else {
+
+		# Set RT unit
+		rt.search <- ! is.null(opt$rtcol) || ! is.null(opt[['all-cols']])
+		if ( rt.search && opt$database == MSDB.FILE && ! conn$hasField('chrom.rt.unit'))
+			conn$addField('chrom.rt.unit', if (opt[['db-rt-unit']] == MSDB.RTUNIT.SEC) 's' else 'min')
+
 		# Select chromatographic columns
 		chrom.cols <- get.chrom.cols(conn, check.cols = ! is.null(opt[['check-cols']]), chrom.cols = opt$rtcol, all.cols = ! is.null(opt[['all-cols']]))
 
 		# Search
-		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift, chrom.cols = chrom.cols,
+		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift,
+			   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = if (is.null(opt$rttol)) opt$rttolx else opt$rttol, rt.tol.exp = if (is.null(opt$rttol)) opt$rttoly else NA_real_,
 		       results.sep = opt[['molids-sep']],
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
 	}
