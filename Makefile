@@ -45,5 +45,7 @@ $(PLANEMO_VENV):
 
 clean:
 	$(RM) -rf dist $(CONDA_DIR) $(PLANEMO_DIR) $(PLANEMO_VENV)
+	$(MAKE) -C test $@
+	$(RM) -r $(BIODB_CACHE_DIRECTORY)
 
 .PHONY: all clean test dist planemo-lint planemo-test planemon-install planemo-toolshed-diff planemo-toolshed-update planemo-testtoolshed-diff planemo-testtoolshed-update
