@@ -105,7 +105,7 @@ print.help <- function() {
 	cat("\t./", PROG, " -d file --url mydbfile.tsv -i input.tsv -m pos -o output.tsv -p 1 -s 0.5 -u plain\n", sep = '')
 
 	cat("\nPeakforest database:\n")
-	cat("\t./", PROG, " -d peakforest --url https://rest.peakforest.org/ --db-token <your Peakforest token> -i input.tsv -m pos -o output.tsv\n", sep = '')
+	cat("\t./", PROG, " -d peakforest --url https://metabohub.peakforest.org/rest/ --db-token <your Peakforest token> -i input.tsv -m pos -o output.tsv\n", sep = '')
 }
 
 # Set default argument values {{{1
