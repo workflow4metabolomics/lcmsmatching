@@ -10,3 +10,4 @@ exclude:
  - java-msdb
  - Makefile
  - bash-testthat
+ - lcms.biodb.cache
