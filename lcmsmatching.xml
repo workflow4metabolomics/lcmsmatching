@@ -4,7 +4,7 @@
 
 	<requirements>
 		<!--<requirement type="package" version="3.3.3">r</requirement>-->
-		<requirement type="package" version="7.0">readline</requirement> <!-- Try readline 7.0 -->
+		<!--		<requirement type="package" version="7.0">readline</requirement>--> <!-- Try readline 7.0 -->
 		<requirement type="package" version="1.20.0">r-getopt</requirement>
 		<requirement type="package" version="1.2.0">r-stringr</requirement>
 		<requirement type="package" version="1.8.4">r-plyr</requirement>
@@ -224,8 +224,8 @@
 			<param name="dbfields" value=""/>
 			<param name="dbmsmodes" value=""/>
 			<param name="mzrtinput" value="mz-input-small.tsv"/>
-			<param name="inputmzfield" value="mzmed"/>
-			<param name="inputrtfield" value="rtmed"/>
+			<param name="inputmzfield" value="mz"/>
+			<!--<param name="inputrtfield" value=""/>-->
 			<param name="mzmode" value="pos"/>
 			<output name="mainoutput" file="filedb-small-mz-match-output.tsv"/>
 			<output name="peaksoutput" file="filedb-small-mz-match-peaks-output.tsv"/>

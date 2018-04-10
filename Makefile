@@ -1,51 +1,38 @@
 export BIODB_CACHE_DIRECTORY=$(CURDIR)/lcms.biodb.cache
-TOOL_XML=lcmsmatching.xml
-GALAXY_BRANCH=release_16.01
-CONDA_DIR=$(HOME)/w4mcnd
-PLANEMO_DIR=$(HOME)/.planemo
-PLANEMO_VENV=$(HOME)/venv_planemo
-SOURCE_VENV=source $(PLANEMO_VENV)/bin/activate
 
 all:
 
 test:
 	$(MAKE) -C $@
 
-planemo-lint: $(PLANEMO_VENV)
-	$(SOURCE_VENV) && planemo lint --no_xsd $(TOOL_XML)
+planemo-venv/bin/planemo: planemo-venv
+	. planemo-venv/bin/activate && pip install --upgrade pip setuptools
+	. planemo-venv/bin/activate && pip install planemo
 
-planemo-test: $(CONDA_DIR)
-	$(SOURCE_VENV) && planemo conda_install --conda_prefix $(CONDA_DIR) $(TOOL_XML)
-	$(SOURCE_VENV) && planemo test --conda_prefix $(CONDA_DIR) --galaxy_branch $(GALAXY_BRANCH) --conda_dependency_resolution $(TOOL_XML)
+planemo-venv:
+	virtualenv planemo-venv
 
-planemo-testtoolshed-diff: dist $(PLANEMO_VENV)
-	$(SOURCE_VENV) && cd $< && planemo shed_diff --shed_target testtoolshed
+planemolint: planemo-venv/bin/planemo
+	. planemo-venv/bin/activate && planemo lint --no_xsd
 
-planemo-testtoolshed-update: dist $(PLANEMO_VENV)
-	$(SOURCE_VENV) && cd $< && planemo shed_update --check_diff --shed_target testtoolshed
+planemotest: planemo-venv/bin/planemo
+	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --galaxy_branch release_17.05
 
-planemo-toolshed-diff: dist $(PLANEMO_VENV)
-	$(SOURCE_VENV) && cd $< && planemo shed_diff --shed_target toolshed
+planemo-testtoolshed-diff: distplanemo-venv/bin/planemo
+	. planemo-venv/bin/activate && cd $< && planemo shed_diff --shed_target testtoolshed
 
-planemo-toolshed-update: dist $(PLANEMO_VENV)
-	$(SOURCE_VENV) && cd $< && planemo shed_update --check_diff --shed_target toolshed
+planemo-testtoolshed-update: distplanemo-venv/bin/planemo
+	. planemo-venv/bin/activate && cd $< && planemo shed_update --check_diff --shed_target testtoolshed
 
-dist:
-	$(RM) -rf dist
-	mkdir $@
-	cp -R .shed.yml *.R lcmsmatching *.py *.xml README.* test-data $@/
+planemo-toolshed-diff: distplanemo-venv/bin/planemo
+	. planemo-venv/bin/activate && cd $< && planemo shed_diff --shed_target toolshed
 
-$(CONDA_DIR): $(PLANEMO_VENV)
-	$(SOURCE_VENV) && planemo conda_init --conda_prefix $(CONDA_DIR)
-
-$(PLANEMO_VENV):
-	virtualenv $@
-	$(SOURCE_VENV) && pip install --upgrade pip
-	$(SOURCE_VENV) && pip install planemo
+planemo-toolshed-update: distplanemo-venv/bin/planemo
+	. planemo-venv/bin/activate && cd $< && planemo shed_update --check_diff --shed_target toolshed
 
 clean:
-	$(RM) -rf dist $(CONDA_DIR) $(PLANEMO_DIR) $(PLANEMO_VENV)
 	$(MAKE) -C test $@
 	$(RM) -r $(BIODB_CACHE_DIRECTORY)
+	$(RM) -r planemo-venv
 
-.PHONY: all clean test dist planemo-lint planemo-test planemon-install planemo-toolshed-diff planemo-toolshed-update planemo-testtoolshed-diff planemo-testtoolshed-update
+.PHONY: all clean test planemo-lint planemo-test planemon-install planemo-toolshed-diff planemo-toolshed-update planemo-testtoolshed-diff planemo-testtoolshed-update
