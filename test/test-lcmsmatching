@@ -563,7 +563,7 @@ function test_generic_html_output_file {
 ################################################################
 
 # Set databases
-[[ -n $DATABASES ]] || DATABASES="file,xls,peakforest"
+[[ -n $DATABASES ]] || DATABASES="file,peakforest"
 
 # Test peakforest token
 if [[ ",$DATABASES," == *",peakforest,"* && -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
