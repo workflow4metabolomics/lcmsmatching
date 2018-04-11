@@ -567,11 +567,12 @@ function test_generic_html_output_file {
 
 # Test peakforest token
 if [[ ",$DATABASES," == *",peakforest,"* && -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
-	echo "No Peakforest defined in env var RMSBD_PEAKFOREST_TOKEN." >&2
+	echo "No Peakforest token defined in env var RMSBD_PEAKFOREST_TOKEN." >&2
 	exit 1
 fi
 
 # Loop on all databases
+DATABASES=$(echo $DATABASES | tr ',' ' ')
 for db in $DATABASES ; do
 
 	test_context "Testing $db database"
