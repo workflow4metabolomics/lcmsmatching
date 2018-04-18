@@ -15,8 +15,9 @@ planemo-venv:
 planemolint: planemo-venv/bin/planemo
 	. planemo-venv/bin/activate && planemo lint --no_xsd
 
+planemotest: R_LIBS_USER=
 planemotest: planemo-venv/bin/planemo
-	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --galaxy_branch release_17.05
+	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --galaxy_branch release_17.09
 
 planemo-testtoolshed-diff: distplanemo-venv/bin/planemo
 	. planemo-venv/bin/activate && cd $< && planemo shed_diff --shed_target testtoolshed
