@@ -12,6 +12,7 @@
 		<requirement type="package" version="1.0_6">r-bitops</requirement>
 		<requirement type="package" version="1.95">r-rcurl</requirement>
 		<requirement type="package" version="1.5">r-jsonlite</requirement>
+		<requirement type="package" version="0.2">r-codetools</requirement>
 	</requirements>
 
 	<!--=======
