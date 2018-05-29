@@ -249,6 +249,7 @@ make.getopt.spec <- function(sections = NULL) {
 			'help',             'h',            0,  'logical',      'Print this help.',
 			'debug',            'g',            0,  'logical',      'Set debug mode.',
 			'quiet',            'q',            0,  'logical',      'Quiet mode.',
+			'log-to-stdout',    'G',            0,  'logical',      'Send log messages to stdout instead of stderr.',
 			'v3',               '3',            0,  'logical',      'Use old version 3 (without biodb).'
 		)
 
@@ -531,8 +532,10 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 	if (quiet)
 		biodb <- biodb::Biodb$new(logger = FALSE)
 	else {
-		logger = biodb::BiodbLogger$new()
-		logger$includeMsgType('debug')
+		log.stream = (if (is.null(opt[['log-to-stdout']])) stderr() else stdout())
+		logger = biodb::BiodbLogger$new(file = log.stream)
+		if ( ! is.null(opt$debug))
+			logger$includeMsgType('debug')
 		biodb <- biodb::Biodb$new(logger = FALSE, observers = logger)
 	}
 
