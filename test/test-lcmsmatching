@@ -287,16 +287,6 @@ function test_filedb_with_number_sign_char {
 	expect_success $LCMSMATCHING -d file --url $db_file -m pos -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
 }
 
-# Test generic - input file with number sign character (#) {{{1
-################################################################
-
-function test_generic_input_file_with_number_sign_char {
-
-	local db=$1
-	local input_file=$RES_DIR/inputs/mz-number-sign.tsv
-
-	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
-}
 
 # Test filedb - field names set to NA {{{1
 ################################################################
@@ -308,6 +298,32 @@ function test_filedb_na_db_fields {
 	local main_output=$SCRIPT_PATH/test_filedb_na_db_fields-main.tsv
 
 	expect_success $LCMSMATCHING -d file --url $db_file --db-fields chebiid=NA,keggid=NA -m pos -i $input_file -o $main_output --same-rows || return 1
+}
+
+# Test filedb - RT match {{{1
+################################################################
+
+function test_filedb_rt_match {
+
+	local resdir=$RES_DIR/filedb/rt_match
+	local db_file=$resdir/db.tsv
+	local input_file=$resdir/input.tsv
+	local main_output=$SCRIPT_PATH/test_filedb_rt_match-main.tsv
+
+	expect_success $LCMSMATCHING -d file --url $db_file -m pos -i $input_file -o $main_output --same-rows --db-rt-unit min --rtunit min --all-cols || return 1
+
+	# Compare with expected output
+}
+
+# Test generic - input file with number sign character (#) {{{1
+################################################################
+
+function test_generic_input_file_with_number_sign_char {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mz-number-sign.tsv
+
+	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -p 5 -s 0 -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
 }
 
 # Test generic - wrong input file in filedb {{{1
@@ -605,6 +621,7 @@ for db in $DATABASES ; do
 		test_that "We do not find an unexpected 'y' column in output." test_filedb_no_y_col_in_output
 		test_that "Bug ticket 2016031010000034 does not come back." test_filedb_ticket_2016031010000034
 		test_that "Use of different RT units give the same results." test_filedb_rtunit
+		test_that "RT matching works." test_filedb_rt_match
 	fi
 
 	# Run Peakforest tests
