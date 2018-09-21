@@ -310,9 +310,11 @@ function test_filedb_rt_match {
 	local input_file=$resdir/input.tsv
 	local main_output=$SCRIPT_PATH/test_filedb_rt_match-main.tsv
 
-	expect_success $LCMSMATCHING -d file --url $db_file -m pos -i $input_file -o $main_output --same-rows --db-rt-unit min --rtunit min --all-cols || return 1
+	expect_success $LCMSMATCHING -d file --url $db_file -m pos -p 5 -s 0 -i $input_file -o $main_output --same-rows -g || return 1
+#	expect_success $LCMSMATCHING -d file --url $db_file -m pos -p 5 -s 0 -i $input_file -o $main_output --same-rows --db-rt-unit min --rtunit min -c col1 --rttolx 5 --rttoly 0.8 -g || return 1
 
 	# Compare with expected output
+	expect_success false || return 1
 }
 
 # Test generic - input file with number sign character (#) {{{1
@@ -590,6 +592,11 @@ fi
 # Loop on all databases
 DATABASES=$(echo $DATABASES | tr ',' ' ')
 for db in $DATABASES ; do
+
+	if [[ $db != 'file' && $db != 'peakforest' ]] ; then
+		echo "Unknown database \"$db\" !" >&2
+		exit 1
+	fi
 
 	test_context "Testing $db database"
 
