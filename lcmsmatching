@@ -654,7 +654,7 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 			rts <- as.numeric(input[i, input.colnames$rt])
 
 		# Search for MS peaks
-		df <- conn$searchMsPeaks(mzs = as.numeric(input[i, input.colnames$mz]), mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = , chrom.col.ids = chrom.cols, rts = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp)
+		df <- conn$searchMsPeaks(mzs = as.numeric(input[i, input.colnames$mz]), mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = , chrom.col.ids = chrom.cols, rts = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp)
 
 		# No results
 		if (is.null(df)) {

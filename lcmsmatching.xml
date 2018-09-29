@@ -359,7 +359,9 @@ The first parameter is the MS mode, specified through the *MS mode* parameter.
 
 The parameters *M/Z precision* and *M/Z shift* are used by the algorithm in the following formula in order to match an *m/z* value:
 
-	mz (1 + (- shift - precision) / 10^6) &lt; mzref &lt; mz (1 + (- shift - precision) / 10^6)
+	mz - shift - precision &lt; mzref &lt; mz - shift + precision
+
+shift and precision can be either set in plain values, or in PPM of mz.
 
 Where *mzref* is the M/Z of reference from the database peak that is tested. If this double inequality is true, then the *m/z* value is matched with this peak.
 
