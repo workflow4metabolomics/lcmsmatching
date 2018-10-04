@@ -202,8 +202,8 @@ make.getopt.spec <- function(sections = NULL) {
 			'rtcol',            'c',            1,  'character',    paste0('Chromatographic column to use. Unset by default. If set, use the corresponding column to filter on retention times, if retention times are provided.'),
 			'check-cols',       'k',            0,  'logical',      'Check that the chromatographic column names specified with option -c really exist.',
 			'list-cols',        'l',            0,  'logical',      'List all chromatographic columns present in the database. Write list inside the file specified by -o option.',
-			'rttol',            'r',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
-			'rttolx',           'x',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
+			'rttol',            'r',            1,  'numeric',      paste0('Tolerance on retention times, in seconds. Unset by default.'),
+			'rttolx',           'x',            1,  'numeric',      paste0('Tolerance on retention times, in seconds. Unset by default.'),
 			'rttoly',           'y',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
 			'rtunit',           'v',            1,  'character',    paste0('Retention time unit for the input file. Default is ', MSDB.DFT$rtunit, '. Allowed values are:', paste(MSDB.RTUNIT.VALS, collapse = ", "), '.')
 		)
@@ -624,7 +624,7 @@ get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 # Search {{{1
 ################################################################
 
-search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, chrom.cols, rt.unit, rt.tol, rt.tol.exp, results.sep) {
+search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, ms.mode, main.output, peaks.output, html.output, chrom.cols, rt.unit, rt.tol, rt.tol.exp, results.sep) {
 
 	rt.search <- ! is.null(chrom.cols) && ! all(is.na(chrom.cols))
 
@@ -654,7 +654,15 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 			rts <- as.numeric(input[i, input.colnames$rt])
 
 		# Search for MS peaks
-		df <- conn$searchMsPeaks(mzs = as.numeric(input[i, input.colnames$mz]), mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = , chrom.col.ids = chrom.cols, rts = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp)
+		print('-------------------------------- lcmsmatching 100')
+		print(ms.mode)
+		print(rts)
+		print(rt.unit)
+		print(rt.tol)
+		print(rt.tol.exp)
+		print('-------------------------------- lcmsmatching 101')
+		# TODO RT.TOL OR RT.TOL.X ?
+		df <- conn$searchMsPeaks(mzs = as.numeric(input[i, input.colnames$mz]), mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rts = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp)
 
 		# No results
 		if (is.null(df)) {
@@ -726,6 +734,9 @@ if (is.null(opt$v3)) {
 	# Search
 	else {
 
+		# MS mode
+		ms.mode <- if (opt$mode == POS_MODE) MSDB.TAG.POS else MSDB.TAG.NEG
+
 		# Set RT unit
 		rt.search <- ! is.null(opt$rtcol) || ! is.null(opt[['all-cols']])
 		if ( rt.search && opt$database == MSDB.FILE && ! conn$hasField('chrom.rt.unit'))
@@ -735,7 +746,8 @@ if (is.null(opt$v3)) {
 		chrom.cols <- get.chrom.cols(conn, check.cols = ! is.null(opt[['check-cols']]), chrom.cols = opt$rtcol, all.cols = ! is.null(opt[['all-cols']]))
 
 		# Search
-		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift,
+		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = opt$mzshift,
+		       ms.mode = ms.mode,
 			   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = if (is.null(opt$rttol)) opt$rttolx else opt$rttol, rt.tol.exp = if (is.null(opt$rttol)) opt$rttoly else NA_real_,
 		       results.sep = opt[['molids-sep']],
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
@@ -745,6 +757,7 @@ if (is.null(opt$v3)) {
 }
 
 # OLD SCHEME {{{2
+################################################################
 
 # Check values
 error <- check.args(opt)

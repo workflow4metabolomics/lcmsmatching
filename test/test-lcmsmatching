@@ -159,11 +159,7 @@ function test_filedb_rtunit {
 			peak_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.tsv
 			html_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.html
 
-			if [[ $input_rtunit == 'sec' ]] ; then
-				rttol=30 # tolerance for seconds
-			else
-				rttol=0.5 # tolerance for minutes
-			fi
+			rttol=30 # tolerance in seconds
 
 			# Run program
 			expect_success $LCMSMATCHING -d file --url $db_file --db-rt-unit $db_rtunit -m pos -p 5 -s 0 -i $input_file --input-col-names 'mz=mz,rt=rt' -o $main_output --peak-output-file $peak_output --html-output-file $html_output --rtunit $input_rtunit --all-cols --rttol $rttol --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
@@ -327,7 +323,7 @@ function test_filedb_rt_match {
 	local db_file=$resdir/db.tsv
 	local input_file=$resdir/input.tsv
 	local main_output=$SCRIPT_PATH/test_filedb_rt_match-main.tsv
-	local expected_output==$resdir/expected_output.tsv
+	local expected_output=$resdir/expected_output.tsv
 
 	expect_success $LCMSMATCHING -d file --url $db_file -m pos -p 5 -s 0 -i $input_file -o $main_output --same-rows --db-rt-unit min --rtunit min -c col1 --rttolx 5 --rttoly 0.8 -g || return 1
 

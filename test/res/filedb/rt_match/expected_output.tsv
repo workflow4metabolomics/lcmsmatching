@@ -1,0 +1,10 @@
+mz	rt	lcmsmatching.compound.id	lcmsmatching.ms.mode	lcmsmatching.chrom.col.name	lcmsmatching.chrom.rt	lcmsmatching.name	lcmsmatching.accession	lcmsmatching.formula	lcmsmatching.molecular.mass	lcmsmatching.ms.level	lcmsmatching.chrom.rt.unit	lcmsmatching.peak.mztheo	lcmsmatching.peak.attr	lcmsmatching.peak.comp	lcmsmatching.peak.mz	lcmsmatching.chrom.col.id	lcmsmatching.mass.csv.file.id
+112.07569	5.69	C1	pos	col1	5.69	Blablaine'	C1.pos.col1.5.69	J114L6M62O2	146.10553	1	min	112.07569	[(M+H)-(H2O)-(NH3)]+	P9Z6W410 O	112.07569	col1	C1.pos.col1.5.69
+112.07569	8.13101720614817	C1	pos	col1	5.69	Blablaine'	C1.pos.col1.5.69	J114L6M62O2	146.10553	1	min	112.07569	[(M+H)-(H2O)-(NH3)]+	P9Z6W410 O	112.07569	col1	C1.pos.col1.5.69
+112.07569	8.131018	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
+112.07569	4.21329435710035	C1	pos	col1	5.69	Blablaine'	C1.pos.col1.5.69	J114L6M62O2	146.10553	1	min	112.07569	[(M+H)-(H2O)-(NH3)]+	P9Z6W410 O	112.07569	col1	C1.pos.col1.5.69
+112.07569	4.21328	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
+112.07625	5.69	C1	pos	col1	5.69	Blablaine'	C1.pos.col1.5.69	J114L6M62O2	146.10553	1	min	112.07569	[(M+H)-(H2O)-(NH3)]+	P9Z6W410 O	112.07569	col1	C1.pos.col1.5.69
+112.076251	5.69	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
+112.075129	5.69	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
+112.07513	5.69	C1	pos	col1	5.69	Blablaine'	C1.pos.col1.5.69	J114L6M62O2	146.10553	1	min	112.07569	[(M+H)-(H2O)-(NH3)]+	P9Z6W410 O	112.07569	col1	C1.pos.col1.5.69
