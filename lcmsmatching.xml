@@ -52,9 +52,6 @@
 		#if $prec.match == "true"
 			--precursor-match --pos-prec "$prec.pos" --neg-prec "$prec.neg"
 		#end if
-		#if $prec.match == "true" and $chromcols:
-			--precursor-rt-tol $tolz
-		#end if
 
 		## Chromatographic columns options and retention matching 
 		#if $chromcols:
@@ -149,7 +146,6 @@
 			<!-- Tolerances -->
 			<param name="tolx" label="RTX retention time tolerance, parameter x (in seconds)" type="float" help="" value="5"/>
 			<param name="toly" label="RTY retention time tolerance, parameter y" type="float" help="" value="0.8"/>
-			<param name="tolz" label="RTZ retention time tolerance, used when precursor matching is enabled." type="float" help="" value="5"/>
 
 		<!-- PRECURSOR MATCH -->
 		<conditional name="prec">
@@ -369,15 +365,14 @@ Where *mzref* is the M/Z of reference from the database peak that is tested. If 
 Retention time match
 --------------------
 
-If at least one column is selected inside the *Chromatographic columns* parameter section, then retention time is also matched, in addition to the *m/z* value, according to the following formula:
+If at least one column is selected inside the *Chromatographic columns* parameter section, then retention time is also matched, in addition to the *m/z* value.
 
+If only **RTX** is 
 	rt - x - rt^y &lt; colrt &lt; rt + x + rt^y
 
 Where *x* is the value of the parameter *RTX* and *y* the value of the parameter *RTY*.
 
 If for a reference compound the database does not contain retention time for at least one of the specified columns, then only the *m/z* value is matched against the peaks of the reference compound. This means that in the results you can find compounds that do no match the provided retention time value.
-
-The *RTZ* parameter is used in the *Precursor match* algorithm (see below).
 
 ---------------
 Precursor match

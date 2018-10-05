@@ -22,7 +22,7 @@ if (as.integer(R.Version()$major) == 2 && as.numeric(R.Version()$minor) < 15)
 ################################################################
 
 PROG <- sub('^.*/([^/]+)$', '\\1', commandArgs()[4], perl = TRUE)
-USERAGENT <- 'search-mz ; pk.roger@icloud.com'
+USERAGENT <- 'W4M lcmsmatching ; pk.roger@icloud.com'
 
 # Authorized database types
 MSDB.XLS <- 'xls'
@@ -542,6 +542,9 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 	# Configure cache
 	biodb$getConfig()$disable('cache.system')
 	biodb$getConfig()$disable('factory.cache')
+	biodb$getConfig()$disable('cache.subfolders')
+	biodb$getConfig()$disable('cache.all.requests')
+	biodb$getConfig()$set('useragent', USERAGENT)
 
 	# Create connector
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
@@ -586,6 +589,8 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 			conn$addField('ms.level', 1)
 
 		# Set MS mode values
+
+		# Set precursor formulae
 	}
 
 	return(conn)
@@ -749,7 +754,7 @@ if (is.null(opt$v3)) {
 		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = opt$mzshift,
 		       ms.mode = ms.mode,
 			   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = if (is.null(opt$rttol)) opt$rttolx else opt$rttol, rt.tol.exp = if (is.null(opt$rttol)) opt$rttoly else NA_real_,
-		       results.sep = opt[['molids-sep']],
+		       results.sep = opt[['molids-sep']], precursor = ! is.null(opt[['precursor-match']]),
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
 	}
 

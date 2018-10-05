@@ -95,44 +95,45 @@ function test_peakforest_estelle_20170314 {
 }
 
 # Test Peakforest Estelle 16/03/2017 {{{1
+# DEPRECATED This type of test is now handled by biodb. It has been disabled because the searched M/Z value is not found anymore inside Peakforest.
 ################################################################
 
-function test_peakforest_estelle_20170316_rtunit {
-
-	local res_name=2017-03-16-estelle-rtunit
-	local res_dir=$RES_DIR/$res_name
-	local min_input=$res_dir/min-input.tsv
-	local min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
-	local min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
-	local min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
-	local sec_input=$res_dir/sec-input.tsv
-	local sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
-	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
-	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
-
-	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
-
-	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
-
-	# Check that output file contains at least same matches
-	local nb_sec_peak_compids=$(csv_count_values "$sec_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
-	expect_num_gt "$nb_sec_peak_compids" 0 || return 1
-	local nb_min_peak_compids=$(csv_count_values "$min_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
-	expect_num_gt "$nb_min_peak_compids" 0 || return 1
-	expect_same_number_of_rows "$sec_peak_output" "$min_peak_output" || return 1
-	csv_expect_identical_col_values lcmsmatching.peakforest.mass.id "$sec_peak_output" "$min_peak_output" "$SEP" || return 1
-
-	# Checkout RT output values
-	local err=1e-10
-	expect_num_eq $(get_nb_rows "$min_input" 1) 1 || return 1
-	local min_rtmed=$(csv_get_val "$min_input" "$SEP" rtmed 1)
-	expect_num_eq $(get_nb_rows "$sec_input" 1) 1 || return 1
-	local sec_rtmed=$(csv_get_val "$sec_input" "$SEP" rtmed 1)
-	csv_expect_float_col_equals "$min_peak_output" "$SEP" rtmed "$min_rtmed" "$err" || return 1
-	csv_expect_float_col_equals "$sec_peak_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 1
-	csv_expect_float_col_equals "$min_main_output" "$SEP" rtmed "$min_rtmed" "$err" || return 10
-	csv_expect_float_col_equals "$sec_main_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 11
-}
+#function test_peakforest_estelle_20170316_rtunit {
+#
+#	local res_name=2017-03-16-estelle-rtunit
+#	local res_dir=$RES_DIR/$res_name
+#	local min_input=$res_dir/min-input.tsv
+#	local min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
+#	local min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
+#	local min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
+#	local sec_input=$res_dir/sec-input.tsv
+#	local sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
+#	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
+#	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
+#
+#	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+#
+#	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+#
+#	# Check that output file contains at least same matches
+#	local nb_sec_peak_compids=$(csv_count_values "$sec_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
+#	expect_num_gt "$nb_sec_peak_compids" 0 || return 1
+#	local nb_min_peak_compids=$(csv_count_values "$min_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
+#	expect_num_gt "$nb_min_peak_compids" 0 || return 1
+#	expect_same_number_of_rows "$sec_peak_output" "$min_peak_output" || return 1
+#	csv_expect_identical_col_values lcmsmatching.peakforest.mass.id "$sec_peak_output" "$min_peak_output" "$SEP" || return 1
+#
+#	# Checkout RT output values
+#	local err=1e-10
+#	expect_num_eq $(get_nb_rows "$min_input" 1) 1 || return 1
+#	local min_rtmed=$(csv_get_val "$min_input" "$SEP" rtmed 1)
+#	expect_num_eq $(get_nb_rows "$sec_input" 1) 1 || return 1
+#	local sec_rtmed=$(csv_get_val "$sec_input" "$SEP" rtmed 1)
+#	csv_expect_float_col_equals "$min_peak_output" "$SEP" rtmed "$min_rtmed" "$err" || return 1
+#	csv_expect_float_col_equals "$sec_peak_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 1
+#	csv_expect_float_col_equals "$min_main_output" "$SEP" rtmed "$min_rtmed" "$err" || return 10
+#	csv_expect_float_col_equals "$sec_main_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 11
+#}
 
 # Test filedb RT unit {{{1
 ################################################################
@@ -648,7 +649,7 @@ for db in $DATABASES ; do
 
 	# Run Peakforest tests
 	if [[ $db == peakforest ]] ; then
-		test_that "Bug Estelle 20170316 does not come back." test_peakforest_estelle_20170316_rtunit
+#		test_that "Bug Estelle 20170316 does not come back." test_peakforest_estelle_20170316_rtunit
 		test_that "Bug Estelle 20170314 does not come back." test_peakforest_estelle_20170314
 	fi
 done
