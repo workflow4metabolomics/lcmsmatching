@@ -110,7 +110,7 @@ function test_peakforest_estelle_20170316_rtunit {
 	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
 	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
 
-	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 0.08 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
 
 	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
 
