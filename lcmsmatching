@@ -506,27 +506,15 @@ restrict.input.cols <- function(input, col.names, same.cols, keep.rt) {
 	return(input)
 }
 
-# Get database connector {{{1
+# Create Biodb instance {{{1
 ################################################################
 
-get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
+create.biodb.instance <- function(quiet = FALSE, ms.modes = NULL) {
+
+	biodb <- NULL
 
 	if (is.null(quiet))
 		quiet <- FALSE
-
-	# Set biodb database name
-	if (db.name == MSDB.FILE)
-		biodb.db.name <- 'mass.csv.file'
-	else if (db.name == MSDB.PEAKFOREST)
-		biodb.db.name <- 'peakforest.mass'
-	else
-		stop(paste0('Unknown database "', db.name, '".'))
-
-	# Set URL & token
-	if (is.null(url))
-		url <- NA_character_
-	if (is.null(token))
-		token <- NA_character_
 
 	# Create biodb instance
 	if (quiet)
@@ -545,6 +533,33 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 	biodb$getConfig()$disable('cache.subfolders')
 	biodb$getConfig()$disable('cache.all.requests')
 	biodb$getConfig()$set('useragent', USERAGENT)
+
+	# Set MS mode values
+	if ( ! is.null(ms.modes))
+		for (k in names(ms.modes))
+			biodb$getEntryFields()$get('ms.mode')$addAllowedValue(k, ms.modes[[k]])
+
+	return(biodb)
+}
+
+# Get database connector {{{1
+################################################################
+
+get.db.conn <- function(biodb, db.name, url, token, fields) {
+
+	# Set biodb database name
+	if (db.name == MSDB.FILE)
+		biodb.db.name <- 'mass.csv.file'
+	else if (db.name == MSDB.PEAKFOREST)
+		biodb.db.name <- 'peakforest.mass'
+	else
+		stop(paste0('Unknown database "', db.name, '".'))
+
+	# Set URL & token
+	if (is.null(url))
+		url <- NA_character_
+	if (is.null(token))
+		token <- NA_character_
 
 	# Create connector
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
@@ -588,9 +603,8 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 		if ( ! conn$hasField('ms.level'))
 			conn$addField('ms.level', 1)
 
-		# Set MS mode values
-
 		# Set precursor formulae
+		# TODO
 	}
 
 	return(conn)
@@ -729,8 +743,11 @@ if (is.null(opt$debug)) {
 # biodb
 if (is.null(opt$v3)) {
 
+	# Create Biodb instance
+	biodb <- create.biodb.instance(quiet = opt$quiet, ms.modes = opt[['db-ms-modes']])
+
 	# Get database connector
-	conn <- get.db.conn(opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']], quiet = opt$quiet)
+	conn <- get.db.conn(opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']])
 
 	# Print columns
 	if ( ! is.null(opt[['list-cols']]))
@@ -757,6 +774,9 @@ if (is.null(opt$v3)) {
 		       results.sep = opt[['molids-sep']], precursor = ! is.null(opt[['precursor-match']]),
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
 	}
+
+	# Terminate Biodb instance
+	biodb$terminate()
 
 	quit(status = 0)
 }
