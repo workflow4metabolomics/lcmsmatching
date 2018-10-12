@@ -545,7 +545,7 @@ create.biodb.instance <- function(quiet = FALSE, ms.modes = NULL) {
 # Get database connector {{{1
 ################################################################
 
-get.db.conn <- function(biodb, db.name, url, token, fields) {
+get.db.conn <- function(biodb, db.name, url, token, fields, pos.prec, neg.prec) {
 
 	# Set biodb database name
 	if (db.name == MSDB.FILE)
@@ -604,7 +604,8 @@ get.db.conn <- function(biodb, db.name, url, token, fields) {
 			conn$addField('ms.level', 1)
 
 		# Set precursor formulae
-		# TODO
+		if ( ! is.null(pos.prec))
+			conn$setPrecursorFormulae(c(pos.prec, neg.prec))
 	}
 
 	return(conn)
@@ -643,7 +644,7 @@ get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 # Search {{{1
 ################################################################
 
-search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, ms.mode, main.output, peaks.output, html.output, chrom.cols, rt.unit, rt.tol, rt.tol.exp, results.sep) {
+search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, ms.mode, main.output, peaks.output, html.output, chrom.cols, rt.unit, rt.tol, rt.tol.exp, results.sep, precursor, precursor.rt.tol) {
 
 	rt.search <- ! is.null(chrom.cols) && ! all(is.na(chrom.cols))
 
@@ -663,10 +664,10 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	# Loop on all M/Z values
 	peaks <- NULL
 	main <- NULL
-	rts <- NA_real_
+	rts <- NULL
 	rt.unit <- if (rt.search) (if (rt.unit == MSDB.RTUNIT.SEC) 's' else 'min') else NA_character_
-	rt.tol <- if (rt.search) rt.tol else NA_real_
-	rt.tol.exp <- if (rt.search) rt.tol.exp else NA_real_
+	rt.tol <- if (rt.search && ! is.null(rt.tol)) rt.tol else NA_real_
+	rt.tol.exp <- if (rt.search && ! is.null(rt.tol.exp)) rt.tol.exp else NA_real_
 	for (i in seq_along(input[[1]])) {
 
 		if (rt.search)
@@ -680,8 +681,7 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 		print(rt.tol)
 		print(rt.tol.exp)
 		print('-------------------------------- lcmsmatching 101')
-		# TODO RT.TOL OR RT.TOL.X ?
-		df <- conn$searchMsPeaks(mzs = as.numeric(input[i, input.colnames$mz]), mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rts = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp)
+		df <- conn$searchMsPeaks(mz = as.numeric(input[i, input.colnames$mz]), mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = FALSE)
 
 		# No results
 		if (is.null(df)) {
@@ -747,7 +747,7 @@ if (is.null(opt$v3)) {
 	biodb <- create.biodb.instance(quiet = opt$quiet, ms.modes = opt[['db-ms-modes']])
 
 	# Get database connector
-	conn <- get.db.conn(opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']])
+	conn <- get.db.conn(biodb, db.name = opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']], pos.prec = opt[['pos-prec']], neg.prec = opt[['neg-prec']])
 
 	# Print columns
 	if ( ! is.null(opt[['list-cols']]))
@@ -770,8 +770,8 @@ if (is.null(opt$v3)) {
 		# Search
 		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = opt$mzshift,
 		       ms.mode = ms.mode,
-			   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = if (is.null(opt$rttol)) opt$rttolx else opt$rttol, rt.tol.exp = if (is.null(opt$rttol)) opt$rttoly else NA_real_,
-		       results.sep = opt[['molids-sep']], precursor = ! is.null(opt[['precursor-match']]),
+			   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = if (is.null(opt$rttol)) opt$rttolx else opt$rttol, rt.tol.exp = opt$rttoly,
+		       results.sep = opt[['molids-sep']], precursor = ! is.null(opt[['precursor-match']]), precursor.rt.tol = opt[['precursor-rt-tol']],
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
 	}
 
