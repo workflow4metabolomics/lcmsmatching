@@ -225,15 +225,28 @@
 		<test>
 			<param name="dbtype" value="inhouse"/>
 			<param name="dburl" value="filedb.tsv"/>
-			<!--<param name="dbfields" value=""/>-->
-			<!--<param name="dbmsmodes" value=""/>-->
 			<param name="mzrtinput" value="mz-input-small.tsv"/>
 			<param name="inputfields" value="mz=mz"/>
-			<!--<param name="inputrtfield" value=""/>-->
 			<param name="mzmode" value="pos"/>
-			<output name="mainoutput" file="filedb-small-mz-match-output.tsv"/>
-			<output name="peaksoutput" file="filedb-small-mz-match-peaks-output.tsv"/>
-			<output name="htmloutput" file="filedb-small-mz-match-html-output.html"/>
+			<output name="mainoutput" file="test_1_main_output.tsv"/>
+			<output name="peaksoutput" file="test_1_peaks_output.tsv"/>
+			<output name="htmloutput" file="test_1_peaks_output.html"/>
+		</test>
+
+		<!-- Galaxy test 2 -->
+		<test>
+			<param name="dbtype" value="inhouse"/>
+			<param name="dburl" value="filedb.tsv"/>
+			<param name="mzrtinput" value="mzrt-input-small.tsv"/>
+			<param name="inputfields" value="mz=mz,rt=rt"/>
+			<param name="mzmode" value="pos"/>
+			<param name="dbrtunit" value="min"/>
+			<param name="chromcols" value="col12"/>
+			<param name="tolx" value="5"/>
+			<param name="toly" value="0.8"/>
+			<output name="mainoutput" file="test_2_main_output.tsv"/>
+			<output name="peaksoutput" file="test_2_peaks_output.tsv"/>
+			<output name="htmloutput" file="test_2_peaks_output.html"/>
 		</test>
 
 		<!-- File database test -->
