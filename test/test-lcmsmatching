@@ -6,6 +6,7 @@
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 RES_DIR=$SCRIPT_PATH/res
+TEST_DATA_DIR=$SCRIPT_PATH/../test-data
 LCMSMATCHING=$SCRIPT_PATH/../lcmsmatching
 SEP="\t"
 PEAKFOREST_URL='https://metabohub.peakforest.org/rest/'
@@ -332,6 +333,25 @@ function test_filedb_rt_match {
 	expect_same_files $main_output $expected_output || return 1
 }
 
+# Test filedb - Galaxy test 1 {{{1
+################################################################
+
+test_filedb_galaxy_test_1() {
+
+	local db_file=$TEST_DATA_DIR/filedb.tsv
+	local input_file=$TEST_DATA_DIR/mz-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_html_output_file-output.tsv
+	local peak_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_html_output_file-peak-output.tsv
+	local html_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_html_output_file-html-output.html
+
+	expect_success $LCMSMATCHING -g --log-to-stdout -i "$input_file" --input-col-names "mz=mz" --rtunit "sec" -d file --db-fields "mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" --db-ms-modes "pos=pos,neg=neg" --db-rt-unit "sec" --url "$db_file" -m pos -p 5.0 -s 0.0 -o "$output_file" --peak-output-file "$peak_output_file" --same-rows --same-cols --html-output-file "$html_output_file" --no-main-table-in-html-output --molids-sep "|" || return 1
+
+	# Compare with expected output
+	expect_same_files "$output_file" "$TEST_DATA_DIR/filedb-small-mz-match-output.tsv" || return 2
+	expect_same_files "$peak_output_file" "$TEST_DATA_DIR/filedb-small-mz-match-peaks-output.tsv" || return 3
+	expect_same_files "$html_output_file" "$TEST_DATA_DIR/filedb-small-mz-match-html-output.html" || return 4
+}
+
 # Test generic - input file with number sign character (#) {{{1
 ################################################################
 
@@ -645,6 +665,7 @@ for db in $DATABASES ; do
 		test_that "Use of different RT units give the same results." test_filedb_rtunit
 		test_that "MZ matching works." test_filedb_mz_match
 		test_that "RT matching works." test_filedb_rt_match
+		test_that "Galaxy test 1 passes." test_filedb_galaxy_test_1
 	fi
 
 	# Run Peakforest tests
