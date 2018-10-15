@@ -9,3 +9,4 @@ dist-test
 tool_test_output.*
 lcms.biodb.cache
 planemo-venv
+!test-data/*
