@@ -340,9 +340,9 @@ test_filedb_galaxy_test_1() {
 
 	local db_file=$TEST_DATA_DIR/filedb.tsv
 	local input_file=$TEST_DATA_DIR/mz-input-small.tsv
-	local output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_html_output_file-output.tsv
-	local peak_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_html_output_file-peak-output.tsv
-	local html_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_html_output_file-html-output.html
+	local output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_main_output.tsv
+	local peak_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_peak_output.tsv
+	local html_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_peak_output.html
 
 	expect_success $LCMSMATCHING -g --log-to-stdout -i "$input_file" --input-col-names "mz=mz" --rtunit "sec" -d file --db-fields "mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" --db-ms-modes "pos=pos,neg=neg" --db-rt-unit "sec" --url "$db_file" -m pos -p 5.0 -s 0.0 -o "$output_file" --peak-output-file "$peak_output_file" --same-rows --same-cols --html-output-file "$html_output_file" --no-main-table-in-html-output --molids-sep "|" || return 1
 

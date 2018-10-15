@@ -1,10 +1,8 @@
-<tool id="lcmsmatching" name="LC/MS matching" version="3.4.3" profile="16.01">
+<tool id="lcmsmatching" name="LC/MS matching" version="4.0.0" profile="16.01">
 
 	<description>Annotation of MS peaks using matching on a spectra database.</description>
 
 	<requirements>
-		<!--<requirement type="package" version="3.3.3">r</requirement>-->
-		<!--		<requirement type="package" version="7.0">readline</requirement>--> <!-- Try readline 7.0 -->
 		<requirement type="package" version="1.2.0a">r-biodb</requirement>
 		<requirement type="package" version="1.20.0">r-getopt</requirement>
 		<requirement type="package" version="1.2.0">r-stringr</requirement>
@@ -221,7 +219,7 @@
 
 	<tests>
 
-		<!-- Galaxy test 1, MZ only -->
+		<!-- Test 1, MZ only -->
 		<test>
 			<param name="dbtype" value="inhouse"/>
 			<param name="dburl" value="filedb.tsv"/>
@@ -233,7 +231,7 @@
 			<output name="htmloutput" file="test_1_peaks_output.html"/>
 		</test>
 
-		<!-- Galaxy test 2, MZ & RT -->
+		<!-- Test 2, MZ & RT -->
 		<test>
 			<param name="dbtype" value="inhouse"/>
 			<param name="dburl" value="filedb.tsv"/>
@@ -247,6 +245,26 @@
 			<output name="mainoutput" file="test_2_main_output.tsv"/>
 			<output name="peaksoutput" file="test_2_peaks_output.tsv"/>
 			<output name="htmloutput" file="test_2_peaks_output.html"/>
+		</test>
+
+		<!-- Test 3, MZ & RT with precursor match -->
+		<test>
+			<param name="dbtype" value="inhouse"/>
+			<param name="dburl" value="filedb.tsv"/>
+			<param name="mzrtinput" value="mzrt-input-small.tsv"/>
+			<param name="inputfields" value="mz=mz,rt=rt"/>
+			<param name="mzmode" value="pos"/>
+			<param name="dbrtunit" value="min"/>
+			<param name="chromcols" value="col12"/>
+			<param name="tolx" value="5"/>
+			<param name="toly" value="0.8"/>
+			<param name="match" value="true"/>
+			<param name="neg" value="[(M-H)]-,[M-H]-"/>
+			<param name="pos" value="[(M+H)]+,[M+H]+"/>
+			<param name="tolz" value="60"/>
+			<output name="mainoutput" file="test_3_main_output.tsv"/>
+			<output name="peaksoutput" file="test_3_peaks_output.tsv"/>
+			<output name="htmloutput" file="test_3_peaks_output.html"/>
 		</test>
 
 	</tests>
