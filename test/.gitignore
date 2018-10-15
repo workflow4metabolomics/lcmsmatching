@@ -12,3 +12,4 @@ res/.*.swp
 *-peak.tsv
 *.txt
 *.log
+test_*.tsv

@@ -22,7 +22,7 @@ if (as.integer(R.Version()$major) == 2 && as.numeric(R.Version()$minor) < 15)
 ################################################################
 
 PROG <- sub('^.*/([^/]+)$', '\\1', commandArgs()[4], perl = TRUE)
-USERAGENT <- 'search-mz ; pk.roger@icloud.com'
+USERAGENT <- 'W4M lcmsmatching ; pk.roger@icloud.com'
 
 # Authorized database types
 MSDB.XLS <- 'xls'
@@ -202,8 +202,8 @@ make.getopt.spec <- function(sections = NULL) {
 			'rtcol',            'c',            1,  'character',    paste0('Chromatographic column to use. Unset by default. If set, use the corresponding column to filter on retention times, if retention times are provided.'),
 			'check-cols',       'k',            0,  'logical',      'Check that the chromatographic column names specified with option -c really exist.',
 			'list-cols',        'l',            0,  'logical',      'List all chromatographic columns present in the database. Write list inside the file specified by -o option.',
-			'rttol',            'r',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
-			'rttolx',           'x',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
+			'rttol',            'r',            1,  'numeric',      paste0('Tolerance on retention times, in seconds. Unset by default.'),
+			'rttolx',           'x',            1,  'numeric',      paste0('Tolerance on retention times, in seconds. Unset by default.'),
 			'rttoly',           'y',            1,  'numeric',      paste0('Tolerance on retention times. Unset by default.'),
 			'rtunit',           'v',            1,  'character',    paste0('Retention time unit for the input file. Default is ', MSDB.DFT$rtunit, '. Allowed values are:', paste(MSDB.RTUNIT.VALS, collapse = ", "), '.')
 		)
@@ -506,27 +506,15 @@ restrict.input.cols <- function(input, col.names, same.cols, keep.rt) {
 	return(input)
 }
 
-# Get database connector {{{1
+# Create Biodb instance {{{1
 ################################################################
 
-get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
+create.biodb.instance <- function(quiet = FALSE, ms.modes = NULL) {
+
+	biodb <- NULL
 
 	if (is.null(quiet))
 		quiet <- FALSE
-
-	# Set biodb database name
-	if (db.name == MSDB.FILE)
-		biodb.db.name <- 'mass.csv.file'
-	else if (db.name == MSDB.PEAKFOREST)
-		biodb.db.name <- 'peakforest.mass'
-	else
-		stop(paste0('Unknown database "', db.name, '".'))
-
-	# Set URL & token
-	if (is.null(url))
-		url <- NA_character_
-	if (is.null(token))
-		token <- NA_character_
 
 	# Create biodb instance
 	if (quiet)
@@ -542,6 +530,36 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 	# Configure cache
 	biodb$getConfig()$disable('cache.system')
 	biodb$getConfig()$disable('factory.cache')
+	biodb$getConfig()$disable('cache.subfolders')
+	biodb$getConfig()$disable('cache.all.requests')
+	biodb$getConfig()$set('useragent', USERAGENT)
+
+	# Set MS mode values
+	if ( ! is.null(ms.modes))
+		for (k in names(ms.modes))
+			biodb$getEntryFields()$get('ms.mode')$addAllowedValue(k, ms.modes[[k]])
+
+	return(biodb)
+}
+
+# Get database connector {{{1
+################################################################
+
+get.db.conn <- function(biodb, db.name, url, token, fields, pos.prec, neg.prec) {
+
+	# Set biodb database name
+	if (db.name == MSDB.FILE)
+		biodb.db.name <- 'mass.csv.file'
+	else if (db.name == MSDB.PEAKFOREST)
+		biodb.db.name <- 'peakforest.mass'
+	else
+		stop(paste0('Unknown database "', db.name, '".'))
+
+	# Set URL & token
+	if (is.null(url))
+		url <- NA_character_
+	if (is.null(token))
+		token <- NA_character_
 
 	# Create connector
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
@@ -585,7 +603,9 @@ get.db.conn <- function(db.name, url, token, fields, quiet = FALSE) {
 		if ( ! conn$hasField('ms.level'))
 			conn$addField('ms.level', 1)
 
-		# Set MS mode values
+		# Set precursor formulae
+		if ( ! is.null(pos.prec))
+			conn$setPrecursorFormulae(c(pos.prec, neg.prec))
 	}
 
 	return(conn)
@@ -624,11 +644,10 @@ get.chrom.cols <- function(conn, check.cols, chrom.cols, all.cols) {
 # Search {{{1
 ################################################################
 
-search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, main.output, peaks.output, html.output, chrom.cols, rt.unit, rt.tol, rt.tol.exp, results.sep) {
+search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.unit, mz.shift, ms.mode, main.output, peaks.output, html.output, chrom.cols, rt.unit, rt.tol, rt.tol.exp, results.sep, precursor, precursor.rt.tol) {
 
 	rt.search <- ! is.null(chrom.cols) && ! all(is.na(chrom.cols))
 
-	# TODO M/Z shift mz.shift = - mz.shift
 	# Load input file
 	input <- load.input.file(input.file, col.names = input.colnames)
 
@@ -641,53 +660,105 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	# Update RT search flag
 	rt.search <- rt.search && 'rt' %in% names(input.colnames) && input.colnames$rt %in% names(input)
 
-	# Loop on all M/Z values
-	peaks <- NULL
-	main <- NULL
-	rts <- NA_real_
+	# Run MZ/RT matching
 	rt.unit <- if (rt.search) (if (rt.unit == MSDB.RTUNIT.SEC) 's' else 'min') else NA_character_
-	rt.tol <- if (rt.search) rt.tol else NA_real_
-	rt.tol.exp <- if (rt.search) rt.tol.exp else NA_real_
-	for (i in seq_along(input[[1]])) {
+	rt.tol <- if (rt.search && ! is.null(rt.tol)) rt.tol else NA_real_
+	rt.tol.exp <- if (rt.search && ! is.null(rt.tol.exp)) rt.tol.exp else NA_real_
+	rt <- if (rt.search) as.numeric(input[[input.colnames$rt]]) else NULL
+	mz <- as.numeric(input[[input.colnames$mz]])
+	results.df <- conn$searchMsPeaks(mz = mz, mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rt, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = TRUE)
 
-		if (rt.search)
-			rts <- input[i, input.colnames$rt]
+	# Build outputs
+	main <- NULL
+	peaks <- NULL
+	if ( ! is.null(results.df)) {
+		
+		# Rename columns of results data frame
+		names(results.df) <- paste('lcmsmatching', names(results.df), sep = '.')
 
-		# Search for MS peaks
-		df <- conn$searchMsPeaks(mzs = input[i, input.colnames$mz], mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = , chrom.col.ids = chrom.cols, rts = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp)
-
-		# No results
-		if (is.null(df)) {
-			peaks.lines <- input[i, , drop = FALSE]
-			main.line <- peaks.lines
+		# Set merging cols
+		input.merging.cols <- input.colnames$mz
+		results.df.merging.cols <- 'lcmsmatching.mz'
+		if (rt.search) {
+			input.merging.cols <- c(input.merging.cols, input.colnames$rt)
+			results.df.merging.cols <- c(results.df.merging.cols, 'lcmsmatching.rt')
 		}
 
-		# Found results
-		else {
-			names(df) <- paste('lcmsmatching', names(df), sep = '.')
+		# Build peaks table
+		peaks <- merge(x = input, y = results.df, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
 
-			# Empty result data frame
-			if (nrow(df) == 0)
-				df[1, ] <- NA
+		# Build main table (move that code into biodb as MassdbConn::collapseResultsDataFrame()
+		results.df.collapsed <- NULL
+		for (i in seq_along(input[[input.colnames$mz]])) {
 
-			# Make multiple lines results
-			peaks.lines <- cbind(input[i, , drop = FALSE], df, row.names = NULL)
+			lines <- results.df[['lcmsmatching.mz']] == input[i, input.colnames$mz]
+			if (rt.search)
+				lines <- lines & (results.df[['lcmsmatching.rt']] == input[i, input.colnames$rt])
 
-			# Build one line result
-			if (nrow(df) == 1)
-				main.line <- peaks.lines
+			lines.df <- results.df[lines, ]
+
+			if (nrow(lines.df) == 1)
+				one.line <- lines.df
 			else {
-				df.one.row <- df[1, ]
-				for (col in names(df))
-					df.one.row[[col]] <- paste(df[[col]], collapse = results.sep)
-				main.line <- cbind(input[i, , drop = FALSE], df.one.row, row.names = NULL)
+				df.one.row <- lines.df[1, ]
+				for (col in names(lines.df))
+					if ( ! col %in% c('lcmsmatching.mz', 'lcmsmatching.rt'))
+						df.one.row[[col]] <- paste(lines.df[[col]], collapse = results.sep)
+				one.line <- df.one.row
 			}
+			results.df.collapsed <- rbind(results.df.collapsed, one.line)
 		}
-		peaks <- plyr::rbind.fill(peaks, peaks.lines)
+		main <- merge(x = input, y = results.df.collapsed, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
 
-		if (nrow(main.line) != 1)
-			stop(paste("More than one match line for main output with M/Z value ", input[i, input.colnames$mz], ".", sep = ''))
-		main <- plyr::rbind.fill(main, main.line)
+		# Force order of columns in output
+		output.cols <- c(colnames(input), colnames(peaks)[ ! colnames(peaks) %in% colnames(input)])
+		peaks <- peaks[, output.cols]
+		main <- main[, output.cols]
+	}
+
+	# TODO TO REMOVE
+	if (FALSE) {
+		for (i in seq_along(input[[1]])) {
+
+			if (rt.search)
+				rts <- as.numeric(input[i, input.colnames$rt])
+
+			# Search for MS peaks
+			df <- conn$searchMsPeaks(mz = as.numeric(input[i, input.colnames$mz]), mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = FALSE)
+
+			# No results
+			if (is.null(df)) {
+				peaks.lines <- input[i, , drop = FALSE]
+				main.line <- peaks.lines
+			}
+
+			# Found results
+			else {
+				names(df) <- paste('lcmsmatching', names(df), sep = '.')
+
+				# Empty result data frame
+				if (nrow(df) == 0)
+					df[1, ] <- NA
+
+				# Make multiple lines results
+				peaks.lines <- cbind(input[i, , drop = FALSE], df, row.names = NULL)
+
+				# Build one line result
+				if (nrow(df) == 1)
+					main.line <- peaks.lines
+				else {
+					df.one.row <- df[1, ]
+					for (col in names(df))
+						df.one.row[[col]] <- paste(df[[col]], collapse = results.sep)
+					main.line <- cbind(input[i, , drop = FALSE], df.one.row, row.names = NULL)
+				}
+			}
+			peaks <- plyr::rbind.fill(peaks, peaks.lines)
+
+			if (nrow(main.line) != 1)
+				stop(paste("More than one match line for main output with M/Z value ", input[i, input.colnames$mz], ".", sep = ''))
+			main <- plyr::rbind.fill(main, main.line)
+		}
 	}
 
 	# Write main output
@@ -716,8 +787,11 @@ if (is.null(opt$debug)) {
 # biodb
 if (is.null(opt$v3)) {
 
+	# Create Biodb instance
+	biodb <- create.biodb.instance(quiet = opt$quiet, ms.modes = opt[['db-ms-modes']])
+
 	# Get database connector
-	conn <- get.db.conn(opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']], quiet = opt$quiet)
+	conn <- get.db.conn(biodb, db.name = opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']], pos.prec = opt[['pos-prec']], neg.prec = opt[['neg-prec']])
 
 	# Print columns
 	if ( ! is.null(opt[['list-cols']]))
@@ -725,6 +799,9 @@ if (is.null(opt$v3)) {
 
 	# Search
 	else {
+
+		# MS mode
+		ms.mode <- if (opt$mode == POS_MODE) MSDB.TAG.POS else MSDB.TAG.NEG
 
 		# Set RT unit
 		rt.search <- ! is.null(opt$rtcol) || ! is.null(opt[['all-cols']])
@@ -735,16 +812,21 @@ if (is.null(opt$v3)) {
 		chrom.cols <- get.chrom.cols(conn, check.cols = ! is.null(opt[['check-cols']]), chrom.cols = opt$rtcol, all.cols = ! is.null(opt[['all-cols']]))
 
 		# Search
-		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = op$mzshift,
-			   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = if (is.null(opt$rttol)) opt$rttolx else opt$rttol, rt.tol.exp = if (is.null(opt$rttol)) opt$rttoly else NA_real_,
-		       results.sep = opt[['molids-sep']],
+		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = - opt$mzshift,
+		       ms.mode = ms.mode,
+			   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = if (is.null(opt$rttol)) opt$rttolx else opt$rttol, rt.tol.exp = opt$rttoly,
+		       results.sep = opt[['molids-sep']], precursor = ! is.null(opt[['precursor-match']]), precursor.rt.tol = opt[['precursor-rt-tol']],
 		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
 	}
+
+	# Terminate Biodb instance
+	biodb$terminate()
 
 	quit(status = 0)
 }
 
 # OLD SCHEME {{{2
+################################################################
 
 # Check values
 error <- check.args(opt)

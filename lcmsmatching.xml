@@ -1,13 +1,11 @@
-<tool id="lcmsmatching" name="LC/MS matching" version="3.4.3" profile="16.01">
+<tool id="lcmsmatching" name="LC/MS matching" version="4.0.0" profile="16.01">
 
 	<description>Annotation of MS peaks using matching on a spectra database.</description>
 
 	<requirements>
-		<!--<requirement type="package" version="3.3.3">r</requirement>-->
-		<!--		<requirement type="package" version="7.0">readline</requirement>--> <!-- Try readline 7.0 -->
-		<requirement type="package" version="1.1.0">r-biodb</requirement>
+		<requirement type="package" version="1.2.0a">r-biodb</requirement>
 		<requirement type="package" version="1.20.0">r-getopt</requirement>
-		<requirement type="package" version="1.2.0">r-stringr</requirement>
+		<requirement type="package" version="1.3.1">r-stringr</requirement>
 		<requirement type="package" version="1.8.4">r-plyr</requirement>
 		<requirement type="package" version="3.98">r-xml</requirement>
 		<requirement type="package" version="1.0_6">r-bitops</requirement>
@@ -221,36 +219,54 @@
 
 	<tests>
 
-		<!-- File database test -->
+		<!-- Test 1, MZ only -->
 		<test>
 			<param name="dbtype" value="inhouse"/>
 			<param name="dburl" value="filedb.tsv"/>
-			<param name="dbfields" value=""/>
-			<param name="dbmsmodes" value=""/>
 			<param name="mzrtinput" value="mz-input-small.tsv"/>
-			<param name="inputmzfield" value="mz"/>
-			<!--<param name="inputrtfield" value=""/>-->
+			<param name="inputfields" value="mz=mz"/>
 			<param name="mzmode" value="pos"/>
-			<output name="mainoutput" file="filedb-small-mz-match-output.tsv"/>
-			<output name="peaksoutput" file="filedb-small-mz-match-peaks-output.tsv"/>
-			<output name="htmloutput" file="filedb-small-mz-match-html-output.html"/>
+			<output name="mainoutput" file="test_1_main_output.tsv"/>
+			<output name="peaksoutput" file="test_1_peaks_output.tsv"/>
+			<output name="htmloutput" file="test_1_peaks_output.html"/>
 		</test>
 
-		<!-- File database test -->
-<!--
+		<!-- Test 2, MZ & RT -->
 		<test>
-			<param name="dbtype" value="peakforest"/>
-			<param name="dbtoken" value="@PEAKFOREST_TOKEN@"/>
-			<param name="mzrtinput" value="mz-input-small.tsv"/>
-			<param name="inputfields" value=""/>
+			<param name="dbtype" value="inhouse"/>
+			<param name="dburl" value="filedb.tsv"/>
+			<param name="mzrtinput" value="mzrt-input-small.tsv"/>
+			<param name="inputfields" value="mz=mz,rt=rt"/>
 			<param name="mzmode" value="pos"/>
-			<output name="mainoutput">
-				<assert_contents>
-					<has_text text="mz"/>
-				</assert_contents>
-			</output>
+			<param name="dbrtunit" value="min"/>
+			<param name="chromcols" value="col12"/>
+			<param name="tolx" value="5"/>
+			<param name="toly" value="0.8"/>
+			<output name="mainoutput" file="test_2_main_output.tsv"/>
+			<output name="peaksoutput" file="test_2_peaks_output.tsv"/>
+			<output name="htmloutput" file="test_2_peaks_output.html"/>
 		</test>
--->
+
+		<!-- Test 3, MZ & RT with precursor match -->
+		<test>
+			<param name="dbtype" value="inhouse"/>
+			<param name="dburl" value="filedb.tsv"/>
+			<param name="mzrtinput" value="mzrt-input-small.tsv"/>
+			<param name="inputfields" value="mz=mz,rt=rt"/>
+			<param name="mzmode" value="pos"/>
+			<param name="dbrtunit" value="min"/>
+			<param name="chromcols" value="col12"/>
+			<param name="tolx" value="5"/>
+			<param name="toly" value="0.8"/>
+			<param name="match" value="true"/>
+			<param name="neg" value="[(M-H)]-,[M-H]-"/>
+			<param name="pos" value="[(M+H)]+,[M+H]+"/>
+			<param name="tolz" value="60"/>
+			<output name="mainoutput" file="test_3_main_output.tsv"/>
+			<output name="peaksoutput" file="test_3_peaks_output.tsv"/>
+			<output name="htmloutput" file="test_3_peaks_output.html"/>
+		</test>
+
 	</tests>
 
 	<!--====
@@ -359,7 +375,9 @@ The first parameter is the MS mode, specified through the *MS mode* parameter.
 
 The parameters *M/Z precision* and *M/Z shift* are used by the algorithm in the following formula in order to match an *m/z* value:
 
-	mz (1 + (- shift - precision) / 10^6) &lt; mzref &lt; mz (1 + (- shift - precision) / 10^6)
+	mz - shift - precision &lt; mzref &lt; mz - shift + precision
+
+shift and precision can be either set in plain values, or in PPM of mz.
 
 Where *mzref* is the M/Z of reference from the database peak that is tested. If this double inequality is true, then the *m/z* value is matched with this peak.
 

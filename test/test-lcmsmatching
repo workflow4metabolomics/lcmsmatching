@@ -6,6 +6,7 @@
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 RES_DIR=$SCRIPT_PATH/res
+TEST_DATA_DIR=$SCRIPT_PATH/../test-data
 LCMSMATCHING=$SCRIPT_PATH/../lcmsmatching
 SEP="\t"
 PEAKFOREST_URL='https://metabohub.peakforest.org/rest/'
@@ -95,44 +96,45 @@ function test_peakforest_estelle_20170314 {
 }
 
 # Test Peakforest Estelle 16/03/2017 {{{1
+# DEPRECATED This type of test is now handled by biodb. It has been disabled because the searched M/Z value is not found anymore inside Peakforest.
 ################################################################
 
-function test_peakforest_estelle_20170316_rtunit {
-
-	local res_name=2017-03-16-estelle-rtunit
-	local res_dir=$RES_DIR/$res_name
-	local min_input=$res_dir/min-input.tsv
-	local min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
-	local min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
-	local min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
-	local sec_input=$res_dir/sec-input.tsv
-	local sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
-	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
-	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
-
-	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 0.08 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
-
-	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
-
-	# Check that output file contains at least same matches
-	local nb_sec_peak_compids=$(csv_count_values "$sec_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
-	expect_num_gt "$nb_sec_peak_compids" 0 || return 1
-	local nb_min_peak_compids=$(csv_count_values "$min_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
-	expect_num_gt "$nb_min_peak_compids" 0 || return 1
-	expect_same_number_of_rows "$sec_peak_output" "$min_peak_output" || return 1
-	csv_expect_identical_col_values lcmsmatching.peakforest.mass.id "$sec_peak_output" "$min_peak_output" "$SEP" || return 1
-
-	# Checkout RT output values
-	local err=1e-10
-	expect_num_eq $(get_nb_rows "$min_input" 1) 1 || return 1
-	local min_rtmed=$(csv_get_val "$min_input" "$SEP" rtmed 1)
-	expect_num_eq $(get_nb_rows "$sec_input" 1) 1 || return 1
-	local sec_rtmed=$(csv_get_val "$sec_input" "$SEP" rtmed 1)
-	csv_expect_float_col_equals "$min_peak_output" "$SEP" rtmed "$min_rtmed" "$err" || return 1
-	csv_expect_float_col_equals "$sec_peak_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 1
-	csv_expect_float_col_equals "$min_main_output" "$SEP" rtmed "$min_rtmed" "$err" || return 10
-	csv_expect_float_col_equals "$sec_main_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 11
-}
+#function test_peakforest_estelle_20170316_rtunit {
+#
+#	local res_name=2017-03-16-estelle-rtunit
+#	local res_dir=$RES_DIR/$res_name
+#	local min_input=$res_dir/min-input.tsv
+#	local min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
+#	local min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
+#	local min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
+#	local sec_input=$res_dir/sec-input.tsv
+#	local sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
+#	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
+#	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
+#
+#	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+#
+#	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
+#
+#	# Check that output file contains at least same matches
+#	local nb_sec_peak_compids=$(csv_count_values "$sec_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
+#	expect_num_gt "$nb_sec_peak_compids" 0 || return 1
+#	local nb_min_peak_compids=$(csv_count_values "$min_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
+#	expect_num_gt "$nb_min_peak_compids" 0 || return 1
+#	expect_same_number_of_rows "$sec_peak_output" "$min_peak_output" || return 1
+#	csv_expect_identical_col_values lcmsmatching.peakforest.mass.id "$sec_peak_output" "$min_peak_output" "$SEP" || return 1
+#
+#	# Checkout RT output values
+#	local err=1e-10
+#	expect_num_eq $(get_nb_rows "$min_input" 1) 1 || return 1
+#	local min_rtmed=$(csv_get_val "$min_input" "$SEP" rtmed 1)
+#	expect_num_eq $(get_nb_rows "$sec_input" 1) 1 || return 1
+#	local sec_rtmed=$(csv_get_val "$sec_input" "$SEP" rtmed 1)
+#	csv_expect_float_col_equals "$min_peak_output" "$SEP" rtmed "$min_rtmed" "$err" || return 1
+#	csv_expect_float_col_equals "$sec_peak_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 1
+#	csv_expect_float_col_equals "$min_main_output" "$SEP" rtmed "$min_rtmed" "$err" || return 10
+#	csv_expect_float_col_equals "$sec_main_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 11
+#}
 
 # Test filedb RT unit {{{1
 ################################################################
@@ -159,11 +161,7 @@ function test_filedb_rtunit {
 			peak_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.tsv
 			html_output=$SCRIPT_PATH/$res_name-$db_rtunit-input-$input_rtunit-peak.html
 
-			if [[ $input_rtunit == 'sec' ]] ; then
-				rttol=30 # tolerance for seconds
-			else
-				rttol=0.5 # tolerance for minutes
-			fi
+			rttol=30 # tolerance in seconds
 
 			# Run program
 			expect_success $LCMSMATCHING -d file --url $db_file --db-rt-unit $db_rtunit -m pos -p 5 -s 0 -i $input_file --input-col-names 'mz=mz,rt=rt' -o $main_output --peak-output-file $peak_output --html-output-file $html_output --rtunit $input_rtunit --all-cols --rttol $rttol --check-cols --same-rows --same-cols --no-main-table-in-html-output --debug || return 1
@@ -282,21 +280,11 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 function test_filedb_with_number_sign_char {
 
 	local db_file=$RES_DIR/filedb/filedb-number-sign.tsv
-	local input_file=$RES_DIR/inputs/mz-small.tsv
+	local input_file=$TEST_DATA_DIR/mz-input-small.tsv
 
 	expect_success $LCMSMATCHING -d file --url $db_file -m pos -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
 }
 
-# Test generic - input file with number sign character (#) {{{1
-################################################################
-
-function test_generic_input_file_with_number_sign_char {
-
-	local db=$1
-	local input_file=$RES_DIR/inputs/mz-number-sign.tsv
-
-	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
-}
 
 # Test filedb - field names set to NA {{{1
 ################################################################
@@ -308,6 +296,109 @@ function test_filedb_na_db_fields {
 	local main_output=$SCRIPT_PATH/test_filedb_na_db_fields-main.tsv
 
 	expect_success $LCMSMATCHING -d file --url $db_file --db-fields chebiid=NA,keggid=NA -m pos -i $input_file -o $main_output --same-rows || return 1
+}
+
+# Test filedb - MZ match {{{1
+################################################################
+
+function test_filedb_mz_match {
+
+	local resdir=$RES_DIR/filedb/mz_match
+	local db_file=$resdir/db.tsv
+	local input_file=$resdir/input.tsv
+	local main_output=$SCRIPT_PATH/test_filedb_mz_match-main.tsv
+	local expected_output=$resdir/expected_output.tsv
+
+	# Run matching
+	expect_success $LCMSMATCHING -d file --url $db_file -m pos -p 5 -s 0 -i $input_file -o $main_output --same-rows -g || return 1
+
+	# Compare with expected output
+	expect_same_files $main_output $expected_output || return 1
+}
+
+# Test filedb - RT match {{{1
+################################################################
+
+function test_filedb_rt_match {
+
+	local resdir=$RES_DIR/filedb/rt_match
+	local db_file=$resdir/db.tsv
+	local input_file=$resdir/input.tsv
+	local main_output=$SCRIPT_PATH/test_filedb_rt_match-main.tsv
+	local expected_output=$resdir/expected_output.tsv
+
+	expect_success $LCMSMATCHING -d file --url $db_file -m pos -p 5 -s 0 -i $input_file -o $main_output --same-rows --db-rt-unit min --rtunit min -c col1 --rttolx 5 --rttoly 0.8 -g || return 1
+
+	# Compare with expected output
+	expect_same_files $main_output $expected_output || return 1
+}
+
+# Test filedb - Galaxy test 1 {{{1
+################################################################
+
+test_filedb_galaxy_test_1() {
+
+	local db_file=$TEST_DATA_DIR/filedb.tsv
+	local input_file=$TEST_DATA_DIR/mz-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_main_output.tsv
+	local peak_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_peak_output.tsv
+	local html_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_1_peak_output.html
+
+	expect_success $LCMSMATCHING -g --log-to-stdout -i "$input_file" --input-col-names "mz=mz" --rtunit "sec" -d file --db-fields "mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" --db-ms-modes "pos=pos,neg=neg" --db-rt-unit "sec" --url "$db_file" -m pos -p 5.0 -s 0.0 -o "$output_file" --peak-output-file "$peak_output_file" --same-rows --same-cols --html-output-file "$html_output_file" --no-main-table-in-html-output --molids-sep "|" || return 1
+
+	# Compare with expected output
+	expect_same_files "$output_file" "$TEST_DATA_DIR/test_1_main_output.tsv" || return 2
+	expect_same_files "$peak_output_file" "$TEST_DATA_DIR/test_1_peaks_output.tsv" || return 3
+	expect_same_files "$html_output_file" "$TEST_DATA_DIR/test_1_peaks_output.html" || return 4
+}
+
+# Test filedb - Galaxy test 2 {{{1
+################################################################
+
+test_filedb_galaxy_test_2() {
+
+	local db_file=$TEST_DATA_DIR/filedb.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_filedb_galaxy_test_2_main_output.tsv
+	local peak_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_2_peak_output.tsv
+	local html_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_2_peak_output.html
+
+	expect_success $LCMSMATCHING -g --log-to-stdout -i "$input_file" --input-col-names "mz=mz" --rtunit "sec" -d file --db-fields "mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" --db-ms-modes "pos=pos,neg=neg" --db-rt-unit "min" --url "$db_file" -m pos -p 5.0 -s 0.0 -o "$output_file" --peak-output-file "$peak_output_file" --same-rows --same-cols --html-output-file "$html_output_file" --no-main-table-in-html-output --molids-sep "|" --rtcol 'col12' --rttolx 5 --rttoly 0.8 || return 1
+
+	# Compare with expected output
+	expect_same_files "$output_file" "$TEST_DATA_DIR/test_2_main_output.tsv" || return 2
+	expect_same_files "$peak_output_file" "$TEST_DATA_DIR/test_2_peaks_output.tsv" || return 3
+	expect_same_files "$html_output_file" "$TEST_DATA_DIR/test_2_peaks_output.html" || return 4
+}
+
+# Test filedb - Galaxy test 3 {{{1
+################################################################
+
+test_filedb_galaxy_test_3() {
+
+	local db_file=$TEST_DATA_DIR/filedb.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_filedb_galaxy_test_3_main_output.tsv
+	local peak_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_3_peak_output.tsv
+	local html_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_3_peak_output.html
+
+	expect_success $LCMSMATCHING -g --log-to-stdout -i "$input_file" --input-col-names "mz=mz" --rtunit "sec" -d file --db-fields "mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" --db-ms-modes "pos=pos,neg=neg" --db-rt-unit "min" --url "$db_file" -m pos -p 5.0 -s 0.0 -o "$output_file" --peak-output-file "$peak_output_file" --same-rows --same-cols --html-output-file "$html_output_file" --no-main-table-in-html-output --molids-sep "|" --rtcol 'col12' --rttolx 5 --rttoly 0.8 --precursor-match --pos-prec "[(M+H)]+,[M+H]+" --neg-prec "[(M-H)]-,[M-H]-" --precursor-rt-tol 60 || return 1
+
+	# Compare with expected output
+	expect_same_files "$output_file" "$TEST_DATA_DIR/test_3_main_output.tsv" || return 2
+	expect_same_files "$peak_output_file" "$TEST_DATA_DIR/test_3_peaks_output.tsv" || return 3
+	expect_same_files "$html_output_file" "$TEST_DATA_DIR/test_3_peaks_output.html" || return 4
+}
+
+# Test generic - input file with number sign character (#) {{{1
+################################################################
+
+function test_generic_input_file_with_number_sign_char {
+
+	local db=$1
+	local input_file=$RES_DIR/inputs/mz-number-sign.tsv
+
+	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -p 5 -s 0 -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
 }
 
 # Test generic - wrong input file in filedb {{{1
@@ -341,9 +432,9 @@ function test_generic_match_mz_no_rt_in_output {
 	local db=$1
 	local output_file=$SCRIPT_PATH/test_generic_match_mz_no_rt_in_output-output.tsv
 
-	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $RES_DIR/inputs/mz-small.tsv -o $output_file
+	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $TEST_DATA_DIR/mz-input-small.tsv -o $output_file
 	csv_expect_not_has_columns $output_file $SEP rt || return 1
-	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $RES_DIR/inputs/mzrt-small.tsv -o $output_file
+	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $TEST_DATA_DIR/mzrt-input-small.tsv -o $output_file
 	csv_expect_not_has_columns $output_file $SEP rt || return 1
 }
 
@@ -353,7 +444,7 @@ function test_generic_match_mz_no_rt_in_output {
 function test_generic_match_mzrt_using_input_file_without_rt {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mz-small.tsv
+	local input_file=$TEST_DATA_DIR/mz-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_match_mzrt_using_input_file_without_rt-output.tsv
 
 	expect_failure $LCMSMATCHING $(get_db_args $db) -m pos -i $input_file -o $output_file --all-cols -x 5.0 -y 0.8 || return 1
@@ -365,7 +456,7 @@ function test_generic_match_mzrt_using_input_file_without_rt {
 function test_generic_match_mz {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mz-small.tsv
+	local input_file=$TEST_DATA_DIR/mz-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_match_mz-output.tsv
 
 	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $input_file -o $output_file || return 1
@@ -379,7 +470,7 @@ function test_generic_match_mz {
 function test_generic_match_mz_unused_rt {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mz-small.tsv
+	local input_file=$TEST_DATA_DIR/mz-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_match_mz_unused_rt-output.tsv
 
 	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $input_file -o $output_file || return 1
@@ -393,7 +484,7 @@ function test_generic_match_mz_unused_rt {
 function test_generic_match_mz_rt {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mzrt-small.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_match_mz_rt-output.tsv
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)" 1)
@@ -408,7 +499,7 @@ function test_generic_match_mz_rt {
 function test_generic_match_mzrt_col_numbers {   
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mzrt-small.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local input_file_without_header=$RES_DIR/inputs/mzrt-small-noheader.tsv
 	local output_file=$SCRIPT_PATH/test_generic_match_mzrt_col_numbers-output.tsv
 
@@ -425,7 +516,7 @@ function test_generic_match_mzrt_col_numbers {
 function test_generic_unknown_chrom_col {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mzrt-small.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_unknown_chrom_col-output.tsv
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)" 1)
@@ -443,7 +534,7 @@ function test_generic_unknown_chrom_col {
 function test_match_mzrt_2cols {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mzrt-small.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_match_mzrt_2cols-output.tsv
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)" 1)
@@ -461,7 +552,7 @@ function test_match_mzrt_2cols {
 function test_generic_precursors_lists {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mzrt-small.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_precursors_lists-output.tsv
 
 	expect_success $LCMSMATCHING $(get_db_args $db) -m pos --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' || return 1
@@ -502,7 +593,7 @@ function test_generic_same_cols {
 function test_generic_same_rows {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mzrt-small.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_same_rows-output.tsv
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)" 1)
@@ -517,7 +608,7 @@ function test_generic_same_rows {
 function test_generic_same_rows_with_peaks_output {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mzrt-small.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_same_rows_with_peaks_output-output.tsv
 	local peak_output_file=$SCRIPT_PATH/test_generic_same_rows_with_peaks_output-peaks-output.tsv
 
@@ -532,7 +623,7 @@ function test_generic_same_rows_with_peaks_output {
 function test_generic_peak_output_file {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mzrt-small.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_peak_output_file-output.tsv
 	local peak_output_file=$SCRIPT_PATH/test_generic_peak_output_file-peaks-output.tsv
 
@@ -550,7 +641,7 @@ function test_generic_peak_output_file {
 function test_generic_html_output_file {
 
 	local db=$1
-	local input_file=$RES_DIR/inputs/mzrt-small.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_html_output_file-output.tsv
 	local peak_output_file=$SCRIPT_PATH/test_generic_html_output_file-peak-output.tsv
 	local html_output_file=$SCRIPT_PATH/test_generic_html_output_file-html-output.html
@@ -574,6 +665,11 @@ fi
 # Loop on all databases
 DATABASES=$(echo $DATABASES | tr ',' ' ')
 for db in $DATABASES ; do
+
+	if [[ $db != 'file' && $db != 'peakforest' ]] ; then
+		echo "Unknown database \"$db\" !" >&2
+		exit 1
+	fi
 
 	test_context "Testing $db database"
 
@@ -605,11 +701,16 @@ for db in $DATABASES ; do
 		test_that "We do not find an unexpected 'y' column in output." test_filedb_no_y_col_in_output
 		test_that "Bug ticket 2016031010000034 does not come back." test_filedb_ticket_2016031010000034
 		test_that "Use of different RT units give the same results." test_filedb_rtunit
+		test_that "MZ matching works." test_filedb_mz_match
+		test_that "RT matching works." test_filedb_rt_match
+		test_that "Galaxy test 1 passes." test_filedb_galaxy_test_1
+		test_that "Galaxy test 2 passes." test_filedb_galaxy_test_2
+		test_that "Galaxy test 3 passes." test_filedb_galaxy_test_3
 	fi
 
 	# Run Peakforest tests
 	if [[ $db == peakforest ]] ; then
-		test_that "Bug Estelle 20170316 does not come back." test_peakforest_estelle_20170316_rtunit
+#		test_that "Bug Estelle 20170316 does not come back." test_peakforest_estelle_20170316_rtunit
 		test_that "Bug Estelle 20170314 does not come back." test_peakforest_estelle_20170314
 	fi
 done

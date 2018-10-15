@@ -8,16 +8,15 @@ before_install:
  - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
  - sudo apt-get update
  - sudo apt-get install -y --no-install-recommends r-base
- - sudo R -e "install.packages(c('getopt', 'stringr', 'plyr', 'XML', 'RCurl', 'jsonlite'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
+ - sudo R -e "install.packages(c('getopt', 'stringr', 'plyr', 'XML', 'RCurl', 'jsonlite', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
+ - sudo bash install_biodb.sh
  - sudo apt-get install -y python-virtualenv
 
 branches:
   only:
     - master
-    - develop
-    - testing/travis-planemo
+    - /^release[/].*$/
+    - /^testing[/]travis-.*$/
    
 script:
- - DATABASES="file xls" make test
- - make planemolint
- - make planemotest
+ - DATABASES="file" make test planemolint planemotest

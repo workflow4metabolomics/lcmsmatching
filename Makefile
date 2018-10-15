@@ -1,4 +1,5 @@
 export BIODB_CACHE_DIRECTORY=$(CURDIR)/lcms.biodb.cache
+CONDA_PREFIX=$(HOME)/.plncnd
 
 all:
 
@@ -6,7 +7,7 @@ test:
 	$(MAKE) -C $@
 
 planemo-venv/bin/planemo: planemo-venv
-	. planemo-venv/bin/activate && pip install --upgrade pip setuptools
+	. planemo-venv/bin/activate && pip install "pip>=7"
 	. planemo-venv/bin/activate && pip install planemo
 
 planemo-venv:
@@ -17,7 +18,7 @@ planemolint: planemo-venv/bin/planemo
 
 planemotest: R_LIBS_USER=
 planemotest: planemo-venv/bin/planemo
-	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --galaxy_branch release_17.09 2>&1 | tee planemotest.log
+	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --conda_prefix "$(CONDA_PREFIX)" --galaxy_branch release_18.09 2>&1 | tee planemotest.log
 
 planemo-testtoolshed-diff: distplanemo-venv/bin/planemo
 	. planemo-venv/bin/activate && cd $< && planemo shed_diff --shed_target testtoolshed
@@ -36,5 +37,7 @@ clean:
 	$(RM) -r $(BIODB_CACHE_DIRECTORY)
 	$(RM) -r planemo-venv
 	$(RM) -r planemotest.log
+	$(RM) -r $(HOME)/.planemo
+	$(RM) -r $(CONDA_PREFIX)
 
 .PHONY: all clean test planemo-lint planemo-test planemon-install planemo-toolshed-diff planemo-toolshed-update planemo-testtoolshed-diff planemo-testtoolshed-update
