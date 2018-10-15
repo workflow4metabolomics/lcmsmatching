@@ -648,7 +648,6 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 
 	rt.search <- ! is.null(chrom.cols) && ! all(is.na(chrom.cols))
 
-	# TODO M/Z shift mz.shift = - mz.shift
 	# Load input file
 	input <- load.input.file(input.file, col.names = input.colnames)
 
@@ -661,53 +660,99 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	# Update RT search flag
 	rt.search <- rt.search && 'rt' %in% names(input.colnames) && input.colnames$rt %in% names(input)
 
-	# Loop on all M/Z values
-	peaks <- NULL
-	main <- NULL
-	rts <- NULL
+	# Run MZ/RT matching
 	rt.unit <- if (rt.search) (if (rt.unit == MSDB.RTUNIT.SEC) 's' else 'min') else NA_character_
 	rt.tol <- if (rt.search && ! is.null(rt.tol)) rt.tol else NA_real_
 	rt.tol.exp <- if (rt.search && ! is.null(rt.tol.exp)) rt.tol.exp else NA_real_
-	for (i in seq_along(input[[1]])) {
+	rt <- if (rt.search) as.numeric(input[[input.colnames$rt]]) else NULL
+	mz <- as.numeric(input[[input.colnames$mz]])
+	results.df <- conn$searchMsPeaks(mz = mz, mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rt, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = TRUE)
 
+#	# Extract MZ/RT values
+#	mzrt.df <- results.df[, c('mz', 'rt')]
+#
+#	# Remove MZ & RT columns from results data frame
+#	results.df <- results.df[, colnames(results.df)[ ! colnames(results.df) %in% c('mz', 'rt')]]
+
+	# Rename columns of results data frame
+	names(results.df) <- paste('lcmsmatching', names(results.df), sep = '.')
+
+	# Set merging cols
+	input.merging.cols <- input.colnames$mz
+	results.df.merging.cols <- 'lcmsmatching.mz'
+	if (rt.search) {
+		input.merging.cols <- c(input.merging.cols, input.colnames$rt)
+		results.df.merging.cols <- c(results.df.merging.cols, 'lcmsmatching.rt')
+	}
+
+	# Build peaks table
+	peaks <- merge(x = input, y = results.df, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
+
+	# Build main table (move that code into biodb as MassdbConn::collapseResultsDataFrame()
+	results.df.collapsed <- NULL
+	for (i in seq_along(input[[input.colnames$mz]])) {
+
+		lines <- results.df[['lcmsmatching.mz']] == input[i, input.colnames$mz]
 		if (rt.search)
-			rts <- as.numeric(input[i, input.colnames$rt])
+			lines <- lines & (results.df[['lcmsmatching.rt']] == input[i, input.colnames$rt])
 
-		# Search for MS peaks
-		df <- conn$searchMsPeaks(mz = as.numeric(input[i, input.colnames$mz]), mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = FALSE)
+		lines.df <- results.df[lines, ]
 
-		# No results
-		if (is.null(df)) {
-			peaks.lines <- input[i, , drop = FALSE]
-			main.line <- peaks.lines
-		}
-
-		# Found results
+		if (nrow(lines.df) == 1)
+			one.line <- lines.df
 		else {
-			names(df) <- paste('lcmsmatching', names(df), sep = '.')
-
-			# Empty result data frame
-			if (nrow(df) == 0)
-				df[1, ] <- NA
-
-			# Make multiple lines results
-			peaks.lines <- cbind(input[i, , drop = FALSE], df, row.names = NULL)
-
-			# Build one line result
-			if (nrow(df) == 1)
-				main.line <- peaks.lines
-			else {
-				df.one.row <- df[1, ]
-				for (col in names(df))
-					df.one.row[[col]] <- paste(df[[col]], collapse = results.sep)
-				main.line <- cbind(input[i, , drop = FALSE], df.one.row, row.names = NULL)
-			}
+			df.one.row <- lines.df[1, ]
+			for (col in names(lines.df))
+				if ( ! col %in% c('lcmsmatching.mz', 'lcmsmatching.rt'))
+					df.one.row[[col]] <- paste(lines.df[[col]], collapse = results.sep)
+			one.line <- df.one.row
 		}
-		peaks <- plyr::rbind.fill(peaks, peaks.lines)
+		results.df.collapsed <- rbind(results.df.collapsed, one.line)
+	}
+	main <- merge(x = input, y = results.df.collapsed, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
 
-		if (nrow(main.line) != 1)
-			stop(paste("More than one match line for main output with M/Z value ", input[i, input.colnames$mz], ".", sep = ''))
-		main <- plyr::rbind.fill(main, main.line)
+	if (FALSE) {
+		for (i in seq_along(input[[1]])) {
+
+			if (rt.search)
+				rts <- as.numeric(input[i, input.colnames$rt])
+
+			# Search for MS peaks
+			df <- conn$searchMsPeaks(mz = as.numeric(input[i, input.colnames$mz]), mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = FALSE)
+
+			# No results
+			if (is.null(df)) {
+				peaks.lines <- input[i, , drop = FALSE]
+				main.line <- peaks.lines
+			}
+
+			# Found results
+			else {
+				names(df) <- paste('lcmsmatching', names(df), sep = '.')
+
+				# Empty result data frame
+				if (nrow(df) == 0)
+					df[1, ] <- NA
+
+				# Make multiple lines results
+				peaks.lines <- cbind(input[i, , drop = FALSE], df, row.names = NULL)
+
+				# Build one line result
+				if (nrow(df) == 1)
+					main.line <- peaks.lines
+				else {
+					df.one.row <- df[1, ]
+					for (col in names(df))
+						df.one.row[[col]] <- paste(df[[col]], collapse = results.sep)
+					main.line <- cbind(input[i, , drop = FALSE], df.one.row, row.names = NULL)
+				}
+			}
+			peaks <- plyr::rbind.fill(peaks, peaks.lines)
+
+			if (nrow(main.line) != 1)
+				stop(paste("More than one match line for main output with M/Z value ", input[i, input.colnames$mz], ".", sep = ''))
+			main <- plyr::rbind.fill(main, main.line)
+		}
 	}
 
 	# Write main output
@@ -761,7 +806,7 @@ if (is.null(opt$v3)) {
 		chrom.cols <- get.chrom.cols(conn, check.cols = ! is.null(opt[['check-cols']]), chrom.cols = opt$rtcol, all.cols = ! is.null(opt[['all-cols']]))
 
 		# Search
-		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = opt$mzshift,
+		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = - opt$mzshift,
 		       ms.mode = ms.mode,
 			   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = if (is.null(opt$rttol)) opt$rttolx else opt$rttol, rt.tol.exp = opt$rttoly,
 		       results.sep = opt[['molids-sep']], precursor = ! is.null(opt[['precursor-match']]), precursor.rt.tol = opt[['precursor-rt-tol']],

@@ -221,7 +221,7 @@
 
 	<tests>
 
-		<!-- Galaxy test 1 -->
+		<!-- Galaxy test 1, MZ only -->
 		<test>
 			<param name="dbtype" value="inhouse"/>
 			<param name="dburl" value="filedb.tsv"/>
@@ -233,7 +233,7 @@
 			<output name="htmloutput" file="test_1_peaks_output.html"/>
 		</test>
 
-		<!-- Galaxy test 2 -->
+		<!-- Galaxy test 2, MZ & RT -->
 		<test>
 			<param name="dbtype" value="inhouse"/>
 			<param name="dburl" value="filedb.tsv"/>
@@ -249,21 +249,6 @@
 			<output name="htmloutput" file="test_2_peaks_output.html"/>
 		</test>
 
-		<!-- File database test -->
-<!--
-		<test>
-			<param name="dbtype" value="peakforest"/>
-			<param name="dbtoken" value="@PEAKFOREST_TOKEN@"/>
-			<param name="mzrtinput" value="mz-input-small.tsv"/>
-			<param name="inputfields" value=""/>
-			<param name="mzmode" value="pos"/>
-			<output name="mainoutput">
-				<assert_contents>
-					<has_text text="mz"/>
-				</assert_contents>
-			</output>
-		</test>
--->
 	</tests>
 
 	<!--====

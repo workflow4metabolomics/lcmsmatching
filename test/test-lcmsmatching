@@ -371,6 +371,25 @@ test_filedb_galaxy_test_2() {
 	expect_same_files "$html_output_file" "$TEST_DATA_DIR/test_2_peaks_output.html" || return 4
 }
 
+# Test filedb - Galaxy test 3 {{{1
+################################################################
+
+test_filedb_galaxy_test_3() {
+
+	local db_file=$TEST_DATA_DIR/filedb.tsv
+	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
+	local output_file=$SCRIPT_PATH/test_filedb_galaxy_test_3_main_output.tsv
+	local peak_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_3_peak_output.tsv
+	local html_output_file=$SCRIPT_PATH/test_filedb_galaxy_test_3_peak_output.html
+
+	expect_success $LCMSMATCHING -g --log-to-stdout -i "$input_file" --input-col-names "mz=mz" --rtunit "sec" -d file --db-fields "mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" --db-ms-modes "pos=pos,neg=neg" --db-rt-unit "min" --url "$db_file" -m pos -p 5.0 -s 0.0 -o "$output_file" --peak-output-file "$peak_output_file" --same-rows --same-cols --html-output-file "$html_output_file" --no-main-table-in-html-output --molids-sep "|" --rtcol 'col12' --rttolx 5 --rttoly 0.8 --precursor-match --pos-prec "[(M+H)]+,[M+H]+" --neg-prec "[(M-H)]-,[M-H]-" --precursor-rt-tol 60 || return 1
+
+	# Compare with expected output
+	expect_same_files "$output_file" "$TEST_DATA_DIR/test_3_main_output.tsv" || return 2
+	expect_same_files "$peak_output_file" "$TEST_DATA_DIR/test_3_peaks_output.tsv" || return 3
+	expect_same_files "$html_output_file" "$TEST_DATA_DIR/test_3_peaks_output.html" || return 4
+}
+
 # Test generic - input file with number sign character (#) {{{1
 ################################################################
 
@@ -686,6 +705,7 @@ for db in $DATABASES ; do
 		test_that "RT matching works." test_filedb_rt_match
 		test_that "Galaxy test 1 passes." test_filedb_galaxy_test_1
 		test_that "Galaxy test 2 passes." test_filedb_galaxy_test_2
+		test_that "Galaxy test 3 passes." test_filedb_galaxy_test_3
 	fi
 
 	# Run Peakforest tests
