@@ -5,9 +5,9 @@ script.path <- sub("--file=","",args[grep("--file=",args)])
 library(getopt)
 
 source(file.path(dirname(script.path), 'msdb-common.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'MsDbLogger.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'MsDbInputDataFrameStream.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'MsDbOutputDataFrameStream.R'), chdir = TRUE)
+#source(file.path(dirname(script.path), 'MsDbLogger.R'), chdir = TRUE)
+#source(file.path(dirname(script.path), 'MsDbInputDataFrameStream.R'), chdir = TRUE)
+#source(file.path(dirname(script.path), 'MsDbOutputDataFrameStream.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'htmlhlp.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'strhlp.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'fshlp.R'), chdir = TRUE)
@@ -15,8 +15,8 @@ source(file.path(dirname(script.path), 'biodb-common.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'nethlp.R'), chdir = TRUE)
 
 # Missing paste0() function in R 2.14.1
-if (as.integer(R.Version()$major) == 2 && as.numeric(R.Version()$minor) < 15)
-	paste0 <- function(...) paste(..., sep = '')
+#if (as.integer(R.Version()$major) == 2 && as.numeric(R.Version()$minor) < 15)
+#	paste0 <- function(...) paste(..., sep = '')
 
 # Constants {{{1
 ################################################################
@@ -249,8 +249,7 @@ make.getopt.spec <- function(sections = NULL) {
 			'help',             'h',            0,  'logical',      'Print this help.',
 			'debug',            'g',            0,  'logical',      'Set debug mode.',
 			'quiet',            'q',            0,  'logical',      'Quiet mode.',
-			'log-to-stdout',    'G',            0,  'logical',      'Send log messages to stdout instead of stderr.',
-			'v3',               '3',            0,  'logical',      'Use old version 3 (without biodb).'
+			'log-to-stdout',    'G',            0,  'logical',      'Send log messages to stdout instead of stderr.'
 		)
 
 	return(spec)
@@ -345,32 +344,32 @@ check.args <- function(opt) {
 
 # Load database {{{1
 ################################################################
-
-.load.db <- function(opt) {
-
-	if (is.null(opt[['pos-prec']]) && is.null(opt[['neg-prec']])) {
-		precursors <- NULL
-	} else {
-		precursors <- list()
-		precursors[[MSDB.TAG.POS]] <- opt[['pos-prec']]
-		precursors[[MSDB.TAG.NEG]] <- opt[['neg-prec']]
-	}
-
-	db <- switch(opt$database,
-		         peakforest = MsPeakForestDb$new(url = opt$url, useragent = USERAGENT, token = opt[['db-token']]),
-		         xls = MsXlsDb$new(db_dir = opt$url, cache_dir = opt[['cache-dir']]),
-		         '4tabsql' = Ms4TabSqlDb$new(host = extract.address(opt$url), port = extract.port(opt$url), dbname = opt[['db-name']], user = opt[['db-user']], password = opt[['db-password']]),
-		         file = MsFileDb$new(file = opt$url),
-		         NULL)
-	db$setPrecursors(precursors)
-	if (db$areDbFieldsSettable())
-		db$setDbFields(opt[['db-fields']])
-	if (db$areDbMsModesSettable())
-		db$setDbMsModes(opt[['db-ms-modes']])
-	db$addObservers(MsDbLogger$new())
-
-	return(db)
-}
+# TODO remove
+#.load.db <- function(opt) {
+#
+#	if (is.null(opt[['pos-prec']]) && is.null(opt[['neg-prec']])) {
+#		precursors <- NULL
+#	} else {
+#		precursors <- list()
+#		precursors[[MSDB.TAG.POS]] <- opt[['pos-prec']]
+#		precursors[[MSDB.TAG.NEG]] <- opt[['neg-prec']]
+#	}
+#
+#	db <- switch(opt$database,
+#		         peakforest = MsPeakForestDb$new(url = opt$url, useragent = USERAGENT, token = opt[['db-token']]),
+#		         xls = MsXlsDb$new(db_dir = opt$url, cache_dir = opt[['cache-dir']]),
+#		         '4tabsql' = Ms4TabSqlDb$new(host = extract.address(opt$url), port = extract.port(opt$url), dbname = opt[['db-name']], user = opt[['db-user']], password = opt[['db-password']]),
+#		         file = MsFileDb$new(file = opt$url),
+#		         NULL)
+#	db$setPrecursors(precursors)
+#	if (db$areDbFieldsSettable())
+#		db$setDbFields(opt[['db-fields']])
+#	if (db$areDbMsModesSettable())
+#		db$setDbMsModes(opt[['db-ms-modes']])
+#	db$addObservers(MsDbLogger$new())
+#
+#	return(db)
+#}
 
 # Output HTML {{{1
 ################################################################
@@ -443,9 +442,10 @@ load.input.file <- function(file, col.names) {
 	}
 
 	# Non-empty file
-	else
+	else {
 		# Load file into data frame
 		input <- read.table(file = file, header = TRUE, sep = "\t", stringsAsFactor = FALSE, check.names = FALSE, comment.char = '')
+	}
 
 	return(input)
 }
@@ -529,7 +529,7 @@ create.biodb.instance <- function(quiet = FALSE, ms.modes = NULL) {
 
 	# Configure cache
 	biodb$getConfig()$disable('cache.system')
-	biodb$getConfig()$disable('factory.cache')
+	#biodb$getConfig()$disable('factory.cache')
 	biodb$getConfig()$disable('cache.subfolders')
 	biodb$getConfig()$disable('cache.all.requests')
 	biodb$getConfig()$set('useragent', USERAGENT)
@@ -673,6 +673,9 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	peaks <- NULL
 	if ( ! is.null(results.df)) {
 		
+		# Sort columns of results data frame
+		results.df <- results.df[sort(colnames(results.df))]
+
 		# Rename columns of results data frame
 		names(results.df) <- paste('lcmsmatching', names(results.df), sep = '.')
 
@@ -716,51 +719,6 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 		main <- main[, output.cols]
 	}
 
-	# TODO TO REMOVE
-	if (FALSE) {
-		for (i in seq_along(input[[1]])) {
-
-			if (rt.search)
-				rts <- as.numeric(input[i, input.colnames$rt])
-
-			# Search for MS peaks
-			df <- conn$searchMsPeaks(mz = as.numeric(input[i, input.colnames$mz]), mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rts, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = FALSE)
-
-			# No results
-			if (is.null(df)) {
-				peaks.lines <- input[i, , drop = FALSE]
-				main.line <- peaks.lines
-			}
-
-			# Found results
-			else {
-				names(df) <- paste('lcmsmatching', names(df), sep = '.')
-
-				# Empty result data frame
-				if (nrow(df) == 0)
-					df[1, ] <- NA
-
-				# Make multiple lines results
-				peaks.lines <- cbind(input[i, , drop = FALSE], df, row.names = NULL)
-
-				# Build one line result
-				if (nrow(df) == 1)
-					main.line <- peaks.lines
-				else {
-					df.one.row <- df[1, ]
-					for (col in names(df))
-						df.one.row[[col]] <- paste(df[[col]], collapse = results.sep)
-					main.line <- cbind(input[i, , drop = FALSE], df.one.row, row.names = NULL)
-				}
-			}
-			peaks <- plyr::rbind.fill(peaks, peaks.lines)
-
-			if (nrow(main.line) != 1)
-				stop(paste("More than one match line for main output with M/Z value ", input[i, input.colnames$mz], ".", sep = ''))
-			main <- plyr::rbind.fill(main, main.line)
-		}
-	}
-
 	# Write main output
 	if ( ! is.null(main.output))
 		write.table(main, file = main.output, row.names = FALSE, sep = "\t", quote = FALSE)
@@ -780,119 +738,40 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 # Read command line arguments
 opt <- read.args()
 
+# Set error function for debugging
 if (is.null(opt$debug)) {
 	options(error = function() { quit(status = 1) }, warn = 0 )
 }
 
-# biodb
-if (is.null(opt$v3)) {
+# Create Biodb instance
+biodb <- create.biodb.instance(quiet = opt$quiet, ms.modes = opt[['db-ms-modes']])
 
-	# Create Biodb instance
-	biodb <- create.biodb.instance(quiet = opt$quiet, ms.modes = opt[['db-ms-modes']])
-
-	# Get database connector
-	conn <- get.db.conn(biodb, db.name = opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']], pos.prec = opt[['pos-prec']], neg.prec = opt[['neg-prec']])
-
-	# Print columns
-	if ( ! is.null(opt[['list-cols']]))
-		print.chrom.cols(conn, opt[['output-file']])
-
-	# Search
-	else {
-
-		# MS mode
-		ms.mode <- if (opt$mode == POS_MODE) MSDB.TAG.POS else MSDB.TAG.NEG
-
-		# Set RT unit
-		rt.search <- ! is.null(opt$rtcol) || ! is.null(opt[['all-cols']])
-		if ( rt.search && opt$database == MSDB.FILE && ! conn$hasField('chrom.rt.unit'))
-			conn$addField('chrom.rt.unit', if (opt[['db-rt-unit']] == MSDB.RTUNIT.SEC) 's' else 'min')
-
-		# Select chromatographic columns
-		chrom.cols <- get.chrom.cols(conn, check.cols = ! is.null(opt[['check-cols']]), chrom.cols = opt$rtcol, all.cols = ! is.null(opt[['all-cols']]))
-
-		# Search
-		search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = - opt$mzshift,
-		       ms.mode = ms.mode,
-			   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = if (is.null(opt$rttol)) opt$rttolx else opt$rttol, rt.tol.exp = opt$rttoly,
-		       results.sep = opt[['molids-sep']], precursor = ! is.null(opt[['precursor-match']]), precursor.rt.tol = opt[['precursor-rt-tol']],
-		       main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
-	}
-
-	# Terminate Biodb instance
-	biodb$terminate()
-
-	quit(status = 0)
-}
-
-# OLD SCHEME {{{2
-################################################################
-
-# Check values
-error <- check.args(opt)
-
-# Load database
-source(file.path(dirname(script.path), DB.SRC.FILE[[opt$database]]), chdir = TRUE)
-db <- .load.db(opt)
+# Get database connector
+conn <- get.db.conn(biodb, db.name = opt$database, url = opt$url, token = opt[['db-token']], fields = opt[['db-fields']], pos.prec = opt[['pos-prec']], neg.prec = opt[['neg-prec']])
 
 # Print columns
 if ( ! is.null(opt[['list-cols']])) {
-	cols <- db$getChromCol()
-	write.table(cols, file = if (is.null(opt[['output-file']])) stdout() else opt[['output-file']], row.names = FALSE, sep = "\t")
-	q(status = 0)
+	print.chrom.cols(conn, opt[['output-file']])
+	quit(status = 0)
 }
 
-# Read input
-input <- load.input.file(opt[['input-file']], col.names = opt[['input-col-names']])
+# MS mode
+ms.mode <- (if (opt$mode == POS_MODE) MSDB.TAG.POS else MSDB.TAG.NEG)
 
-# Check mz column
-if ( ! opt[['input-col-names']][['mz']] %in% colnames(input))
-	stop(paste0('No column named "', opt[['input-col-names']][['mz']], '" in input file.'))
+# Set RT unit
+rt.search <- ! is.null(opt$rtcol) || ! is.null(opt[['all-cols']])
+if ( rt.search && opt$database == MSDB.FILE && ! conn$hasField('chrom.rt.unit'))
+	conn$addField('chrom.rt.unit', (if (opt[['db-rt-unit']] == MSDB.RTUNIT.SEC) 's' else 'min'))
 
-# Set columns 'all-cols' specified
-if ( ! is.null(opt[['all-cols']]))
-	opt$rtcol <- db$getChromCol()[['id']]
+# Select chromatographic columns
+chrom.cols <- get.chrom.cols(conn, check.cols = ! is.null(opt[['check-cols']]), chrom.cols = opt$rtcol, all.cols = ! is.null(opt[['all-cols']]))
 
-# check chrom columns
-if ( ! is.null(opt[['check-cols']]) && ! is.null(opt$rtcol)) {
-	dbcols <- db$getchromcol()[['id']]
-	unknown.cols <- opt$rtcol[ ! opt$rtcol %in% dbcols]
-	if (length(unknown.cols) > 0) {
-		stop(paste0("unknown chromatographic column", (if (length(unknown.cols) > 1) 's' else ''), ': ', paste(unknown.cols, collapse = ', '), ".\nallowed chromatographic column names are:\n", paste(dbcols, collapse = "\n")))
-	}
-}
+# Search
+search(conn, input.file = opt[['input-file']], input.colnames = opt[['input-col-names']], same.cols =  ! is.null(opt[['same-cols']]), mz.tol = opt$mzprec, mz.tol.unit = opt$mztolunit, mz.shift = - opt$mzshift,
+	   ms.mode = ms.mode,
+	   chrom.cols = chrom.cols, rt.unit = opt$rtunit, rt.tol = (if (is.null(opt$rttol)) opt$rttolx else opt$rttol), rt.tol.exp = opt$rttoly,
+	   results.sep = opt[['molids-sep']], precursor = ! is.null(opt[['precursor-match']]), precursor.rt.tol = opt[['precursor-rt-tol']],
+	   main.output = opt[['output-file']], peaks.output = opt[['peak-output-file']], html.output = opt[['html-output-file']])
 
-# Check that an RT column exists when using MZ/RT matching
-if ( ! is.null(opt$rtcol) && ! opt[['input-col-names']][['rt']] %in% colnames(input))
-	stop(paste0("You are running an MZ/RT match run on your input data, but no retention time column named '", opt[['input-col-names']][['rt']],"' can be found inside your input file."))
-
-# Set output col names
-output.col.names <- opt[['input-col-names']]
-
-# Set streams
-input.stream <- MsDbInputDataFrameStream$new(df = input, input.fields = opt[['input-col-names']], rtunit = opt[['rtunit']])
-main.output <- MsDbOutputDataFrameStream$new(keep.unused = ! is.null(opt[['same-cols']]), output.fields = output.col.names, one.line = ! is.null(opt[['same-rows']]), match.sep = opt[['molids-sep']], first.val = ! is.null(opt[['first-val']]), ascii = ! is.null(opt[['excel2011comp']]), nogreek = ! is.null(opt[['excel2011comp']]), noapostrophe = ! is.null(opt[['excel2011comp']]), noplusminus = ! is.null(opt[['excel2011comp']]), rtunit = opt[['rtunit']])
-peaks.output <- MsDbOutputDataFrameStream$new(keep.unused = ! is.null(opt[['same-cols']]), output.fields = output.col.names, first.val = ! is.null(opt[['first-val']]), ascii = ! is.null(opt[['excel2011comp']]), nogreek = ! is.null(opt[['excel2011comp']]), noapostrophe = ! is.null(opt[['excel2011comp']]), noplusminus = ! is.null(opt[['excel2011comp']]), rtunit = opt[['rtunit']])
-invisible(db$setInputStream(input.stream))
-db$addOutputStreams(c(main.output, peaks.output))
-
-# Set database units
-db$setMzTolUnit(opt$mztolunit)
-if ( ! is.null(opt[['db-rt-unit']]) && opt$database == 'file')
-	db$setRtUnit(opt[['db-rt-unit']])
-
-# Search database
-mode <- if (opt$mode == POS_MODE) MSDB.TAG.POS else MSDB.TAG.NEG
-db$searchForMzRtList(mode = mode, shift = opt$mzshift, prec = opt$mzprec, rt.tol = opt$rttol, rt.tol.x = opt$rttolx, rt.tol.y = opt$rttoly, col = opt$rtcol, precursor.match = ! is.null(opt[['precursor-match']]), precursor.rt.tol = opt[['precursor-rt-tol']])
-
-# Write output
-main.output$moveColumnsToBeginning(colnames(input))
-peaks.output$moveColumnsToBeginning(colnames(input))
-# TODO Create a class MsDbOutputCsvFileStream
-write.table(main.output$getDataFrame(), file = opt[['output-file']], row.names = FALSE, sep = "\t")
-if ( ! is.null(opt[['peak-output-file']]))
-	# TODO Create a class MsDbOutputCsvFileStream
-	write.table(peaks.output$getDataFrame(), file = opt[['peak-output-file']], row.names = FALSE, sep = "\t")
-if ( ! is.null(opt[['html-output-file']]))
-	# TODO Create a class MsDbOutputHtmlFileStream
-	output.html(db = db, peaks = peaks.output$getDataFrame(), file = opt[['html-output-file']])
+# Terminate Biodb instance
+biodb$terminate()
