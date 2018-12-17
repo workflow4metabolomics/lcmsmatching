@@ -714,5 +714,3 @@ for db in $DATABASES ; do
 		test_that "Bug Estelle 20170314 does not come back." test_peakforest_estelle_20170314
 	fi
 done
-
-test_report
