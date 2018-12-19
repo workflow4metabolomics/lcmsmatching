@@ -19,4 +19,4 @@ branches:
     - /^testing[/]travis-.*$/
    
 script:
- - DATABASES="file" make test && make planemolint && make planemotest
+ - make test && make planemolint && make planemotest
