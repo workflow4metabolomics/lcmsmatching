@@ -698,7 +698,7 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 			if (rt.search)
 				lines <- lines & (results.df[['lcmsmatching.rt']] == input[i, input.colnames$rt])
 
-			lines.df <- results.df[lines, ]
+			lines.df <- results.df[lines, , drop = FALSE]
 
 			if (nrow(lines.df) == 1)
 				one.line <- lines.df
