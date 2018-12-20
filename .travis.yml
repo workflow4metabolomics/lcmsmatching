@@ -3,7 +3,8 @@ language: r
 r:
     - release
 
-r_packages: getopt
+r_packages:
+    - getopt
 
 r_github_packages: pkrog/biodb
       
