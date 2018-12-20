@@ -5,6 +5,7 @@ args <- commandArgs(trailingOnly = F)
 script.path <- sub("--file=","",args[grep("--file=",args)])
 
 library(getopt)
+library(methods)
 library(biodb)
 
 source(file.path(dirname(script.path), 'msdb-common.R'), chdir = TRUE)
