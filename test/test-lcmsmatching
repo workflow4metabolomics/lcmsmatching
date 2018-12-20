@@ -270,11 +270,6 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 	csv_expect_same_col_names $input_file $peak_output $SEP $nb_input_cols 1
 
 	# Check that outputs are identical
-	echo --------------------------------
-	cat $main_output
-	echo --------------------------------
-	cat $main_ref_output
-	echo --------------------------------
 	expect_same_files $main_output $main_ref_output || return 1
 	expect_same_files $peak_output $peak_ref_output || return 1
 }
