@@ -3,28 +3,16 @@ language: r
 r:
     - release
 
-r_packages:
-    - getopt
+r_packages: getopt
 
-r_github_packages:
-    -  pkrog/biodb
+r_github_packages: pkrog/biodb
       
 notifications:
  email:
   recipients:
    - pk.roger@icloud.com
                            
-apt_packages:
-    - python-virtualenv
-      
-      #before_install:
-    # - sudo sed -i -e '$adeb http://cran.univ-paris1.fr/bin/linux/ubuntu trusty/' /etc/apt/sources.list
-    # - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-    # - sudo apt-get update
-    # - sudo apt-get install -y --no-install-recommends r-base
-    # - sudo R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
-    # - sudo bash install_biodb.sh
-    # - sudo apt-get install -y python-virtualenv
+apt_packages: python-virtualenv
 
 branches:
   only:
@@ -32,7 +20,7 @@ branches:
     - /^release[/].*$/
     - /^testing[/]travis-.*$/
    
-install:
+install: echo NOTHING_TO_INSTALL
     
 script:
  - make test && make planemolint && make planemotest
