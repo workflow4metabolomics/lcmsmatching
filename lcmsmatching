@@ -1,8 +1,11 @@
 #!/usr/bin/env Rscript
 # vi: ft=r fdm=marker
+
 args <- commandArgs(trailingOnly = F)
 script.path <- sub("--file=","",args[grep("--file=",args)])
+
 library(getopt)
+library(biodb)
 
 source(file.path(dirname(script.path), 'msdb-common.R'), chdir = TRUE)
 #source(file.path(dirname(script.path), 'MsDbLogger.R'), chdir = TRUE)
