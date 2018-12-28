@@ -1,9 +1,8 @@
 language: r
+cache: packages
 
 r:
-    - oldrel
     - release
-    - devel
       
 notifications:
  email:
@@ -27,7 +26,7 @@ branches:
     - /^testing[/]travis-.*$/
    
 install:
-    - R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
-    - bash install_biodb.sh
+    - [ $TEST = test ] && R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
+    - [ $TEST = test ] && bash install_biodb.sh
     
 script: make $TEST
