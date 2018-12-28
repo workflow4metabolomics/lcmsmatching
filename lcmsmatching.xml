@@ -3,7 +3,7 @@
 	<description>Annotation of MS peaks using matching on a spectra database.</description>
 
 	<requirements>
-		<requirement type="package" version="1.2.0rc">r-biodb</requirement>
+		<requirement type="package" version="1.2.0rc2">r-biodb</requirement>
 		<requirement type="package" version="1.20.0">r-getopt</requirement>
 		<!--<requirement type="package" version="0.2">r-codetools</requirement>-->
 	</requirements>
