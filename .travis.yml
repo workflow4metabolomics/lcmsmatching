@@ -1,9 +1,8 @@
 language: r
 cache: packages
 
-r:
-    - release
-      
+r: release
+
 notifications:
  email:
   recipients:
@@ -13,7 +12,7 @@ env:
     - TEST=test
     - TEST=planemolint
     - TEST=planemotest
-                           
+
 addons:
     apt:
         packages:
