@@ -9,6 +9,11 @@ notifications:
  email:
   recipients:
    - pk.roger@icloud.com
+
+env:
+    - TEST=test
+    - TEST=planemolint
+    - TEST=planemotest
                            
 addons:
     apt:
@@ -25,4 +30,4 @@ install:
     - R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
     - bash install_biodb.sh
     
-script: make test && make planemolint && make planemotest
+script: make $TEST
