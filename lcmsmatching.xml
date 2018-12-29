@@ -5,7 +5,8 @@
 	<requirements>
 		<requirement type="package" version="1.2.0rc2">r-biodb</requirement>
 		<requirement type="package" version="1.20.0">r-getopt</requirement>
-		<!--<requirement type="package" version="0.2">r-codetools</requirement>-->
+		<requirement type="package" version="0.2">r-codetools</requirement> <!-- code for methods in class \u201cHtmlWriter\u201d was not checked for suspicious field assignments (recommended package \u2018codetools\u2019 not available?) -->
+		
 	</requirements>
 
 	<!--=======
