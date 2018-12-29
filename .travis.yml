@@ -25,7 +25,7 @@ branches:
     - /^testing[/]travis-.*$/
    
 install:
-    - [ $TEST = test ] && R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
-    - [ $TEST = test ] && bash install_biodb.sh
+    - R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
+    - bash install_biodb.sh
     
 script: make $TEST
