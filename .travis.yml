@@ -24,8 +24,6 @@ branches:
     - /^release[/].*$/
     - /^testing[/]travis-.*$/
    
-install:
-    - R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
-    - bash install_biodb.sh
+install: make ${TEST}.travis.install
     
 script: make $TEST
