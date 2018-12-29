@@ -18,11 +18,11 @@ addons:
         packages:
             - python-virtualenv
 
-              #branches:
-              #  only:
-              #    - master
-              #    - /^release[/].*$/
-              #    - /^testing[/]travis-.*$/
+branches:
+  only:
+    - master
+    - /^release[/].*$/
+    - /^testing[/]travis-.*$/
    
 install:
     - [ $TEST = test ] && R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
