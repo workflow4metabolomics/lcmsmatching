@@ -555,11 +555,11 @@ function test_generic_precursors_lists {
 	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
 	local output_file=$SCRIPT_PATH/test_generic_precursors_lists-output.tsv
 
-	expect_success $LCMSMATCHING $(get_db_args $db) -m pos --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' || return 1
+	expect_success $LCMSMATCHING $(get_db_args $db) -m pos --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' -g || return 1
 
 	local chromcols=$(list_chrom_cols "$(get_db_args $db)" 1)
 
-	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' || return 1
+	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' -g || return 1
 }
 
 # Test generic - same cols {{{1
@@ -714,5 +714,3 @@ for db in $DATABASES ; do
 		test_that "Bug Estelle 20170314 does not come back." test_peakforest_estelle_20170314
 	fi
 done
-
-test_report

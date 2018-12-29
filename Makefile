@@ -18,7 +18,7 @@ planemolint: planemo-venv/bin/planemo
 
 planemotest: R_LIBS_USER=
 planemotest: planemo-venv/bin/planemo
-	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --conda_prefix "$(CONDA_PREFIX)" --galaxy_branch release_18.09 2>&1 | tee planemotest.log
+	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --conda_prefix "$(CONDA_PREFIX)" --galaxy_branch release_18.09
 
 planemo-testtoolshed-diff: distplanemo-venv/bin/planemo
 	. planemo-venv/bin/activate && cd $< && planemo shed_diff --shed_target testtoolshed

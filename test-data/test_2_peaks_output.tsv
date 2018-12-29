@@ -1,4 +1,4 @@
-mz	rt	lcmsmatching.compound.id	lcmsmatching.ms.mode	lcmsmatching.chrom.col.name	lcmsmatching.chrom.rt	lcmsmatching.name	lcmsmatching.accession	lcmsmatching.formula	lcmsmatching.molecular.mass	lcmsmatching.ms.level	lcmsmatching.chrom.rt.unit	lcmsmatching.peak.mztheo	lcmsmatching.peak.attr	lcmsmatching.peak.comp	lcmsmatching.peak.mz	lcmsmatching.chrom.col.id	lcmsmatching.mass.csv.file.id
+mz	rt	lcmsmatching.accession	lcmsmatching.chrom.col.id	lcmsmatching.chrom.col.name	lcmsmatching.chrom.rt	lcmsmatching.chrom.rt.unit	lcmsmatching.compound.id	lcmsmatching.formula	lcmsmatching.mass.csv.file.id	lcmsmatching.molecular.mass	lcmsmatching.ms.level	lcmsmatching.ms.mode	lcmsmatching.name	lcmsmatching.peak.attr	lcmsmatching.peak.comp	lcmsmatching.peak.mz	lcmsmatching.peak.mztheo
 80.04959021	339.9725632	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
 82.04819461	1593.540123	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
 83.01343941	654.9535891	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
@@ -7,7 +7,7 @@ mz	rt	lcmsmatching.compound.id	lcmsmatching.ms.mode	lcmsmatching.chrom.col.name	
 89.50682004	39.62335341	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
 90.97680734	1598.991244	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
 92.98092987	46.13716368	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
-94.57331384	44.37587921	A10	pos	col12	0.8	Blablaine	A10.pos.col12.0.8	J114L6M62O2	146.10553	1	min	94.5733145	[(M+2H)+(CH3CN)]++	P93Z8W419 O2	94.5733145	col12	A10.pos.col12.0.8
+94.57331384	44.37587921	A10.pos.col12.0.8	col12	col12	0.8	min	A10	J114L6M62O2	A10.pos.col12.0.8	146.10553	1	pos	Blablaine	[(M+2H)+(CH3CN)]++	P93Z8W419 O2	94.5733145	94.5733145
 97.07602789	655.2993307	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
 99.5429594	42.19533608	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
 101.0708987	733.3084926	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
@@ -29,4 +29,4 @@ mz	rt	lcmsmatching.compound.id	lcmsmatching.ms.mode	lcmsmatching.chrom.col.name	
 108.1575604	1611.664677	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
 109.0777249	3.299196943	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
 110.0599023	3.456417112	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA
-147.112804	48	A10	pos	col12	0.8	Blablaine	A10.pos.col12.0.8	J114L6M62O2	146.10553	1	min	147.112804	[(M+H)]+	P92Z6W415 O2	147.112804	col12	A10.pos.col12.0.8
+147.112804	48	A10.pos.col12.0.8	col12	col12	0.8	min	A10	J114L6M62O2	A10.pos.col12.0.8	146.10553	1	pos	Blablaine	[(M+H)]+	P92Z6W415 O2	147.112804	147.112804
