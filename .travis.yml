@@ -1,6 +1,7 @@
 language: r
 
-r: release
+r:
+    - release
 
 notifications:
  email:
