@@ -24,8 +24,6 @@ branches:
     - /^release[/].*$/
     - /^testing[/]travis-.*$/
    
-install:
-    - python --version
-    - make ${TEST}.travis.install
+install: make ${TEST}.travis.install
     
 script: make $TEST
