@@ -8,8 +8,8 @@ matrix:
               - bash install_biodb.sh
           script: make test
         - name: "Planemo tests"
+          dist: xenial # To get Python >=2.7.7
           language: python
-          python: 2.7.7
           addons:
               apt:
                   packages: python-virtualenv
