@@ -19,7 +19,7 @@ planemo-venv/bin/planemo: planemo-venv
 	. planemo-venv/bin/activate && pip install planemo
 
 planemo-venv:
-	virtualenv planemo-venv
+	virtualenv -p python2.7.7 planemo-venv
 
 planemolint: planemo-venv/bin/planemo
 	. planemo-venv/bin/activate && planemo lint --no_xsd
