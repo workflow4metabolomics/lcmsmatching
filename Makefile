@@ -15,7 +15,7 @@ planemolint.travis.install: virtualenv.install
 planemotest.travis.install: virtualenv.install
 
 virtualenv.install:
-	sudo apt-get upgrade
+	sudo apt-get install python2.7
 	python --version
 	sudo apt-get install python-virtualenv
 
