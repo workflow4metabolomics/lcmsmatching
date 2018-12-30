@@ -6,19 +6,6 @@ all:
 test:
 	$(MAKE) -C $@
 
-test.travis.install:
-	R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
-	bash install_biodb.sh
-
-planemolint.travis.install: virtualenv.install
-
-planemotest.travis.install: virtualenv.install
-
-virtualenv.install:
-	sudo apt-get install python2.7
-	python --version
-	sudo apt-get install python-virtualenv
-
 planemo-venv/bin/planemo: planemo-venv
 	. planemo-venv/bin/activate && pip install "pip>=7"
 	. planemo-venv/bin/activate && pip install planemo
@@ -53,4 +40,4 @@ clean:
 	$(RM) -r $(HOME)/.planemo
 	$(RM) -r $(CONDA_PREFIX)
 
-.PHONY: all clean test planemo-lint planemo-test planemon-install planemo-toolshed-diff planemo-toolshed-update planemo-testtoolshed-diff planemo-testtoolshed-update test.travis.install planemolint.travis.install planemotest.travis.install virtualenv.install
+.PHONY: all clean test planemo-lint planemo-test planemon-install planemo-toolshed-diff planemo-toolshed-update planemo-testtoolshed-diff planemo-testtoolshed-update

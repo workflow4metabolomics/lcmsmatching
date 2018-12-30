@@ -1,29 +1,27 @@
-language: r
-
-r:
-    - release
+matrix:
+    include:
+        - name: "Plain tests"
+          language: r
+          r: release
+          install:
+              - R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
+              - bash install_biodb.sh
+          script: make test
+        - name: "Planemo tests"
+          language: python
+          python: 2.7.7
+          addons:
+              apt:
+                  packages: python-virtualenv
+          script: make planemolint planemotest
 
 notifications:
  email:
   recipients:
    - pk.roger@icloud.com
 
-env:
-    - TEST=test
-    - TEST=planemolint
-    - TEST=planemotest
-
-addons:
-    apt:
-        packages:
-            - python-virtualenv
-
 branches:
   only:
     - master
     - /^release[/].*$/
     - /^testing[/]travis-.*$/
-   
-install: make ${TEST}.travis.install
-    
-script: make $TEST
