@@ -8,9 +8,116 @@ library(getopt)
 library(methods)
 library(biodb)
 
-source(file.path(dirname(script.path), 'msdb-common.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'htmlhlp.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'biodb-common.R'), chdir = TRUE)
+# HTML Writer {{{1
+################################################################
+
+HtmlWriter <- methods::setRefClass("HtmlWriter", fields = list(.con = "ANY", .auto.indent = "numeric"))
+
+# Constructor {{{2
+################################################################
+
+HtmlWriter$methods( initialize = function(auto.indent = TRUE, ...) {
+
+	.auto.indent <<- if (auto.indent) 0 else NA_integer_
+	.con <<- NULL
+
+	callSuper(...) # calls super-class initializer with remaining parameters
+})
+
+# Open {{{2
+################################################################################
+
+HtmlWriter$methods( file.opn = function(file) {
+	.con <<- file(file, open = "w")
+})
+
+# Close {{{2
+################################################################################
+
+HtmlWriter$methods( file.close = function() {
+	close(.self$.con)
+})
+
+# Write {{{2
+################################################################
+
+HtmlWriter$methods( write = function(text, indent = NA_integer_, newline = TRUE, escape = FALSE) {
+
+	# Compute indentation
+	if (is.na(indent))
+		indent <- if (is.na(.self$.auto.indent)) 0 else .self$.auto.indent
+
+	cat(rep("\t", indent), text, if (newline) "\n" else "", sep = '', file = .self$.con)
+})
+
+# Write tag {{{2
+################################################################
+
+HtmlWriter$methods( writeTag = function(tag, attr = NA_character_, text = NA_character_, indent = NA_integer_, newline = TRUE) {
+
+	if (is.na(text)) {
+		attributes <- if (is.na(attr)) '' else paste0(' ', paste(vapply(names(attr), function(a) paste0(a, '="', attr[[a]], '"'), FUN.VALUE=''), collapse = ' '))
+		.self$write(paste0("<", tag, attributes, "/>"), indent = indent, newline = newline, escape = FALSE)
+	}
+	else {
+		.self$writeBegTag(tag, attr = attr, indent = indent, newline = FALSE)
+		.self$write(text, escape = TRUE , indent = 0, newline = FALSE)
+		.self$writeEndTag(tag, indent = 0, newline = newline)
+	}
+})
+
+# Write begin tag {{{2
+###################################################################################
+
+HtmlWriter$methods( writeBegTag = function(tag, attr = NA_character_, indent = NA_integer_, newline = TRUE) {
+
+	# Write opening tag
+	attributes <- if (is.na(attr)) '' else paste0(' ', paste(vapply(names(attr), function(a) paste0(a, '="', attr[[a]], '"'), FUN.VALUE=''), collapse = ' '))
+	.self$write(paste0("<", tag, attributes, ">"), indent = indent, newline = newline, escape = FALSE)
+
+	# Increment auto-indent
+	if ( ! is.na(.self$.auto.indent))
+		.auto.indent <<- .self$.auto.indent + 1
+})
+
+# Write end tag {{{2
+################################################################
+
+HtmlWriter$methods( writeEndTag = function(tag, indent = NA_integer_, newline = TRUE) {
+
+	# Decrement auto-indent
+	if ( ! is.na(.self$.auto.indent))
+		.auto.indent <<- .self$.auto.indent - 1
+
+	# Write closing tag
+	.self$write(paste0("</", tag, ">"), indent = indent, newline = newline, escape = FALSE)
+})
+
+# Write table {{{2
+################################################################
+
+HtmlWriter$methods( writeTable = function(x, indent = NA_integer_, newline = TRUE) {
+
+	.self$writeBegTag('table', indent = indent, newline = newline)
+
+	# Write table header
+	if ( ! is.null(colnames(x))) {
+		.self$writeBegTag('tr', indent = indent + 1, newline = newline)
+		for (field in colnames(x))
+			.self$writeTag('th', text = field, indent = indent + 2, newline = newline)
+		.self$writeEndTag('tr', indent = indent + 1, newline = newline)
+	}
+
+	# Write values
+	if (nrow(x) > 0 && ncol(x) > 0)
+		for (i in 1:nrow(x)) {
+			.self$writeBegTag('tr', indent = indent + 1, newline = newline)
+			for (j in 1:ncol(x))
+				.self$writeTag('td', text = x[i, j], indent = indent + 2, newline = newline)
+			.self$writeEndTag('tr', indent = indent + 1, newline = newline)
+		}
+	.self$writeEndTag('table', indent = indent, newline = newline)
+})
 
 # Split key/value list {{{1
 ################################################################
@@ -48,13 +155,70 @@ concat.kv.list <- function(x, sep = ',', kvsep = '=') {
 PROG <- sub('^.*/([^/]+)$', '\\1', commandArgs()[4], perl = TRUE)
 USERAGENT <- 'W4M lcmsmatching ; pk.roger@icloud.com'
 
+# Field tags
+MSDB.TAG.MZ <- 'mz'
+MSDB.TAG.MZEXP <- 'mzexp'
+MSDB.TAG.MZTHEO <- 'mztheo'
+MSDB.TAG.RT <- 'rt'
+MSDB.TAG.MODE <- 'msmode'
+MSDB.TAG.MOLID <- 'compoundid'
+MSDB.TAG.COL <- 'chromcol'
+MSDB.TAG.COLRT <- 'chromcolrt'
+MSDB.TAG.ATTR <- 'peakattr'
+MSDB.TAG.INT <- 'intensity'
+MSDB.TAG.REL <- 'relative.intensity'
+MSDB.TAG.COMP <- 'peakcomp'
+MSDB.TAG.MOLNAMES <- 'fullnames'
+MSDB.TAG.MOLCOMP <- 'compoundcomp'
+MSDB.TAG.MOLMASS <- 'compoundmass'
+MSDB.TAG.INCHI <- 'inchi'
+MSDB.TAG.INCHIKEY <- 'inchikey'
+MSDB.TAG.PUBCHEM <- 'pubchemcompid'
+MSDB.TAG.CHEBI <- 'chebiid'
+MSDB.TAG.HMDB <- 'hmdbid'
+MSDB.TAG.KEGG <- 'keggid'
+
 # Authorized database types
 MSDB.VALS <- c('file', 'peakforest')
 
 # Authorized mode values
+MSDB.TAG.POS           <- 'pos'
+MSDB.TAG.NEG           <- 'neg'
 POS_MODE <- 'pos'
 NEG_MODE <- 'neg'
 MSDB.MODE.VALS <- c(POS_MODE, NEG_MODE)
+
+# Authorized mz tolerance unit values
+MSDB.MZTOLUNIT.PPM <- 'ppm'
+MSDB.MZTOLUNIT.PLAIN <- 'plain' # same as mz: mass-to-charge ratio
+MSDB.MZTOLUNIT.VALS <- c(MSDB.MZTOLUNIT.PPM, MSDB.MZTOLUNIT.PLAIN)
+
+# Authorized rt units
+MSDB.RTUNIT.SEC <- 'sec'
+MSDB.RTUNIT.MIN <- 'min'
+MSDB.RTUNIT.VALS <- c(MSDB.RTUNIT.SEC ,MSDB.RTUNIT.MIN)
+
+# Default values
+MSDB.DFT.PREC <- list()
+MSDB.DFT.PREC[[MSDB.TAG.POS]] <- c("[(M+H)]+", "[M+H]+", "[(M+Na)]+", "[M+Na]+", "[(M+K)]+", "[M+K]+")
+MSDB.DFT.PREC[[MSDB.TAG.NEG]] <- c("[(M-H)]-", "[M-H]-", "[(M+Cl)]-", "[M+Cl]-")
+MSDB.DFT.MATCH.FIELDS <- list( molids = 'molid', molnames = 'molnames')
+MSDB.DFT.MATCH.SEP <- '|'
+MSDB.DFT.MODES <- list( pos = 'POS', neg = 'NEG')
+MSDB.DFT.MZTOLUNIT <- MSDB.MZTOLUNIT.PPM
+
+# Get default db fields
+################################################################
+
+msdb.get.dft.db.fields <- function () {
+
+	dft.fields <- list()
+
+	for (f in c(MSDB.TAG.MZTHEO, MSDB.TAG.COLRT, MSDB.TAG.MOLID, MSDB.TAG.COL, MSDB.TAG.MODE, MSDB.TAG.ATTR, MSDB.TAG.COMP, MSDB.TAG.MOLNAMES, MSDB.TAG.MOLCOMP, MSDB.TAG.MOLMASS, MSDB.TAG.INCHI, MSDB.TAG.INCHIKEY, MSDB.TAG.PUBCHEM, MSDB.TAG.CHEBI, MSDB.TAG.HMDB, MSDB.TAG.KEGG))
+		dft.fields[[f]] <- f
+
+	return(dft.fields)
+}
 
 # Default 
 MSDB.DFT <- list()
@@ -70,7 +234,20 @@ MSDB.DFT[['neg-prec']] <- paste(MSDB.DFT.PREC[[MSDB.TAG.NEG]], collapse = ',')
 MSDB.DFT[['db-rt-unit']] <- MSDB.RTUNIT.SEC
 MSDB.DFT[['rtunit']] <- MSDB.RTUNIT.SEC
 DEFAULT.ARG.VALUES <- MSDB.DFT
-DEFAULT.ARG.VALUES[['input-col-names']] <- concat.kv.list(msdb.get.dft.input.fields())
+DEFAULT.ARG.VALUES[['input-col-names']] <- 'mz=mz,rt=rt'
+
+# Get default input fields {{{1
+################################################################
+
+msdb.get.dft.input.fields <- function () {
+
+	dft.fields <- list()
+
+	for(f in c(MSDB.TAG.MZ, MSDB.TAG.RT))
+		dft.fields[[f]] <- f
+
+	return(dft.fields)
+}
 
 # Print help {{{1
 ################################################################
@@ -335,21 +512,22 @@ check.args <- function(opt) {
 # Output HTML {{{1
 ################################################################
 
-output.html <- function(db, peaks, file) {
+output.html <- function(biodb, peaks, file) {
 
 	# Replace public database IDs by URLs
 	if ( ! is.null(peaks)) {
 		# Conversion from extdb id field to extdb name
 		extdb2classdb = list()
-		extdb2classdb[MSDB.TAG.KEGG] = BIODB.KEGG
-		extdb2classdb[MSDB.TAG.HMDB] = BIODB.HMDB
-		extdb2classdb[MSDB.TAG.CHEBI] = BIODB.CHEBI
-		extdb2classdb[MSDB.TAG.PUBCHEM] = BIODB.PUBCHEMCOMP
+		extdb2classdb[MSDB.TAG.KEGG] = 'kegg.compound'
+		extdb2classdb[MSDB.TAG.HMDB] = 'hmdb.metabolites'
+		extdb2classdb[MSDB.TAG.CHEBI] = 'chebi'
+		extdb2classdb[MSDB.TAG.PUBCHEM] = 'ncbi.pubchem.comp'
 
 		# Loop on all dbs
 		for (extdb in c(MSDB.TAG.KEGG, MSDB.TAG.HMDB, MSDB.TAG.CHEBI, MSDB.TAG.PUBCHEM)) {
-			if ( ! is.null(peaks) && extdb %in% colnames(peaks))
-				peaks[[extdb]] <- vapply(peaks[[extdb]], function(id) if (is.na(id)) '' else paste0('<a href="', get.entry.url(class = extdb2classdb[[extdb]], accession = id, content.type = BIODB.HTML), '">', id, '</a>'), FUN.VALUE = '')
+			conn <- biodb$getFactory()$createConn(extdb2classdb[[extdb]], fail.if.exists = FALSE)
+			if (extdb %in% colnames(peaks))
+				peaks[[extdb]] <- vapply(peaks[[extdb]], function(id) if (is.na(id)) '' else paste0('<a href="', conn$getEntryPageUrl(id), '">', id, '</a>'), FUN.VALUE = '')
 		}
 	}
 
@@ -690,7 +868,7 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 
 	# Write HTML output
 	if ( ! is.null(html.output))
-		output.html(db = db, peaks = peaks, file = html.output)
+		output.html(biodb = conn$getBiodb(), peaks = peaks, file = html.output)
 }
 
 # MAIN {{{1
