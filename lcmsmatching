@@ -9,18 +9,38 @@ library(methods)
 library(biodb)
 
 source(file.path(dirname(script.path), 'msdb-common.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'MsDbLogger.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'MsDbInputDataFrameStream.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'MsDbOutputDataFrameStream.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'htmlhlp.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'strhlp.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'fshlp.R'), chdir = TRUE)
 source(file.path(dirname(script.path), 'biodb-common.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'nethlp.R'), chdir = TRUE)
 
-# Missing paste0() function in R 2.14.1
-#if (as.integer(R.Version()$major) == 2 && as.numeric(R.Version()$minor) < 15)
-#	paste0 <- function(...) paste(..., sep = '')
+# Split key/value list {{{1
+################################################################
+
+split.kv.list <- function(s, sep = ',', kvsep = '=') {
+
+	# Split
+	kvs <- strsplit(strsplit(s, sep)[[1]], kvsep)
+
+	# Get keys
+	k <- vapply(kvs, function(x) x[[1]], FUN.VALUE = '')
+	v <- vapply(kvs, function(x) x[[2]], FUN.VALUE = '')
+
+	# Set names
+	names(v) <- k
+
+	return(v)
+}
+
+# Concat key/value list {{{1
+################################################################
+
+concat.kv.list <- function(x, sep = ',', kvsep = '=') {
+
+	k <- names(x)
+
+	s = paste(paste(names(x), x, sep = kvsep), collapse = sep)
+
+	return(s)
+}
 
 # Constants {{{1
 ################################################################
@@ -171,9 +191,9 @@ parse.arg.val <- function(opt) {
 
 	# Parse lists of precursors
 	if ( ! is.null(opt[['pos-prec']]))
-		opt[['pos-prec']] <- split.str(opt[['pos-prec']], unlist = TRUE)
+		opt[['pos-prec']] <- unlist(strsplit(opt[['pos-prec']], ','))
 	if ( ! is.null(opt[['neg-prec']]))
-		opt[['neg-prec']] <- split.str(opt[['neg-prec']], unlist = TRUE)
+		opt[['neg-prec']] <- unlist(strsplit(opt[['neg-prec']], ','))
 
 	return(opt)
 }
@@ -345,35 +365,6 @@ check.args <- function(opt) {
 			stop("You must specify an M/Z tolerance unit through the --mztolunit option.")
 	}
 }
-
-# Load database {{{1
-################################################################
-# TODO remove
-#.load.db <- function(opt) {
-#
-#	if (is.null(opt[['pos-prec']]) && is.null(opt[['neg-prec']])) {
-#		precursors <- NULL
-#	} else {
-#		precursors <- list()
-#		precursors[[MSDB.TAG.POS]] <- opt[['pos-prec']]
-#		precursors[[MSDB.TAG.NEG]] <- opt[['neg-prec']]
-#	}
-#
-#	db <- switch(opt$database,
-#		         peakforest = MsPeakForestDb$new(url = opt$url, useragent = USERAGENT, token = opt[['db-token']]),
-#		         xls = MsXlsDb$new(db_dir = opt$url, cache_dir = opt[['cache-dir']]),
-#		         '4tabsql' = Ms4TabSqlDb$new(host = extract.address(opt$url), port = extract.port(opt$url), dbname = opt[['db-name']], user = opt[['db-user']], password = opt[['db-password']]),
-#		         file = MsFileDb$new(file = opt$url),
-#		         NULL)
-#	db$setPrecursors(precursors)
-#	if (db$areDbFieldsSettable())
-#		db$setDbFields(opt[['db-fields']])
-#	if (db$areDbMsModesSettable())
-#		db$setDbMsModes(opt[['db-ms-modes']])
-#	db$addObservers(MsDbLogger$new())
-#
-#	return(db)
-#}
 
 # Output HTML {{{1
 ################################################################

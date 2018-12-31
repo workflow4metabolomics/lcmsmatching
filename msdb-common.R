@@ -1,7 +1,6 @@
-if ( ! exists('.parse_chrom_col_desc')) { # Do not load again if already loaded
+if ( ! exists('msdb.get.dft.input.fields')) { # Do not load again if already loaded
 
 	library('stringr')
-	source('strhlp.R', chdir = TRUE)
 	source('biodb-common.R', chdir = TRUE)
 
 	#############
@@ -155,58 +154,6 @@ if ( ! exists('.parse_chrom_col_desc')) { # Do not load again if already loaded
 		}
 
 		return(df)
-	}
-
-	############################
-	# PARSE COLUMN DESCRIPTION #
-	############################
-	
-	.parse_chrom_col_desc <- function(desc) {
-	
-		# Clean string
-		s <- desc
-		s <- gsub('\\.+', ' ', s, perl = TRUE) # Replace '.' characters by spaces
-		s <- gsub('[*-]', ' ', s, perl = TRUE) # Replace dashes and asterisks by spaces
-		s <- gsub('[)(]', '', s, perl = TRUE) # Remove paranthesis
-		s <- trim(s)
-		s <- tolower(s) # put in lowercase
-		
-		# Match      2                         3 4                   5 6         7 8                                           9 10        1112         13
-		pattern <- "^(uplc|hsf5|hplc|zicphilic)( (c8|c18|150 5 2 1))?( (\\d+)mn)?( (orbitrap|exactive|qtof|shimadzu exactive))?( (\\d+)mn)?( (bis|ter))?( 1)?$"
-		g <- str_match(s, pattern)
-		if (is.na(g[1, 1]))
-			stop(paste0("Impossible to parse column description \"", desc, "\"."))
-
-		type <- g[1, 2]
-		stationary_phase <- if ( ! is.na(g[1, 4]) && nchar(g[1, 4]) > 0) g[1, 4] else NA_character_
-		msdevice <- if ( ! is.na(g[1, 8]) && nchar(g[1, 8]) > 0) g[1, 8] else NA_character_
-		time <- if ( ! is.na(g[1,6]) && nchar(g[1, 6]) > 0) as.integer(g[1, 6]) else ( if ( ! is.na(g[1, 10]) && nchar(g[1, 10]) > 0) as.integer(g[1, 10]) else NA_integer_ )
-		
-		# Correct values
-		if ( ! is.na(stationary_phase) && stationary_phase == '150 5 2 1') stationary_phase <- '150*5*2.1'
-		if ( ! is.na(msdevice)) msdevice <- gsub(' ', '', msdevice) # remove spaces
-
-		return(list( type = type, stationary_phase = stationary_phase, time = time, msdevice = msdevice))
-
-	}
-	
-	#########################
-	# NORMALIZE COLUMN NAME #
-	#########################
-
-	.normalize_column_name <- function(desc) {
-	
-		lst <- .parse_chrom_col_desc(desc)
-	
-		v <- c(lst$type)
-		if ( ! is.na(lst$stationary_phase))
-			v <- c(v, lst$stationary_phase)
-		if ( ! is.na(lst$time))
-			v <- c(v, paste0(lst$time, "min"))
-		if ( ! is.na(lst$msdevice))
-			v <- c(v, lst$msdevice)
-	
-		return(paste(v, collapse = '-'))
 	}
 
 } # end of load safe guard
