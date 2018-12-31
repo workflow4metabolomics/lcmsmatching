@@ -39,5 +39,7 @@ clean:
 	$(RM) -r planemotest.log
 	$(RM) -r $(HOME)/.planemo
 	$(RM) -r $(CONDA_PREFIX)
+	$(RM) test_*-output.tsv
+	$(RM) tool_test_output.*
 
 .PHONY: all clean test planemo-lint planemo-test planemon-install planemo-toolshed-diff planemo-toolshed-update planemo-testtoolshed-diff planemo-testtoolshed-update

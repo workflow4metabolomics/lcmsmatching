@@ -9,28 +9,25 @@ The two matching algorithms used in this tool have been imported from developmen
 
 For more information, see the galaxy tool page, help section, available inside `galaxy/lcmsmatching.xml`.
 
-## search-mz
+## lcmsmatching script
 
-This is the script, included in this repository, that allows run on command line an MZ matching on one of the available database types.
+This is the script, included in this repository, that allows to run on command line an MZ matching on one of the available database types.
 
-Please run `search-mz -h` for a help page listing all options and presenting some examples.
+Please run `lcmsmatching -h` for a help page listing all options and presenting some examples.
 
 ## Dependencies
 
- * `libssl-dev`.
- * `libcurl4-openssl-dev`.
- * `libxml2-dev`.
- * `R` version `3.2.2`.
+ * `R` version `3.5.1`.
  * `R` packages:
    - `getopt` >= `1.20.0`.
-   - `stringr` >= `1.0.0`.
-   - `plyr` >= `1.8.3`.
-   - `XML` >= `3.98`.
-   - `bitops` >= `1.0_6`.
-   - `RCurl` >= `1.95`.
-   - `jsonlite` >= `1.1`.
+   - `biodb` >= `1.2.0rc2`.
 
 ## Updates
+
+### 4.0.0
+
+   * Switch to biodb R library (<http://github.com/pkrog/biodb>).
+   * Remove Excel and 4TabSql databases from script.
 
 ### 3.3.1
 

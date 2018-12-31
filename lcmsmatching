@@ -8,19 +8,146 @@ library(getopt)
 library(methods)
 library(biodb)
 
-source(file.path(dirname(script.path), 'msdb-common.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'MsDbLogger.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'MsDbInputDataFrameStream.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'MsDbOutputDataFrameStream.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'htmlhlp.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'strhlp.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'fshlp.R'), chdir = TRUE)
-source(file.path(dirname(script.path), 'biodb-common.R'), chdir = TRUE)
-#source(file.path(dirname(script.path), 'nethlp.R'), chdir = TRUE)
+# HTML Writer {{{1
+################################################################
 
-# Missing paste0() function in R 2.14.1
-#if (as.integer(R.Version()$major) == 2 && as.numeric(R.Version()$minor) < 15)
-#	paste0 <- function(...) paste(..., sep = '')
+HtmlWriter <- methods::setRefClass("HtmlWriter", fields = list(.con = "ANY", .auto.indent = "numeric"))
+
+# Constructor {{{2
+################################################################
+
+HtmlWriter$methods( initialize = function(auto.indent = TRUE, ...) {
+
+	.auto.indent <<- if (auto.indent) 0 else NA_integer_
+	.con <<- NULL
+
+	callSuper(...) # calls super-class initializer with remaining parameters
+})
+
+# Open {{{2
+################################################################################
+
+HtmlWriter$methods( file.opn = function(file) {
+	.con <<- file(file, open = "w")
+})
+
+# Close {{{2
+################################################################################
+
+HtmlWriter$methods( file.close = function() {
+	close(.self$.con)
+})
+
+# Write {{{2
+################################################################
+
+HtmlWriter$methods( write = function(text, indent = NA_integer_, newline = TRUE, escape = FALSE) {
+
+	# Compute indentation
+	if (is.na(indent))
+		indent <- if (is.na(.self$.auto.indent)) 0 else .self$.auto.indent
+
+	cat(rep("\t", indent), text, if (newline) "\n" else "", sep = '', file = .self$.con)
+})
+
+# Write tag {{{2
+################################################################
+
+HtmlWriter$methods( writeTag = function(tag, attr = NA_character_, text = NA_character_, indent = NA_integer_, newline = TRUE) {
+
+	if (is.na(text)) {
+		attributes <- if (is.na(attr)) '' else paste0(' ', paste(vapply(names(attr), function(a) paste0(a, '="', attr[[a]], '"'), FUN.VALUE=''), collapse = ' '))
+		.self$write(paste0("<", tag, attributes, "/>"), indent = indent, newline = newline, escape = FALSE)
+	}
+	else {
+		.self$writeBegTag(tag, attr = attr, indent = indent, newline = FALSE)
+		.self$write(text, escape = TRUE , indent = 0, newline = FALSE)
+		.self$writeEndTag(tag, indent = 0, newline = newline)
+	}
+})
+
+# Write begin tag {{{2
+###################################################################################
+
+HtmlWriter$methods( writeBegTag = function(tag, attr = NA_character_, indent = NA_integer_, newline = TRUE) {
+
+	# Write opening tag
+	attributes <- if (is.na(attr)) '' else paste0(' ', paste(vapply(names(attr), function(a) paste0(a, '="', attr[[a]], '"'), FUN.VALUE=''), collapse = ' '))
+	.self$write(paste0("<", tag, attributes, ">"), indent = indent, newline = newline, escape = FALSE)
+
+	# Increment auto-indent
+	if ( ! is.na(.self$.auto.indent))
+		.auto.indent <<- .self$.auto.indent + 1
+})
+
+# Write end tag {{{2
+################################################################
+
+HtmlWriter$methods( writeEndTag = function(tag, indent = NA_integer_, newline = TRUE) {
+
+	# Decrement auto-indent
+	if ( ! is.na(.self$.auto.indent))
+		.auto.indent <<- .self$.auto.indent - 1
+
+	# Write closing tag
+	.self$write(paste0("</", tag, ">"), indent = indent, newline = newline, escape = FALSE)
+})
+
+# Write table {{{2
+################################################################
+
+HtmlWriter$methods( writeTable = function(x, indent = NA_integer_, newline = TRUE) {
+
+	.self$writeBegTag('table', indent = indent, newline = newline)
+
+	# Write table header
+	if ( ! is.null(colnames(x))) {
+		.self$writeBegTag('tr', indent = indent + 1, newline = newline)
+		for (field in colnames(x))
+			.self$writeTag('th', text = field, indent = indent + 2, newline = newline)
+		.self$writeEndTag('tr', indent = indent + 1, newline = newline)
+	}
+
+	# Write values
+	if (nrow(x) > 0 && ncol(x) > 0)
+		for (i in 1:nrow(x)) {
+			.self$writeBegTag('tr', indent = indent + 1, newline = newline)
+			for (j in 1:ncol(x))
+				.self$writeTag('td', text = x[i, j], indent = indent + 2, newline = newline)
+			.self$writeEndTag('tr', indent = indent + 1, newline = newline)
+		}
+	.self$writeEndTag('table', indent = indent, newline = newline)
+})
+
+# Split key/value list {{{1
+################################################################
+
+split.kv.list <- function(s, sep = ',', kvsep = '=') {
+
+	# Split
+	kvs <- strsplit(strsplit(s, sep)[[1]], kvsep)
+
+	# Get keys
+	k <- vapply(kvs, function(x) x[[1]], FUN.VALUE = '')
+	v <- vapply(kvs, function(x) x[[2]], FUN.VALUE = '')
+
+	# Set names
+	names(v) <- k
+
+	return(v)
+}
+
+# Concat key/value list {{{1
+################################################################
+
+concat.kv.list <- function(x, sep = ',', kvsep = '=') {
+
+	k <- names(x)
+
+	s = paste(paste(names(x), x, sep = kvsep), collapse = sep)
+
+	return(s)
+}
 
 # Constants {{{1
 ################################################################
@@ -28,22 +155,70 @@ source(file.path(dirname(script.path), 'biodb-common.R'), chdir = TRUE)
 PROG <- sub('^.*/([^/]+)$', '\\1', commandArgs()[4], perl = TRUE)
 USERAGENT <- 'W4M lcmsmatching ; pk.roger@icloud.com'
 
+# Field tags
+MSDB.TAG.MZ <- 'mz'
+MSDB.TAG.MZEXP <- 'mzexp'
+MSDB.TAG.MZTHEO <- 'mztheo'
+MSDB.TAG.RT <- 'rt'
+MSDB.TAG.MODE <- 'msmode'
+MSDB.TAG.MOLID <- 'compoundid'
+MSDB.TAG.COL <- 'chromcol'
+MSDB.TAG.COLRT <- 'chromcolrt'
+MSDB.TAG.ATTR <- 'peakattr'
+MSDB.TAG.INT <- 'intensity'
+MSDB.TAG.REL <- 'relative.intensity'
+MSDB.TAG.COMP <- 'peakcomp'
+MSDB.TAG.MOLNAMES <- 'fullnames'
+MSDB.TAG.MOLCOMP <- 'compoundcomp'
+MSDB.TAG.MOLMASS <- 'compoundmass'
+MSDB.TAG.INCHI <- 'inchi'
+MSDB.TAG.INCHIKEY <- 'inchikey'
+MSDB.TAG.PUBCHEM <- 'pubchemcompid'
+MSDB.TAG.CHEBI <- 'chebiid'
+MSDB.TAG.HMDB <- 'hmdbid'
+MSDB.TAG.KEGG <- 'keggid'
+
 # Authorized database types
-MSDB.XLS <- 'xls'
-MSDB.4TABSQL <- '4tabsql'
-MSDB.FILE <- 'file'
-MSDB.PEAKFOREST <- 'peakforest'
-MSDB.VALS <- c(MSDB.XLS, MSDB.4TABSQL, MSDB.FILE, MSDB.PEAKFOREST)
-DB.SRC.FILE <- list ()
-DB.SRC.FILE[[MSDB.FILE]] <- 'MsFileDb.R'
-DB.SRC.FILE[[MSDB.PEAKFOREST]] <- 'MsPeakForestDb.R'
-DB.SRC.FILE[[MSDB.XLS]] <- 'MsXlsDb.R'
-DB.SRC.FILE[[MSDB.4TABSQL]] <- 'Ms4TabSqlDb.R'
+MSDB.VALS <- c('file', 'peakforest')
 
 # Authorized mode values
+MSDB.TAG.POS           <- 'pos'
+MSDB.TAG.NEG           <- 'neg'
 POS_MODE <- 'pos'
 NEG_MODE <- 'neg'
 MSDB.MODE.VALS <- c(POS_MODE, NEG_MODE)
+
+# Authorized mz tolerance unit values
+MSDB.MZTOLUNIT.PPM <- 'ppm'
+MSDB.MZTOLUNIT.PLAIN <- 'plain' # same as mz: mass-to-charge ratio
+MSDB.MZTOLUNIT.VALS <- c(MSDB.MZTOLUNIT.PPM, MSDB.MZTOLUNIT.PLAIN)
+
+# Authorized rt units
+MSDB.RTUNIT.SEC <- 'sec'
+MSDB.RTUNIT.MIN <- 'min'
+MSDB.RTUNIT.VALS <- c(MSDB.RTUNIT.SEC ,MSDB.RTUNIT.MIN)
+
+# Default values
+MSDB.DFT.PREC <- list()
+MSDB.DFT.PREC[[MSDB.TAG.POS]] <- c("[(M+H)]+", "[M+H]+", "[(M+Na)]+", "[M+Na]+", "[(M+K)]+", "[M+K]+")
+MSDB.DFT.PREC[[MSDB.TAG.NEG]] <- c("[(M-H)]-", "[M-H]-", "[(M+Cl)]-", "[M+Cl]-")
+MSDB.DFT.MATCH.FIELDS <- list( molids = 'molid', molnames = 'molnames')
+MSDB.DFT.MATCH.SEP <- '|'
+MSDB.DFT.MODES <- list( pos = 'POS', neg = 'NEG')
+MSDB.DFT.MZTOLUNIT <- MSDB.MZTOLUNIT.PPM
+
+# Get default db fields
+################################################################
+
+msdb.get.dft.db.fields <- function () {
+
+	dft.fields <- list()
+
+	for (f in c(MSDB.TAG.MZTHEO, MSDB.TAG.COLRT, MSDB.TAG.MOLID, MSDB.TAG.COL, MSDB.TAG.MODE, MSDB.TAG.ATTR, MSDB.TAG.COMP, MSDB.TAG.MOLNAMES, MSDB.TAG.MOLCOMP, MSDB.TAG.MOLMASS, MSDB.TAG.INCHI, MSDB.TAG.INCHIKEY, MSDB.TAG.PUBCHEM, MSDB.TAG.CHEBI, MSDB.TAG.HMDB, MSDB.TAG.KEGG))
+		dft.fields[[f]] <- f
+
+	return(dft.fields)
+}
 
 # Default 
 MSDB.DFT <- list()
@@ -59,7 +234,20 @@ MSDB.DFT[['neg-prec']] <- paste(MSDB.DFT.PREC[[MSDB.TAG.NEG]], collapse = ',')
 MSDB.DFT[['db-rt-unit']] <- MSDB.RTUNIT.SEC
 MSDB.DFT[['rtunit']] <- MSDB.RTUNIT.SEC
 DEFAULT.ARG.VALUES <- MSDB.DFT
-DEFAULT.ARG.VALUES[['input-col-names']] <- concat.kv.list(msdb.get.dft.input.fields())
+DEFAULT.ARG.VALUES[['input-col-names']] <- 'mz=mz,rt=rt'
+
+# Get default input fields {{{1
+################################################################
+
+msdb.get.dft.input.fields <- function () {
+
+	dft.fields <- list()
+
+	for(f in c(MSDB.TAG.MZ, MSDB.TAG.RT))
+		dft.fields[[f]] <- f
+
+	return(dft.fields)
+}
 
 # Print help {{{1
 ################################################################
@@ -121,10 +309,6 @@ set.dft.arg.val <-function(opt) {
 		if (is.null(opt[[f]]))
 			opt[[f]] <- MSDB.DFT[[f]]
 
-	# Set default values
-	if ( opt$database == MSDB.XLS && ! is.null(opt$url) && is.null(opt[['cache-dir']]))
-		opt[['cache-dir']] <- file.path(opt$url, 'cache')
-
 	if ( ! is.null(opt$rtcol) && opt$rtcol == '')
 		opt$rtcol <- NULL
 
@@ -171,9 +355,9 @@ parse.arg.val <- function(opt) {
 
 	# Parse lists of precursors
 	if ( ! is.null(opt[['pos-prec']]))
-		opt[['pos-prec']] <- split.str(opt[['pos-prec']], unlist = TRUE)
+		opt[['pos-prec']] <- unlist(strsplit(opt[['pos-prec']], ','))
 	if ( ! is.null(opt[['neg-prec']]))
-		opt[['neg-prec']] <- split.str(opt[['neg-prec']], unlist = TRUE)
+		opt[['neg-prec']] <- unlist(strsplit(opt[['neg-prec']], ','))
 
 	return(opt)
 }
@@ -236,9 +420,8 @@ make.getopt.spec <- function(sections = NULL) {
 	# Database
 	if (is.null(sections) || 'database' %in% sections)
 		spec <- c(spec,
-			'database',         'd',            1,  'character',    paste0('Set database to use: "xls" for an Excel database, "file" for a single file database, "4tabsql" for a 4Tab SQL database, and "peakforest" for a connection to PeakForest database.'),
+			'database',         'd',            1,  'character',    paste0('Set database to use: "file" for a single file database and "peakforest" for a connection to PeakForest database.'),
 			'url',              'W',            1,  'character',    'URL of database. For "peakforest" database it is the HTTP URL, for the "xls" database it is the path to the directory containing the Excel files, for the "file" database it is the path to the file database and for the "4tabsql" database it is the IP address of the server.',
-			'cache-dir',        'C',            1,  'character',    'Path to directory where to store cache files. Only used when database flag is set to "xls".',
 			'db-name',          'N',            1,  'character',    'Name of the database. Used by the "4tabsql" database.',
 			'db-user',          'U',            1,  'character',    'User of the database. Used by the "4tabsql" database.',
 			'db-password',      'P',            1,  'character',    'Password of the database user. Used by the "4tabsql" database.',
@@ -291,35 +474,15 @@ check.args <- function(opt) {
 		stop(paste0("Invalid value \"", opt$database, "\" for --database option."))
 
 	# Check filedb database
-	if (opt$database == MSDB.FILE) {
+	if (opt$database == 'file') {
 		if (is.null(opt$url))
 			stop("When using single file database, you must specify the location of the database file with option --url.")
 		if ( ! file.exists(opt$url))
 			stop(paste0("The file path \"", opt$url,"\" specified with --db-file option is not valid."))
 	}
 
-	# Check Excel database
-	if (opt$database == MSDB.XLS) {
-		if (is.null(opt$url))
-			stop("When using Excel database, you must specify the location of the Excel files directory with option --url.")
-		if ( ! file.exists(opt$url))
-			stop(paste0("The directory path \"", opt$url,"\" specified with --xls-dir option is not valid."))
-	}
-
-	# Check 4 tab database
-	if (opt$database == MSDB.4TABSQL) {
-		if (is.null(opt$url))
-			stop("When using 4Tab SQL database, you must specify the URL of the SQL server with option --url.")
-		if (is.null(opt[['db-name']]))
-			stop("When using 4Tab SQL database, you must specify the database name through the --db-name option.")
-		if (is.null(opt[['db-user']]))
-			stop("When using 4Tab SQL database, you must specify the database user through the --db-user option.")
-		if (is.null(opt[['db-password']]))
-			stop("When using 4Tab SQL database, you must specify the database user password through the --db-password option.")
-	}
-
 	# Check Peakforest database
-	if (opt$database == MSDB.PEAKFOREST) {
+	if (opt$database == 'peakforest') {
 		if (is.null(opt$url))
 			stop("When using PeakForest database, you must specify the URL of the PeakForest server with option --url.")
 	}
@@ -346,53 +509,25 @@ check.args <- function(opt) {
 	}
 }
 
-# Load database {{{1
-################################################################
-# TODO remove
-#.load.db <- function(opt) {
-#
-#	if (is.null(opt[['pos-prec']]) && is.null(opt[['neg-prec']])) {
-#		precursors <- NULL
-#	} else {
-#		precursors <- list()
-#		precursors[[MSDB.TAG.POS]] <- opt[['pos-prec']]
-#		precursors[[MSDB.TAG.NEG]] <- opt[['neg-prec']]
-#	}
-#
-#	db <- switch(opt$database,
-#		         peakforest = MsPeakForestDb$new(url = opt$url, useragent = USERAGENT, token = opt[['db-token']]),
-#		         xls = MsXlsDb$new(db_dir = opt$url, cache_dir = opt[['cache-dir']]),
-#		         '4tabsql' = Ms4TabSqlDb$new(host = extract.address(opt$url), port = extract.port(opt$url), dbname = opt[['db-name']], user = opt[['db-user']], password = opt[['db-password']]),
-#		         file = MsFileDb$new(file = opt$url),
-#		         NULL)
-#	db$setPrecursors(precursors)
-#	if (db$areDbFieldsSettable())
-#		db$setDbFields(opt[['db-fields']])
-#	if (db$areDbMsModesSettable())
-#		db$setDbMsModes(opt[['db-ms-modes']])
-#	db$addObservers(MsDbLogger$new())
-#
-#	return(db)
-#}
-
 # Output HTML {{{1
 ################################################################
 
-output.html <- function(db, peaks, file) {
+output.html <- function(biodb, peaks, file) {
 
 	# Replace public database IDs by URLs
 	if ( ! is.null(peaks)) {
 		# Conversion from extdb id field to extdb name
 		extdb2classdb = list()
-		extdb2classdb[MSDB.TAG.KEGG] = BIODB.KEGG
-		extdb2classdb[MSDB.TAG.HMDB] = BIODB.HMDB
-		extdb2classdb[MSDB.TAG.CHEBI] = BIODB.CHEBI
-		extdb2classdb[MSDB.TAG.PUBCHEM] = BIODB.PUBCHEMCOMP
+		extdb2classdb[MSDB.TAG.KEGG] = 'kegg.compound'
+		extdb2classdb[MSDB.TAG.HMDB] = 'hmdb.metabolites'
+		extdb2classdb[MSDB.TAG.CHEBI] = 'chebi'
+		extdb2classdb[MSDB.TAG.PUBCHEM] = 'ncbi.pubchem.comp'
 
 		# Loop on all dbs
 		for (extdb in c(MSDB.TAG.KEGG, MSDB.TAG.HMDB, MSDB.TAG.CHEBI, MSDB.TAG.PUBCHEM)) {
-			if ( ! is.null(peaks) && extdb %in% colnames(peaks))
-				peaks[[extdb]] <- vapply(peaks[[extdb]], function(id) if (is.na(id)) '' else paste0('<a href="', get.entry.url(class = extdb2classdb[[extdb]], accession = id, content.type = BIODB.HTML), '">', id, '</a>'), FUN.VALUE = '')
+			conn <- biodb$getFactory()$createConn(extdb2classdb[[extdb]], fail.if.exists = FALSE)
+			if (extdb %in% colnames(peaks))
+				peaks[[extdb]] <- vapply(peaks[[extdb]], function(id) if (is.na(id)) '' else paste0('<a href="', conn$getEntryPageUrl(id), '">', id, '</a>'), FUN.VALUE = '')
 		}
 	}
 
@@ -552,9 +687,9 @@ create.biodb.instance <- function(quiet = FALSE, ms.modes = NULL) {
 get.db.conn <- function(biodb, db.name, url, token, fields, pos.prec, neg.prec) {
 
 	# Set biodb database name
-	if (db.name == MSDB.FILE)
+	if (db.name == 'file')
 		biodb.db.name <- 'mass.csv.file'
-	else if (db.name == MSDB.PEAKFOREST)
+	else if (db.name == 'peakforest')
 		biodb.db.name <- 'peakforest.mass'
 	else
 		stop(paste0('Unknown database "', db.name, '".'))
@@ -569,7 +704,7 @@ get.db.conn <- function(biodb, db.name, url, token, fields, pos.prec, neg.prec) 
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
 
 	# Set up file database
-	if (db.name == MSDB.FILE) {
+	if (db.name == 'file') {
 
 		# Set fields
 		if ( ! MSDB.TAG.MODE %in% names(fields))
@@ -733,7 +868,7 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 
 	# Write HTML output
 	if ( ! is.null(html.output))
-		output.html(db = db, peaks = peaks, file = html.output)
+		output.html(biodb = conn$getBiodb(), peaks = peaks, file = html.output)
 }
 
 # MAIN {{{1
@@ -764,7 +899,7 @@ ms.mode <- (if (opt$mode == POS_MODE) MSDB.TAG.POS else MSDB.TAG.NEG)
 
 # Set RT unit
 rt.search <- ! is.null(opt$rtcol) || ! is.null(opt[['all-cols']])
-if ( rt.search && opt$database == MSDB.FILE && ! conn$hasField('chrom.rt.unit'))
+if ( rt.search && opt$database == 'file' && ! conn$hasField('chrom.rt.unit'))
 	conn$addField('chrom.rt.unit', (if (opt[['db-rt-unit']] == MSDB.RTUNIT.SEC) 's' else 'min'))
 
 # Select chromatographic columns
