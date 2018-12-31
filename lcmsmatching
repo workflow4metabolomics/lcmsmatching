@@ -482,7 +482,7 @@ check.args <- function(opt) {
 	}
 
 	# Check Peakforest database
-	if (opt$database == MSDB.PEAKFOREST) {
+	if (opt$database == 'peakforest') {
 		if (is.null(opt$url))
 			stop("When using PeakForest database, you must specify the URL of the PeakForest server with option --url.")
 	}
@@ -689,7 +689,7 @@ get.db.conn <- function(biodb, db.name, url, token, fields, pos.prec, neg.prec) 
 	# Set biodb database name
 	if (db.name == 'file')
 		biodb.db.name <- 'mass.csv.file'
-	else if (db.name == MSDB.PEAKFOREST)
+	else if (db.name == 'peakforest')
 		biodb.db.name <- 'peakforest.mass'
 	else
 		stop(paste0('Unknown database "', db.name, '".'))
