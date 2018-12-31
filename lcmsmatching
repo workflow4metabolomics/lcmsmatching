@@ -49,16 +49,7 @@ PROG <- sub('^.*/([^/]+)$', '\\1', commandArgs()[4], perl = TRUE)
 USERAGENT <- 'W4M lcmsmatching ; pk.roger@icloud.com'
 
 # Authorized database types
-MSDB.XLS <- 'xls'
-MSDB.4TABSQL <- '4tabsql'
-MSDB.FILE <- 'file'
-MSDB.PEAKFOREST <- 'peakforest'
-MSDB.VALS <- c(MSDB.XLS, MSDB.4TABSQL, MSDB.FILE, MSDB.PEAKFOREST)
-DB.SRC.FILE <- list ()
-DB.SRC.FILE[[MSDB.FILE]] <- 'MsFileDb.R'
-DB.SRC.FILE[[MSDB.PEAKFOREST]] <- 'MsPeakForestDb.R'
-DB.SRC.FILE[[MSDB.XLS]] <- 'MsXlsDb.R'
-DB.SRC.FILE[[MSDB.4TABSQL]] <- 'Ms4TabSqlDb.R'
+MSDB.VALS <- c('file', 'peakforest')
 
 # Authorized mode values
 POS_MODE <- 'pos'
@@ -140,10 +131,6 @@ set.dft.arg.val <-function(opt) {
 	for (f in names(MSDB.DFT))
 		if (is.null(opt[[f]]))
 			opt[[f]] <- MSDB.DFT[[f]]
-
-	# Set default values
-	if ( opt$database == MSDB.XLS && ! is.null(opt$url) && is.null(opt[['cache-dir']]))
-		opt[['cache-dir']] <- file.path(opt$url, 'cache')
 
 	if ( ! is.null(opt$rtcol) && opt$rtcol == '')
 		opt$rtcol <- NULL
@@ -256,9 +243,8 @@ make.getopt.spec <- function(sections = NULL) {
 	# Database
 	if (is.null(sections) || 'database' %in% sections)
 		spec <- c(spec,
-			'database',         'd',            1,  'character',    paste0('Set database to use: "xls" for an Excel database, "file" for a single file database, "4tabsql" for a 4Tab SQL database, and "peakforest" for a connection to PeakForest database.'),
+			'database',         'd',            1,  'character',    paste0('Set database to use: "file" for a single file database and "peakforest" for a connection to PeakForest database.'),
 			'url',              'W',            1,  'character',    'URL of database. For "peakforest" database it is the HTTP URL, for the "xls" database it is the path to the directory containing the Excel files, for the "file" database it is the path to the file database and for the "4tabsql" database it is the IP address of the server.',
-			'cache-dir',        'C',            1,  'character',    'Path to directory where to store cache files. Only used when database flag is set to "xls".',
 			'db-name',          'N',            1,  'character',    'Name of the database. Used by the "4tabsql" database.',
 			'db-user',          'U',            1,  'character',    'User of the database. Used by the "4tabsql" database.',
 			'db-password',      'P',            1,  'character',    'Password of the database user. Used by the "4tabsql" database.',
@@ -311,31 +297,11 @@ check.args <- function(opt) {
 		stop(paste0("Invalid value \"", opt$database, "\" for --database option."))
 
 	# Check filedb database
-	if (opt$database == MSDB.FILE) {
+	if (opt$database == 'file') {
 		if (is.null(opt$url))
 			stop("When using single file database, you must specify the location of the database file with option --url.")
 		if ( ! file.exists(opt$url))
 			stop(paste0("The file path \"", opt$url,"\" specified with --db-file option is not valid."))
-	}
-
-	# Check Excel database
-	if (opt$database == MSDB.XLS) {
-		if (is.null(opt$url))
-			stop("When using Excel database, you must specify the location of the Excel files directory with option --url.")
-		if ( ! file.exists(opt$url))
-			stop(paste0("The directory path \"", opt$url,"\" specified with --xls-dir option is not valid."))
-	}
-
-	# Check 4 tab database
-	if (opt$database == MSDB.4TABSQL) {
-		if (is.null(opt$url))
-			stop("When using 4Tab SQL database, you must specify the URL of the SQL server with option --url.")
-		if (is.null(opt[['db-name']]))
-			stop("When using 4Tab SQL database, you must specify the database name through the --db-name option.")
-		if (is.null(opt[['db-user']]))
-			stop("When using 4Tab SQL database, you must specify the database user through the --db-user option.")
-		if (is.null(opt[['db-password']]))
-			stop("When using 4Tab SQL database, you must specify the database user password through the --db-password option.")
 	}
 
 	# Check Peakforest database
@@ -543,7 +509,7 @@ create.biodb.instance <- function(quiet = FALSE, ms.modes = NULL) {
 get.db.conn <- function(biodb, db.name, url, token, fields, pos.prec, neg.prec) {
 
 	# Set biodb database name
-	if (db.name == MSDB.FILE)
+	if (db.name == 'file')
 		biodb.db.name <- 'mass.csv.file'
 	else if (db.name == MSDB.PEAKFOREST)
 		biodb.db.name <- 'peakforest.mass'
@@ -560,7 +526,7 @@ get.db.conn <- function(biodb, db.name, url, token, fields, pos.prec, neg.prec) 
 	conn <- biodb$getFactory()$createConn(biodb.db.name, url = url, token = token)
 
 	# Set up file database
-	if (db.name == MSDB.FILE) {
+	if (db.name == 'file') {
 
 		# Set fields
 		if ( ! MSDB.TAG.MODE %in% names(fields))
@@ -755,7 +721,7 @@ ms.mode <- (if (opt$mode == POS_MODE) MSDB.TAG.POS else MSDB.TAG.NEG)
 
 # Set RT unit
 rt.search <- ! is.null(opt$rtcol) || ! is.null(opt[['all-cols']])
-if ( rt.search && opt$database == MSDB.FILE && ! conn$hasField('chrom.rt.unit'))
+if ( rt.search && opt$database == 'file' && ! conn$hasField('chrom.rt.unit'))
 	conn$addField('chrom.rt.unit', (if (opt[['db-rt-unit']] == MSDB.RTUNIT.SEC) 's' else 'min'))
 
 # Select chromatographic columns

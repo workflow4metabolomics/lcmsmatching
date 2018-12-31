@@ -1,6 +1,6 @@
 if ( ! exists('msdb.get.dft.input.fields')) { # Do not load again if already loaded
 
-	library('stringr')
+#	library('stringr')
 	source('biodb-common.R', chdir = TRUE)
 
 	#############
@@ -34,9 +34,9 @@ if ( ! exists('msdb.get.dft.input.fields')) { # Do not load again if already loa
 	MSDB.TAG.POS           <- 'pos'
 	MSDB.TAG.NEG           <- 'neg'
 
-	# Fields containing multiple values
-	MSDB.MULTIVAL.FIELDS <- c(MSDB.TAG.MOLNAMES)
-	MSDB.MULTIVAL.FIELD.SEP <- ';'
+#	# Fields containing multiple values
+#	MSDB.MULTIVAL.FIELDS <- c(MSDB.TAG.MOLNAMES)
+#	MSDB.MULTIVAL.FIELD.SEP <- ';'
 
 	# Authorized mz tolerance unit values
 	MSDB.MZTOLUNIT.PPM <- 'ppm'
@@ -52,7 +52,7 @@ if ( ! exists('msdb.get.dft.input.fields')) { # Do not load again if already loa
 	MSDB.DFT.PREC <- list()
 	MSDB.DFT.PREC[[MSDB.TAG.POS]] <- c("[(M+H)]+", "[M+H]+", "[(M+Na)]+", "[M+Na]+", "[(M+K)]+", "[M+K]+")
 	MSDB.DFT.PREC[[MSDB.TAG.NEG]] <- c("[(M-H)]-", "[M-H]-", "[(M+Cl)]-", "[M+Cl]-")
-	MSDB.DFT.OUTPUT.MULTIVAL.FIELD.SEP <- MSDB.MULTIVAL.FIELD.SEP
+#	MSDB.DFT.OUTPUT.MULTIVAL.FIELD.SEP <- MSDB.MULTIVAL.FIELD.SEP
 	MSDB.DFT.MATCH.FIELDS <- list( molids = 'molid', molnames = 'molnames')
 	MSDB.DFT.MATCH.SEP <- '|'
 	MSDB.DFT.MODES <- list( pos = 'POS', neg = 'NEG')
