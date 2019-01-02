@@ -88,10 +88,10 @@
 				<param name="dburl" label="Database file" type="data" format="tabular,tsv" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
 
 				<!-- File database field names -->
-				<param name="dbfields" label="Column names" type="text" size="256" value="mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" help="The list of column names of your database in-house file, as a coma separated list of key/value pairs." help=""/>
+				<param name="dbfields" label="Column names" type="text" size="256" value="mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" help="The list of column names of your database in-house file, as a coma separated list of key/value pairs."/>
 					
 				<!-- File database MS modes -->
-				<param name="dbmsmodes" label="MS modes" help="Values used for the file database MS modes, as a coma separated list of key/value pairs." type="text" size="64" value="pos=pos,neg=neg" help=""/>
+				<param name="dbmsmodes" label="MS modes" help="Values used for the file database MS modes, as a coma separated list of key/value pairs." type="text" size="64" value="pos=pos,neg=neg"/>
 
 				<!-- File database RT unit -->
 				<param name="dbrtunit" label="Retention time unit" type="select" display="radio" multiple="false" help="">
@@ -120,7 +120,7 @@
 		<param name="mzrtinput" label="Input file - MZ(/RT) values" type="data" format="tabular,tsv" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. RT values must be in seconds."/>
 
 		<!-- Input field field names -->
-		<param name="inputfields" type="text" label="Input column names" size="64" help="Input file column names, as a coma separated list of key/value pairs." value="mz=mz,rt=rt" help=""/>
+		<param name="inputfields" type="text" label="Input column names" size="64" help="Input file column names, as a coma separated list of key/value pairs." value="mz=mz,rt=rt"/>
 
 		<!-- Input file RT unit -->
 		<param name="inputrtunit" label="Retention time unit" type="select" display="radio" multiple="false" help="">
