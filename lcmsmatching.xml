@@ -8,7 +8,7 @@
 	<requirements>
 		<requirement type="package" version="1.2.0rc2">r-biodb</requirement>
 		<requirement type="package" version="1.20.0">r-getopt</requirement>
-		<requirement type="package" version="0.2_15">r-codetools</requirement> <!-- R_VERSION="0.2-15" --> <!-- code for methods in class \u201cHtmlWriter\u201d was not checked for suspicious field assignments (recommended package \u2018codetools\u2019 not available?) -->
+		<requirement type="package" version="0.2_15">r-codetools</requirement> <!-- R_VERSION="0.2-15" IMPORTANT Do not remove, used by travis_install_deps.sh script. --> <!-- codetools package is needed because of the following error when running Galaxy on Travis-CI in planemo tests: "code for methods in class “HtmlWriter” was not checked for suspicious field assignments (recommended package ‘codetools’ not available?)". -->
 		
 	</requirements>
 
@@ -41,7 +41,7 @@
 			--url "$db.dburl"
 
 		## M/Z matching
-		-m $mzmode -p $mzprec -s $mzshift
+		-m $mzmode -p $mzprec -s $mzshift -u $mztolunit
 
 		## Precursor matching
 		#if $prec.match == "true"
@@ -67,14 +67,13 @@
 		## @@@END_CHEETAH@@@
 	]]></command>
 
-
 	<!-- Inputs {{{1 -->
 	<!-- **************************************************************** -->
 
 	<inputs>
 
-		<!-- DATABASE -->
-
+		<!-- Database {{{2 -->
+		<!-- **************************************************************** -->
 		<conditional name="db">
 
 			<param name="dbtype" label="Database" type="select" refresh_on_change="true">
@@ -82,15 +81,17 @@
 				<option value="peakforest">Peakforest</option>
 			</param>
 
+			<!-- In-house database parameters {{{3 -->
+			<!-- **************************************************************** -->
 			<when value="inhouse">
 				<!-- Database file -->
 				<param name="dburl" label="Database file" type="data" format="tabular,tsv" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. Retention time values must be in seconds."/>
 
 				<!-- File database field names -->
-				<param name="dbfields" type="text" size="256" value="mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" label="The list of column names of your database in-house file, as a coma separated list of key/value pairs." help=""/>
+				<param name="dbfields" label="Column names" type="text" size="256" value="mztheo=mztheo,chromcolrt=chromcolrt,compoundid=compoundid,chromcol=chromcol,msmode=msmode,peakattr=peakattr,pubchemcompid=pubchemcompid,chebiid=chebiid,hmdbid=hmdbid,keggid=keggid" help="The list of column names of your database in-house file, as a coma separated list of key/value pairs." help=""/>
 					
 				<!-- File database MS modes -->
-				<param name="dbmsmodes" label="File database MS modes, as a coma separated list of key/value pairs." type="text" size="64" value="pos=pos,neg=neg" help=""/>
+				<param name="dbmsmodes" label="MS modes" help="Values used for the file database MS modes, as a coma separated list of key/value pairs." type="text" size="64" value="pos=pos,neg=neg" help=""/>
 
 				<!-- File database RT unit -->
 				<param name="dbrtunit" label="Retention time unit" type="select" display="radio" multiple="false" help="">
@@ -101,8 +102,10 @@
 				<param name="dbtoken" type="text" size="32" value="" hidden="true"/>
 			</when>
 
+			<!-- PeakForest database parameters {{{3 -->
+			<!-- **************************************************************** -->
 			<when value="peakforest">
-				<param name="dburl" type="text" size="128" value="https://peakforest-alpha.inra.fr/rest" refresh_on_change="true"/>
+				<param name="dburl" type="text" size="128" value="https://metabohub.peakforest.org/rest/" refresh_on_change="true"/>
 
 				<param name="dbtoken" label="Peakforest security token" type="text" size="32" value="" refresh_on_change="true" help="If you do not have yet a Peakforest token, go to Peakforest website and request one from your account."/>
 
@@ -110,43 +113,52 @@
 			</when>
 		</conditional>
 
-		<!-- INPUT -->
+		<!-- Input file {{{2 -->
+		<!-- **************************************************************** -->
 
-			<!-- Input file -->
-			<param name="mzrtinput" label="Input file - MZ(/RT) values" type="data" format="tabular,tsv" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. RT values must be in seconds."/>
+		<!-- Input file -->
+		<param name="mzrtinput" label="Input file - MZ(/RT) values" type="data" format="tabular,tsv" refresh_on_change="true" help="Decimal: '.', missing: NA, mode: character and numerical, sep: tabular. RT values must be in seconds."/>
 
-			<!-- Input field field names -->
-			<param name="inputfields" type="text" size="64" label="Input file column names, as a coma separated list of key/value pairs." value="mz=mz,rt=rt" help=""/>
+		<!-- Input field field names -->
+		<param name="inputfields" type="text" label="Input column names" size="64" help="Input file column names, as a coma separated list of key/value pairs." value="mz=mz,rt=rt" help=""/>
 
-			<!-- Input file RT unit -->
-			<param name="inputrtunit" label="Retention time unit" type="select" display="radio" multiple="false" help="">
-				<option value="sec">Seconds</option>
-				<option value="min">Minutes</option>
-			</param>
+		<!-- Input file RT unit -->
+		<param name="inputrtunit" label="Retention time unit" type="select" display="radio" multiple="false" help="">
+			<option value="sec">Seconds</option>
+			<option value="min">Minutes</option>
+		</param>
 
-		<!-- M/Z MATCHING -->
+		<!-- M/Z matching {{{2 -->
+		<!-- **************************************************************** -->
 
-			<!-- Mode -->
-			<param name="mzmode" label="MS mode" type="select" display="radio" multiple="false" help="">
-				<option value="pos">Positive</option>
-				<option value="neg">Negative</option>
-			</param>
+		<!-- Mode -->
+		<param name="mzmode" label="MS mode" type="select" display="radio" multiple="false" help="">
+			<option value="pos">Positive</option>
+			<option value="neg">Negative</option>
+		</param>
 
-			<!-- MZ matching parameters -->
-			<param name="mzprec" label="M/Z precision (in ppm)" type="float" help="" value="5"/>
-			<param name="mzshift" label="M/Z shift (in ppm)" type="float" help="" value="0"/>
+		<!-- MZ matching parameters -->
+		<param name="mzprec" label="M/Z precision (in ppm)" type="float" help="" value="5"/>
+		<param name="mzshift" label="M/Z shift (in ppm)" type="float" help="" value="0"/>
+		<param name="mztolunit" label="M/Z tolerance unit" type="select" display="radio" multiple="false" help="">
+			<option value="ppm">PPM</option>
+			<option value="plain">Plain</option>
+		</param>
+		<param name="" label="M/Z tolerance unit (in ppm)" type="float" help="" value="0"/>
 
-		<!-- RETENTION TIME PARAMETERS -->
+		<!-- RT matching {{{2 -->
+		<!-- **************************************************************** -->
 
-			<!-- List of chromatographic columns -->
-			<param name="chromcols" type="text" label="Chromatographic columns" size="2048" value=""/>
+		<!-- List of chromatographic columns -->
+		<param name="chromcols" type="text" label="Chromatographic columns" size="2048" value=""/>
 
-			<!-- Tolerances -->
-			<param name="tolx" label="RTX retention time tolerance, parameter x (in seconds)" type="float" help="" value="5"/>
-			<param name="toly" label="RTY retention time tolerance, parameter y" type="float" help="" value="0.8"/>
-			<param name="tolz" label="RTZ retention time tolerance, used when precursor matching is enabled." type="float" help="" value="5"/>
+		<!-- Tolerances -->
+		<param name="tolx" label="RTX" help="The retention time tolerance X parameter (in seconds)." type="float" value="5"/>
+		<param name="toly" label="RTY" help="The retention time tolerance Y parameter (no unit)." type="float" value="0.8"/>
+		<param name="tolz" label="RTZ" help="The retention time tolerance used when precursor matching is enabled." type="float" value="5"/>
 
-		<!-- PRECURSOR MATCH -->
+		<!-- Precursor matching {{{2 -->
+		<!-- **************************************************************** -->
 		<conditional name="prec">
 
 			<param name="match" label="Precursor match" type="select">
@@ -182,9 +194,11 @@
 			</when>
 		</conditional>
 
-		<!-- OUTPUT -->
+		<!-- Output format {{{2 -->
+		<!-- **************************************************************** -->
+
 		<!-- Molecule IDs separator character -->
-		<param name="molidssep" label="Molecule IDs separator character" type="text" size="3" value="|" help="">
+		<param name="molidssep" label="Multiple matches separator character" type="text" size="3" value="|" help="">
 			<sanitizer>
 				<valid initial="string.printable">
 					<remove value='"'/>
@@ -202,7 +216,6 @@
 
 	<outputs>
 
-		<!-- Output file -->
 		<data name="mainoutput"  label="lcmsmatch_${mzrtinput.name}" format="tabular"/>
 		<data name="peaksoutput" label="lcmsmatch_${mzrtinput.name}_peaks" format="tabular"/>
 		<data name="htmloutput"  label="lcmsmatch_${mzrtinput.name}.html" format="html"/>
@@ -214,7 +227,8 @@
 
 	<tests>
 
-		<!-- Test 1, MZ only -->
+		<!-- Test 1, MZ only {{{2 -->
+		<!-- **************************************************************** -->
 		<test>
 			<param name="dbtype" value="inhouse"/>
 			<param name="dburl" value="filedb.tsv"/>
@@ -226,7 +240,8 @@
 			<output name="htmloutput" file="test_1_peaks_output.html"/>
 		</test>
 
-		<!-- Test 2, MZ & RT -->
+		<!-- Test 2, MZ & RT {{{2 -->
+		<!-- **************************************************************** -->
 		<test>
 			<param name="dbtype" value="inhouse"/>
 			<param name="dburl" value="filedb.tsv"/>
@@ -242,7 +257,8 @@
 			<output name="htmloutput" file="test_2_peaks_output.html"/>
 		</test>
 
-		<!-- Test 3, MZ & RT with precursor match -->
+		<!-- Test 3, MZ & RT with precursor match {{{2 -->
+		<!-- **************************************************************** -->
 		<test>
 			<param name="dbtype" value="inhouse"/>
 			<param name="dburl" value="filedb.tsv"/>
@@ -295,13 +311,14 @@ Be careful to always provide UTF-8 encoded files, unless you do not use special 
 Single file database
 ====================
 
-The database used is provided as a single file, in tabular format, through the *Database file* field. This file must contain a list of MS peaks, with possibly retention times.
+In this case, the database used is provided as a single file by the user, in tabular format, through the *Database file* field. This file must contain a list of MS peaks, with possibly retention times.
 Peaks are "duplicated" as much as necessary. For instance if 3 retention times are available on a compound with 10 peaks in positive mode, then there will be 30 lines for this compound in positive mode.
 
-The file must contain a header with the column names. The names are free, but must be provided through the different fields named *Database file ... column name*.
-Then you must provide the values used to identify the MS modes (positive and negative).
+The file must contain a header with the column names. The names are free, but must be provided through the *Column names* field as a comma separated list of key/value pairs. See default value as an example. Of course it is much easier if your database file uses the default column names used in the default value of the *Column names* field. The column names shown in the default values, are only the ones used by the algorithm. You can provide any additional columns in your database file, they will be copied in the output.
 
-A last information about the single file database is the unit of the retention times, either in seconds or in minutes.
+Then you must provide the values used to identify the MS modes (positive and negative), using field *MS modes*.
+
+A last information about the single file database is the unit of the retention times, either in seconds or in minutes. Use the field "Retention time unit" to provide this information.
 
 Example of database file (totally fake, no meaning):
 
@@ -331,13 +348,18 @@ Example of database file (totally fake, no meaning):
 | A10   | "POS" | 145.097154 | "P92Z6W413 O2"     | "[(M+H)-(H2)]+"         | "hcoltt"  | 0.8   | "J114L6M62O2" | 146.10553 | "Blablaine"  |
 +-------+-------+------------+--------------------+-------------------------+-----------+-------+---------------+-----------+--------------+
 
+The corresponding value of the *Column names* field for this database field would be:
+**mztheo=mz,chromcolrt=rt,compoundid=molid,chromcol=col,msmode=mode,peakattr=attribution**.
+
+And the value of the *MS modes* field would be: **pos=POS,neg=NEG**.
+
 MZ/RT input file
 ================
 
-The input to provide is a file, in a tabular format (or TSV: Tab Seperated Values), containing the list of M/Z values, with possibly also RT values.
+The input to provide is a dataset in a tabular format (or TSV: Tab Seperated Values), containing the list of M/Z values, with possibly also RT values. The dataset is chosen through the field *Input file - MZ(/RT) values*.
 
-The column names for the M/Z and RT values must be provided through the fields *Input file MZ column name* and *Input file RT column name*.
-As a consequence, the file must contain a header line.
+The column names for the M/Z and RT values must be provided through the field *Input column names*, as a comma separated list of key/value pairs.
+The file/dataset must contain a header line with the same names specified in the field *Input column names*.
 
 The unit of the retention time has to be provided with the field *Retention time unit*.
 
@@ -363,29 +385,29 @@ Example of file input:
 M/Z matching
 ------------
 
-In the simplest form of the algorithm only the *m/z* values are matched against the database peaks. This happens if both *Retention time match* and *Precursor match* are off.
+In the simplest form of the algorithm only the *M/Z* values are matched against the database peaks. This happens if both *Retention time match* and *Precursor match* are off.
 
 The first parameter is the MS mode, specified through the *MS mode* parameter.
 
-The parameters *M/Z precision* and *M/Z shift* are used by the algorithm in the following formula in order to match an *m/z* value:
+The parameters *M/Z precision* and *M/Z shift* are used by the algorithm in the following formula in order to match an *M/Z* value:
 
 	mz - shift - precision &lt; mzref &lt; mz - shift + precision
 
-shift and precision can be either set in plain values, or in PPM of mz.
+Where *mzref* is the M/Z of reference from the database peak that is tested. If this double inequality is true, then the *M/Z* value is matched with this peak.
 
-Where *mzref* is the M/Z of reference from the database peak that is tested. If this double inequality is true, then the *m/z* value is matched with this peak.
+The parameters *shift* and *precision* can be input in either PPM values of M/Z or in plain values. Use the field *M/Z tolerance unit* to set the unit.
 
 --------------------
 Retention time match
 --------------------
 
-If at least one column is selected inside the *Chromatographic columns* parameter section, then retention time is also matched, in addition to the *m/z* value, according to the following formula:
+If at least one column is selected inside the *Chromatographic columns* parameter section, then retention time is also matched, in addition to the *M/Z* value, according to the following formula:
 
 	rt - x - rt^y &lt; colrt &lt; rt + x + rt^y
 
 Where *x* is the value of the parameter *RTX* and *y* the value of the parameter *RTY*.
 
-If for a reference compound the database does not contain retention time for at least one of the specified columns, then only the *m/z* value is matched against the peaks of the reference compound. This means that in the results you can find compounds that do no match the provided retention time value.
+If for a reference compound the database does not contain retention time for at least one of the specified columns, then only the *M/Z* value is matched against the peaks of the reference compound. This means that in the results you can find compounds that do no match the provided retention time value.
 
 The *RTZ* parameter is used in the *Precursor match* algorithm (see below).
 
@@ -395,7 +417,7 @@ Precursor match
 
 If the "Precursor match" option is enabled inside the parameters section, then a more sophisticated version of the algorithm, which is executed in two steps, is used.
 
-This algorithm takes two more parameters, one for each MS mode. These are the lists of precursors. Since the matching is run for one MS mode only, only one of the two parameters is used. Inside the single file database, all the peaks whose **attr** column value is equal to one of the precursor listed in *List of negative precursors* or *List of positive precursors*, depending on the mode, are considered as precursor peaks.
+This algorithm takes two more parameters, one for each MS mode. These are the lists of precursors. Since the matching is run for one MS mode only, only one of the two parameters is used. Inside the single file database, all the peaks whose **peakattr** column value is equal to one of the precursor listed in *List of negative precursors* or *List of positive precursors*, depending on the mode, are considered as precursor peaks.
 
 M/Z matching using precursor matching
 =====================================
@@ -415,7 +437,7 @@ MZ/RT matching using precursor matching
 Output settings
 ---------------
 
-The *Molecule IDs separator character* is used to customize the character used to separate the molecule IDs of the **molid** column inside the *main* output file.
+The *Multiple matches separator character* is used to customize the character used to separate the multiple values inside each row in the *main* output dataset. The *main* output contains as much rows as the MZ/RT input dataset, thus when for one MZ/RT value the algorithm finds more than one match, it concatenates the matches using this separator character.
 
 Output files
 ============
@@ -425,18 +447,25 @@ Three files are output by the tool.
 +-------------+--------------------------------------+--------------------------------------------------------+
 |   Outputs   |              File name               |                      Description                       |
 +-------------+--------------------------------------+--------------------------------------------------------+
-| Main output | lcmsmatching_{input_file_name}       | Contains the list of compounds that have been matched. |
+| Main output | lcmsmatching_{input_file_name}       | Contains the same data as the input dataset, with      |
+|             |                                      | match result included on each row. If more than one    |
+|             |                                      | match is found for a row, the different values of the  |
+|             |                                      | match are concatenated using the provided separator    |
+|             |                                      | character.                                             |
 +-------------+--------------------------------------+--------------------------------------------------------+
-| Peak list   | lcmsmatching_peaks_{input_file_name} | Contains all matched database peaks.                   |
+| Peak list   | lcmsmatching_{input_file_name}_peaks | Contains the same data as the input dataset, with      |
+|             |                                      | match result included on each row. If more than one    |
+|             |                                      | match is found for a row, then the row is duplicated.  |
+|             |                                      | Hence there is either no match for a row, or one       |
+|             |                                      | single match.                                          |
 +-------------+--------------------------------------+--------------------------------------------------------+
-| HTML output | lcmsmatching_{input_file_name}.html  | Contains the two tables on one page.                   |
+| HTML output | lcmsmatching_{input_file_name}.html  | Contains the same table as *Peak list* but in HTML     |
+|             |                                      | format and with links to external databases if columns |
+|             |                                      | for PubChem Compound, ChEBI, HMDB Metabolites or KEGG  |
+|             |                                      | Compounds are provided.                                |
 +-------------+--------------------------------------+--------------------------------------------------------+
 
-The **main** output is identical to the input file, to which is added an *msmatching* column. This column contains a list of IDs of the compounds that have been matched for this couple of (m/z, rt) values.
-
-The **peak list** output contains all database peaks that have been matched, for each (m/z, rt) input couple. Thus for each (m/z, rt) couple, there will be zero, one or more matched peaks output. The columns output are *mz*, *rt*, *id*, *mztheo*, *col*, *colrt*, *attribution* and *composition*, where *id* is the compound ID, *mztheo* is the theoretical mass of the fragment, *col* is the matched column and *colrt* is the retention time measured on the column for the reference compound.
-
-The **HTML** output contains the peak table with links toward HMDB, KEGG, ChEBI and PubChem public databases, when IDs are available.
+The match results are output as new columns appended to the columns provided inside the MZ/RT input dataset, and prefixed with "lcmsmatching.".
 
 =====
 About
@@ -456,7 +485,15 @@ About
 .. class:: infomark
 
 **Please cite**
-	R Core Team (2013). R: A language and Environment for Statistical Computing. http://www.r-project.org
+	R Core Team (2013). R: A language and Environment for Statistical Computing. http://www.r-project.org.
+
+==============
+Changelog/News
+==============
+
+**Version 4.0.0 - 02/01/2019**
+
+- NEW: Use of R biodb library. Connection to databases and matching have been moved to biodb library, which is maintained separately at http://github.com/pkrog/biodb.
 
 <!-- @@@END_RST@@@ -->
 	</help>
@@ -464,6 +501,14 @@ About
 	<!-- Citations {{{1 -->
 	<!-- **************************************************************** -->
 
-	<citations/>
+	<citations>
+		<citation type="bibtex">@unpublished{FGiacomoni2017,
+			title  = {PeakForest [Internet], a spectral data portal for Metabolomics community - storing, curating and annotation services for metabolic profiles of biological matrix.},
+			author = {Franck Giacomoni, Nils Paulhe},
+			institution = {INRA / MetaboHUB},
+			year = {2017},
+			note = {Unpublished paper, available from: https://peakforest.org/.}
+			}</citation>
+	</citations>
 
 </tool>
