@@ -1,17 +1,19 @@
-<tool id="lcmsmatching" name="LC/MS matching" version="4.0.0b" profile="18.09">
+<!-- vi: fdm=marker -->
+<tool id="lcmsmatching" name="LCMS matching" version="4.0.0b" profile="18.09">
 
-	<description>Annotation of MS peaks using matching on a spectra database.</description>
+	<description>Annotation of LCMS peaks using matching on a in-house spectra database or on PeakForest spectra database.</description>
 
+	<!-- Requirements {{{1 -->
+	<!-- **************************************************************** -->
 	<requirements>
 		<requirement type="package" version="1.2.0rc2">r-biodb</requirement>
 		<requirement type="package" version="1.20.0">r-getopt</requirement>
-		<requirement type="package" version="0.2">r-codetools</requirement> <!-- code for methods in class \u201cHtmlWriter\u201d was not checked for suspicious field assignments (recommended package \u2018codetools\u2019 not available?) -->
+		<requirement type="package" version="0.2_15">r-codetools</requirement> <!-- R_VERSION="0.2-15" --> <!-- code for methods in class \u201cHtmlWriter\u201d was not checked for suspicious field assignments (recommended package \u2018codetools\u2019 not available?) -->
 		
 	</requirements>
 
-	<!--=======
-	= COMMAND =
-	========-->
+	<!-- Command {{{1 -->
+	<!-- **************************************************************** -->
 
 	<command>
 		<![CDATA[
@@ -65,9 +67,9 @@
 		## @@@END_CHEETAH@@@
 	]]></command>
 
-	<!--======
-	= INPUTS =
-	=======-->
+
+	<!-- Inputs {{{1 -->
+	<!-- **************************************************************** -->
 
 	<inputs>
 
@@ -195,9 +197,8 @@
 
 	</inputs>
 
-	<!--=======
-	= OUTPUTS =
-	========-->
+	<!-- Outputs {{{1 -->
+	<!-- **************************************************************** -->
 
 	<outputs>
 
@@ -208,9 +209,8 @@
 
 	</outputs>
 
-	<!--=====
-	= TESTS =
-	======-->
+	<!-- Tests {{{1 -->
+	<!-- **************************************************************** -->
 
 	<tests>
 
@@ -264,9 +264,8 @@
 
 	</tests>
 
-	<!--====
-	= HELP =
-	=====-->
+	<!-- Help {{{1 -->
+	<!-- **************************************************************** -->
 
 	<help>
 <!-- @@@BEGIN_RST@@@ -->
@@ -462,9 +461,8 @@ About
 <!-- @@@END_RST@@@ -->
 	</help>
 
-	<!--=========
-	= CITATIONS =
-	==========-->
+	<!-- Citations {{{1 -->
+	<!-- **************************************************************** -->
 
 	<citations/>
 
