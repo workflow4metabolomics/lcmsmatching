@@ -3,9 +3,7 @@ matrix:
         - name: "Plain tests"
           language: r
           r: release
-          install:
-              - R -e "install.packages(c('getopt', 'devtools'), dependencies = TRUE, repos = 'https://cloud.r-project.org/')"
-              - bash install_biodb.sh
+          install: ./travis_install_deps.sh
           script: make test
         - name: "Planemo tests"
           dist: xenial # To get Python >=2.7.7
