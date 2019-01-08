@@ -815,8 +815,12 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 		# Sort columns of results data frame
 		results.df <- results.df[sort(colnames(results.df))]
 
+		# Build main table
+		results.df.collapsed <- conn$collapseResultsDataFrame(results.df = results.df, output.mz = input[[input.colnames$mz]], output.rt = if (rt.search) input[[input.colnames$rt]] else NULL, sep = results.sep)
+
 		# Rename columns of results data frame
 		names(results.df) <- paste('lcmsmatching', names(results.df), sep = '.')
+		names(results.df.collapsed) <- paste('lcmsmatching', names(results.df.collapsed), sep = '.')
 
 		# Set merging cols
 		input.merging.cols <- input.colnames$mz
@@ -826,31 +830,11 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 			results.df.merging.cols <- c(results.df.merging.cols, 'lcmsmatching.rt')
 		}
 
+		# Build main table
+		main <- merge(x = input, y = results.df.collapsed, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
+
 		# Build peaks table
 		peaks <- merge(x = input, y = results.df, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
-
-		# Build main table (move that code into biodb as MassdbConn::collapseResultsDataFrame()
-		results.df.collapsed <- NULL
-		for (i in seq_along(input[[input.colnames$mz]])) {
-
-			lines <- results.df[['lcmsmatching.mz']] == input[i, input.colnames$mz]
-			if (rt.search)
-				lines <- lines & (results.df[['lcmsmatching.rt']] == input[i, input.colnames$rt])
-
-			lines.df <- results.df[lines, , drop = FALSE]
-
-			if (nrow(lines.df) == 1)
-				one.line <- lines.df
-			else {
-				df.one.row <- lines.df[1, ]
-				for (col in names(lines.df))
-					if ( ! col %in% c('lcmsmatching.mz', 'lcmsmatching.rt'))
-						df.one.row[[col]] <- paste(lines.df[[col]], collapse = results.sep)
-				one.line <- df.one.row
-			}
-			results.df.collapsed <- rbind(results.df.collapsed, one.line)
-		}
-		main <- merge(x = input, y = results.df.collapsed, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
 
 		# Force order of columns in output
 		output.cols <- c(colnames(input), colnames(peaks)[ ! colnames(peaks) %in% colnames(input)])
