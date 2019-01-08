@@ -811,7 +811,7 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	main <- NULL
 	peaks <- NULL
 	if ( ! is.null(results.df)) {
-		
+
 		# Sort columns of results data frame
 		results.df <- results.df[sort(colnames(results.df))]
 

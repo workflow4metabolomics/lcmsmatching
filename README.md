@@ -22,7 +22,7 @@ Please run `lcmsmatching -h` for a help page listing all options and presenting 
    - `getopt` >= `1.20.0`.
    - `biodb` >= `1.2.0rc2`.
 
-## Updates
+## Changelog
 
 ### 4.0.0
 
@@ -30,6 +30,7 @@ Please run `lcmsmatching -h` for a help page listing all options and presenting 
    * Remove Excel and 4TabSql databases from script.
    * Remove all dynamic fields in XML (i.e.: fields computed using python scripts, like the list of chromatogaphic columns).
    * Use now a single field for in-house file databases column names, whose value is a comma separated list of key/value pairs.
+   * Update Peakforest URL.
 
 ### 3.4.3
 
