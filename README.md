@@ -28,6 +28,13 @@ Please run `lcmsmatching -h` for a help page listing all options and presenting 
 
    * Switch to biodb R library (<http://github.com/pkrog/biodb>).
    * Remove Excel and 4TabSql databases from script.
+   * Remove all dynamic fields in XML (i.e.: fields computed using python scripts, like the list of chromatogaphic columns).
+   * Use now a single field for in-house file databases column names, whose value is a comma separated list of key/value pairs.
+
+### 3.4.3
+
+   * Returns empty match in case of NA values in mz.low and mz.high.
+   * Speed up HTML output writing.
 
 ### 3.3.1
 
