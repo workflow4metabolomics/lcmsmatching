@@ -1,4 +1,4 @@
-<!-- vi: fdm=marker -->
+<!-- vi: se fdm=marker : -->
 <tool id="lcmsmatching" name="LCMS matching" version="4.0.0b" profile="18.09">
 
 	<description>Annotation of LCMS peaks using matching on a in-house spectra database or on PeakForest spectra database.</description>
