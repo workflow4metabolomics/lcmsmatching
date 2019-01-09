@@ -5,6 +5,7 @@
 ################################################################
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
+OUTPUT_PATH=$SCRIPT_PATH/output
 RES_DIR=$SCRIPT_PATH/res
 TEST_DATA_DIR=$SCRIPT_PATH/../test-data
 LCMSMATCHING=$SCRIPT_PATH/../lcmsmatching
@@ -50,10 +51,6 @@ function get_db_args {
 		local res_dir=$RES_DIR/$res_name
 		local db_file=$res_dir/filedb-rtsec.tsv
 		args="-d file --url $db_file"
-
-	elif [[ $db == xls ]] ; then
-		local db_dir=$RES_DIR/xlsdb
-		args="-d xls --url $db_dir"
 
 	elif [[ $db == peakforest ]] ; then
 		args="-d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN"
@@ -642,9 +639,9 @@ function test_generic_html_output_file {
 
 	local db=$1
 	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
-	local output_file=$SCRIPT_PATH/test_generic_html_output_file-output.tsv
-	local peak_output_file=$SCRIPT_PATH/test_generic_html_output_file-peak-output.tsv
-	local html_output_file=$SCRIPT_PATH/test_generic_html_output_file-html-output.html
+	local output_file=$OUTPUT_PATH/test_generic_html_output_file-output.tsv
+	local peak_output_file=$OUTPUT_PATH/test_generic_html_output_file-peak-output.tsv
+	local html_output_file=$OUTPUT_PATH/test_generic_html_output_file-html-output.html
 
 	expect_success $LCMSMATCHING $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file --debug || return 1
 	expect_file_exists $html_output_file || return 1
@@ -655,6 +652,9 @@ function test_generic_html_output_file {
 
 # Set databases
 [[ -n $DATABASES ]] || DATABASES="file,peakforest"
+
+# Create output dir
+[[ -d $OUTPUT_PATH ]] || mkdir "$OUTPUT_PATH"
 
 # Test peakforest token
 if [[ ",$DATABASES," == *",peakforest,"* && -z $RMSBD_PEAKFOREST_TOKEN ]] ; then

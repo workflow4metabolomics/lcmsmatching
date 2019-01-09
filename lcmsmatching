@@ -516,18 +516,12 @@ output.html <- function(biodb, peaks, file) {
 
 	# Replace public database IDs by URLs
 	if ( ! is.null(peaks)) {
-		# Conversion from extdb id field to extdb name
-		extdb2classdb = list()
-		extdb2classdb[MSDB.TAG.KEGG] = 'kegg.compound'
-		extdb2classdb[MSDB.TAG.HMDB] = 'hmdb.metabolites'
-		extdb2classdb[MSDB.TAG.CHEBI] = 'chebi'
-		extdb2classdb[MSDB.TAG.PUBCHEM] = 'ncbi.pubchem.comp'
-
 		# Loop on all dbs
-		for (extdb in c(MSDB.TAG.KEGG, MSDB.TAG.HMDB, MSDB.TAG.CHEBI, MSDB.TAG.PUBCHEM)) {
-			conn <- biodb$getFactory()$createConn(extdb2classdb[[extdb]], fail.if.exists = FALSE)
-			if (extdb %in% colnames(peaks))
-				peaks[[extdb]] <- vapply(peaks[[extdb]], function(id) if (is.na(id)) '' else paste0('<a href="', conn$getEntryPageUrl(id), '">', id, '</a>'), FUN.VALUE = '')
+		for (extdb in c('kegg.compound', 'hmdb.metabolites', 'chebi', 'ncbi.pubchem.comp')) {
+			conn <- biodb$getFactory()$createConn(extdb, fail.if.exists = FALSE)
+			col.name <- paste('lcmsmatching', extdb, 'id', sep = '.')
+			if (col.name %in% colnames(peaks))
+				peaks[[col.name]] <- vapply(peaks[[col.name]], function(id) if (is.na(id)) '' else paste0('<a href="', conn$getEntryPageUrl(id), '">', id, '</a>'), FUN.VALUE = '')
 		}
 	}
 
