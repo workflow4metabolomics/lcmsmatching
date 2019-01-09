@@ -799,7 +799,7 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	rt.tol.exp <- if (rt.search && ! is.null(rt.tol.exp)) rt.tol.exp else NA_real_
 	rt <- if (rt.search) as.numeric(input[[input.colnames$rt]]) else NULL
 	mz <- as.numeric(input[[input.colnames$mz]])
-	results.df <- conn$searchMsPeaks(mz = mz, mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rt, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = TRUE)
+	results.df <- conn$searchMsPeaks(mz = mz, mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rt, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = TRUE, compute = FALSE)
 
 	# Build outputs
 	main <- NULL
