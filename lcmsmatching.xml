@@ -138,13 +138,12 @@
 		</param>
 
 		<!-- MZ matching parameters -->
-		<param name="mzprec" label="M/Z precision (in ppm)" type="float" help="" value="5"/>
-		<param name="mzshift" label="M/Z shift (in ppm)" type="float" help="" value="0"/>
+		<param name="mzprec" label="M/Z precision" type="float" help="" value="5"/>
+		<param name="mzshift" label="M/Z shift" type="float" help="" value="0"/>
 		<param name="mztolunit" label="M/Z tolerance unit" type="select" display="radio" multiple="false" help="">
 			<option value="ppm">PPM</option>
 			<option value="plain">Plain</option>
 		</param>
-		<param name="" label="M/Z tolerance unit (in ppm)" type="float" help="" value="0"/>
 
 		<!-- RT matching {{{2 -->
 		<!-- **************************************************************** -->
