@@ -516,18 +516,12 @@ output.html <- function(biodb, peaks, file) {
 
 	# Replace public database IDs by URLs
 	if ( ! is.null(peaks)) {
-		# Conversion from extdb id field to extdb name
-		extdb2classdb = list()
-		extdb2classdb[MSDB.TAG.KEGG] = 'kegg.compound'
-		extdb2classdb[MSDB.TAG.HMDB] = 'hmdb.metabolites'
-		extdb2classdb[MSDB.TAG.CHEBI] = 'chebi'
-		extdb2classdb[MSDB.TAG.PUBCHEM] = 'ncbi.pubchem.comp'
-
 		# Loop on all dbs
-		for (extdb in c(MSDB.TAG.KEGG, MSDB.TAG.HMDB, MSDB.TAG.CHEBI, MSDB.TAG.PUBCHEM)) {
-			conn <- biodb$getFactory()$createConn(extdb2classdb[[extdb]], fail.if.exists = FALSE)
-			if (extdb %in% colnames(peaks))
-				peaks[[extdb]] <- vapply(peaks[[extdb]], function(id) if (is.na(id)) '' else paste0('<a href="', conn$getEntryPageUrl(id), '">', id, '</a>'), FUN.VALUE = '')
+		for (extdb in c('kegg.compound', 'hmdb.metabolites', 'chebi', 'ncbi.pubchem.comp')) {
+			conn <- biodb$getFactory()$createConn(extdb, fail.if.exists = FALSE)
+			col.name <- paste('lcmsmatching', extdb, 'id', sep = '.')
+			if (col.name %in% colnames(peaks))
+				peaks[[col.name]] <- vapply(peaks[[col.name]], function(id) if (is.na(id)) '' else paste0('<a href="', conn$getEntryPageUrl(id), '">', id, '</a>'), FUN.VALUE = '')
 		}
 	}
 
@@ -805,18 +799,22 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	rt.tol.exp <- if (rt.search && ! is.null(rt.tol.exp)) rt.tol.exp else NA_real_
 	rt <- if (rt.search) as.numeric(input[[input.colnames$rt]]) else NULL
 	mz <- as.numeric(input[[input.colnames$mz]])
-	results.df <- conn$searchMsPeaks(mz = mz, mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rt, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = TRUE)
+	results.df <- conn$searchMsPeaks(mz = mz, mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rt, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = TRUE, compute = FALSE)
 
 	# Build outputs
 	main <- NULL
 	peaks <- NULL
 	if ( ! is.null(results.df)) {
-		
+
 		# Sort columns of results data frame
 		results.df <- results.df[sort(colnames(results.df))]
 
+		# Build main table
+		results.df.collapsed <- conn$collapseResultsDataFrame(results.df = results.df, output.mz = input[[input.colnames$mz]], output.rt = if (rt.search) input[[input.colnames$rt]] else NULL, sep = results.sep)
+
 		# Rename columns of results data frame
 		names(results.df) <- paste('lcmsmatching', names(results.df), sep = '.')
+		names(results.df.collapsed) <- paste('lcmsmatching', names(results.df.collapsed), sep = '.')
 
 		# Set merging cols
 		input.merging.cols <- input.colnames$mz
@@ -826,31 +824,11 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 			results.df.merging.cols <- c(results.df.merging.cols, 'lcmsmatching.rt')
 		}
 
+		# Build main table
+		main <- merge(x = input, y = results.df.collapsed, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
+
 		# Build peaks table
 		peaks <- merge(x = input, y = results.df, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
-
-		# Build main table (move that code into biodb as MassdbConn::collapseResultsDataFrame()
-		results.df.collapsed <- NULL
-		for (i in seq_along(input[[input.colnames$mz]])) {
-
-			lines <- results.df[['lcmsmatching.mz']] == input[i, input.colnames$mz]
-			if (rt.search)
-				lines <- lines & (results.df[['lcmsmatching.rt']] == input[i, input.colnames$rt])
-
-			lines.df <- results.df[lines, , drop = FALSE]
-
-			if (nrow(lines.df) == 1)
-				one.line <- lines.df
-			else {
-				df.one.row <- lines.df[1, ]
-				for (col in names(lines.df))
-					if ( ! col %in% c('lcmsmatching.mz', 'lcmsmatching.rt'))
-						df.one.row[[col]] <- paste(lines.df[[col]], collapse = results.sep)
-				one.line <- df.one.row
-			}
-			results.df.collapsed <- rbind(results.df.collapsed, one.line)
-		}
-		main <- merge(x = input, y = results.df.collapsed, by.x = input.merging.cols, by.y = results.df.merging.cols, sort = FALSE)
 
 		# Force order of columns in output
 		output.cols <- c(colnames(input), colnames(peaks)[ ! colnames(peaks) %in% colnames(input)])
