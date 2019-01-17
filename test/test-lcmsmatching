@@ -5,7 +5,7 @@
 ################################################################
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
-OUTPUT_PATH=$SCRIPT_PATH/output
+OUTPUT_DIR=$SCRIPT_PATH/output
 RES_DIR=$SCRIPT_PATH/res
 TEST_DATA_DIR=$SCRIPT_PATH/../test-data
 LCMSMATCHING=$SCRIPT_PATH/../lcmsmatching
@@ -79,7 +79,10 @@ function list_chrom_cols {
 	echo $chromcols
 }
 
-# Test Peakforest Estelle 14/03/2017 {{{1
+# Peakforest tests {{{1
+################################################################
+
+# Test Peakforest Estelle 14/03/2017 {{{2
 ################################################################
 
 function test_peakforest_estelle_20170314 {
@@ -92,48 +95,10 @@ function test_peakforest_estelle_20170314 {
 	expect_success $LCMSMATCHING -g -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output || return 1
 }
 
-# Test Peakforest Estelle 16/03/2017 {{{1
-# DEPRECATED This type of test is now handled by biodb. It has been disabled because the searched M/Z value is not found anymore inside Peakforest.
+# File database tests {{{1
 ################################################################
 
-#function test_peakforest_estelle_20170316_rtunit {
-#
-#	local res_name=2017-03-16-estelle-rtunit
-#	local res_dir=$RES_DIR/$res_name
-#	local min_input=$res_dir/min-input.tsv
-#	local min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
-#	local min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
-#	local min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
-#	local sec_input=$res_dir/sec-input.tsv
-#	local sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
-#	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
-#	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
-#
-#	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output || return 1
-#
-#	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output || return 1
-#
-#	# Check that output file contains at least same matches
-#	local nb_sec_peak_compids=$(csv_count_values "$sec_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
-#	expect_num_gt "$nb_sec_peak_compids" 0 || return 1
-#	local nb_min_peak_compids=$(csv_count_values "$min_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
-#	expect_num_gt "$nb_min_peak_compids" 0 || return 1
-#	expect_same_number_of_rows "$sec_peak_output" "$min_peak_output" || return 1
-#	csv_expect_identical_col_values lcmsmatching.peakforest.mass.id "$sec_peak_output" "$min_peak_output" "$SEP" || return 1
-#
-#	# Checkout RT output values
-#	local err=1e-10
-#	expect_num_eq $(get_nb_rows "$min_input" 1) 1 || return 1
-#	local min_rtmed=$(csv_get_val "$min_input" "$SEP" rtmed 1)
-#	expect_num_eq $(get_nb_rows "$sec_input" 1) 1 || return 1
-#	local sec_rtmed=$(csv_get_val "$sec_input" "$SEP" rtmed 1)
-#	csv_expect_float_col_equals "$min_peak_output" "$SEP" rtmed "$min_rtmed" "$err" || return 1
-#	csv_expect_float_col_equals "$sec_peak_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 1
-#	csv_expect_float_col_equals "$min_main_output" "$SEP" rtmed "$min_rtmed" "$err" || return 10
-#	csv_expect_float_col_equals "$sec_main_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 11
-#}
-
-# Test filedb RT unit {{{1
+# Test filedb RT unit {{{2
 ################################################################
 
 function test_filedb_rtunit {
@@ -185,7 +150,7 @@ function test_filedb_rtunit {
 	done
 }
 
-# Test filedb ticket 2016031010000034 {{{1
+# Test filedb ticket 2016031010000034 {{{2
 ################################################################
 
 function test_filedb_ticket_2016031010000034 {
@@ -199,7 +164,7 @@ function test_filedb_ticket_2016031010000034 {
 	expect_success $LCMSMATCHING -g -d file --url $db_file --db-fields 'mztheo=mz,chromcolrt=rt,compoundid=molid,chromcol=col,msmode=mode,peakattr=attr,peakcomp=comp,fullnames=molnames,compoundmass=molmass,compoundcomp=molcomp,inchi=inchi,inchikey=inchikey,pubchemcompid=pubchem,chebiid=chebi,hmdbid=hmdb,keggid=kegg' -m pos -i $input_file --input-col-names mz=mzmed,rt=rtmed -o $main_output --peak-output-file $peak_output --html-output-file $html_output || return 1
 }
 
-# Test filedb no 'y' column in output {{{1
+# Test filedb no 'y' column in output {{{2
 ################################################################
 
 function test_filedb_no_y_col_in_output {
@@ -215,7 +180,7 @@ function test_filedb_no_y_col_in_output {
 	csv_expect_not_has_columns $main_output $SEP y || return 1
 }
 
-# Test filedb Florence Castelli 18/01/2017 {{{1
+# Test filedb Florence Castelli 18/01/2017 {{{2
 ################################################################
 
 # 2017-01-18 Failure encountered on Galaxy production instance (lcmsmatching version 2.1.3) with Florence Castelli
@@ -238,7 +203,7 @@ function test_filedb_2017_01_18_florence_castelli {
 	expect_file_exists $html_output || return 1
 }
 
-# Test filedb W4M Sacurine PhenoMeNal 26/01/2017 {{{1
+# Test filedb W4M Sacurine PhenoMeNal 26/01/2017 {{{2
 ################################################################
 
 # Test bug replacing values of columns by integers
@@ -271,7 +236,7 @@ function test_filedb_2017_01_26_w4m_sacurine_phenomenal_demo {
 	expect_same_files $peak_output $peak_ref_output || return 1
 }
 
-# Test filedb - filedb with number sign character (#) {{{1
+# Test filedb - filedb with number sign character (#) {{{2
 ################################################################
 
 function test_filedb_with_number_sign_char {
@@ -283,7 +248,7 @@ function test_filedb_with_number_sign_char {
 }
 
 
-# Test filedb - field names set to NA {{{1
+# Test filedb - field names set to NA {{{2
 ################################################################
 
 function test_filedb_na_db_fields {
@@ -295,7 +260,7 @@ function test_filedb_na_db_fields {
 	expect_success $LCMSMATCHING -g -d file --url $db_file --db-fields chebiid=NA,keggid=NA -m pos -i $input_file -o $main_output --same-rows || return 1
 }
 
-# Test filedb - MZ match {{{1
+# Test filedb - MZ match {{{2
 ################################################################
 
 function test_filedb_mz_match {
@@ -307,13 +272,13 @@ function test_filedb_mz_match {
 	local expected_output=$resdir/expected_output.tsv
 
 	# Run matching
-	expect_success $LCMSMATCHING -g -d file --url $db_file -m pos -p 5 -s 0 -i $input_file -o $main_output --same-rows -g || return 1
+	expect_success $LCMSMATCHING -g -d file --url $db_file -m pos -p 5 -s 0 -i $input_file -o $main_output --same-rows || return 1
 
 	# Compare with expected output
 	expect_same_files $main_output $expected_output || return 1
 }
 
-# Test filedb - RT match {{{1
+# Test filedb - RT match {{{2
 ################################################################
 
 function test_filedb_rt_match {
@@ -324,13 +289,13 @@ function test_filedb_rt_match {
 	local main_output=$SCRIPT_PATH/test_filedb_rt_match-main.tsv
 	local expected_output=$resdir/expected_output.tsv
 
-	expect_success $LCMSMATCHING -g -d file --url $db_file -m pos -p 5 -s 0 -i $input_file -o $main_output --same-rows --db-rt-unit min --rtunit min -c col1 --rttolx 5 --rttoly 0.8 -g || return 1
+	expect_success $LCMSMATCHING -g -d file --url $db_file -m pos -p 5 -s 0 -i $input_file -o $main_output --same-rows --db-rt-unit min --rtunit min -c col1 --rttolx 5 --rttoly 0.8 || return 1
 
 	# Compare with expected output
 	expect_same_files $main_output $expected_output || return 1
 }
 
-# Test filedb - Galaxy test 1 {{{1
+# Test filedb - Galaxy test 1 {{{2
 ################################################################
 
 test_filedb_galaxy_test_1() {
@@ -349,7 +314,7 @@ test_filedb_galaxy_test_1() {
 	expect_same_files "$html_output_file" "$TEST_DATA_DIR/test_1_peaks_output.html" || return 4
 }
 
-# Test filedb - Galaxy test 2 {{{1
+# Test filedb - Galaxy test 2 {{{2
 ################################################################
 
 test_filedb_galaxy_test_2() {
@@ -368,7 +333,7 @@ test_filedb_galaxy_test_2() {
 	expect_same_files "$html_output_file" "$TEST_DATA_DIR/test_2_peaks_output.html" || return 4
 }
 
-# Test filedb - Galaxy test 3 {{{1
+# Test filedb - Galaxy test 3 {{{2
 ################################################################
 
 test_filedb_galaxy_test_3() {
@@ -387,7 +352,30 @@ test_filedb_galaxy_test_3() {
 	expect_same_files "$html_output_file" "$TEST_DATA_DIR/test_3_peaks_output.html" || return 4
 }
 
-# Test generic - input file with number sign character (#) {{{1
+# Test filedb - NA values in M/Z input {{{2
+################################################################
+
+test_001_filedb_na_in_input() {
+
+	local n_test="001"
+	local res_dir="$RES_DIR/$n_test"
+	local db_file=$res_dir/filedb.tsv
+	local input_file=$res_dir/mz-input-small_with_nas.tsv
+	local main_output_file=$OUTPUT_DIR/test_${n_test}_main.tsv
+	local peak_output_file=$OUTPUT_DIR/test_${n_test}_peak.tsv
+	local expected_peak_output=$res_dir/expected_peak_output.tsv
+
+	# Run matching
+	expect_success $LCMSMATCHING -g -d file --url "$db_file" -m pos -p 5 -s 0 -i "$input_file" -o "$main_output_file" --same-rows --peak-output-file "$peak_output_file" || return 1
+
+	# Compare with expected output
+	expect_same_files "$peak_output_file" "$expected_peak_output" || return 1
+}
+
+# Generic tests {{{1
+################################################################
+
+# Test generic - input file with number sign character (#) {{{2
 ################################################################
 
 function test_generic_input_file_with_number_sign_char {
@@ -398,7 +386,7 @@ function test_generic_input_file_with_number_sign_char {
 	expect_success $LCMSMATCHING -g $(get_db_args $db) -m pos -p 5 -s 0 -i $input_file -o test_filedb_input_file_with_number_sign_char-output.tsv || return 1
 }
 
-# Test generic - wrong input file in filedb {{{1
+# Test generic - wrong input file in filedb {{{2
 ################################################################
 
 function test_generic_wrong_input_file {
@@ -408,7 +396,7 @@ function test_generic_wrong_input_file {
 	expect_failure $LCMSMATCHING -g $(get_db_args $db) -m pos -i blabla.zut -o test_generic_wrong_input_file-output.tsv || return 1
 }
 
-# Test generic - empty files {{{1
+# Test generic - empty files {{{2
 ################################################################
 
 function test_generic_empty_files {	
@@ -421,7 +409,7 @@ function test_generic_empty_files {
 	expect_success $LCMSMATCHING -g $(get_db_args $db) -m pos -i $empty -o test_empty_files-output.tsv || return 1
 }
 
-# Test generic - mz matching does not give rt col in output {{{1
+# Test generic - mz matching does not give rt col in output {{{2
 ################################################################
 
 function test_generic_match_mz_no_rt_in_output {
@@ -435,7 +423,7 @@ function test_generic_match_mz_no_rt_in_output {
 	csv_expect_not_has_columns $output_file $SEP rt || return 1
 }
 
-# Test generic - mzrt matching without rt input {{{1
+# Test generic - mzrt matching without rt input {{{2
 ################################################################
 
 function test_generic_match_mzrt_using_input_file_without_rt {
@@ -447,7 +435,7 @@ function test_generic_match_mzrt_using_input_file_without_rt {
 	expect_failure $LCMSMATCHING -g $(get_db_args $db) -g -m pos -i $input_file -o $output_file --all-cols -x 5.0 -y 0.8 || return 1
 }
 
-# Test generic - mz matching {{{1
+# Test generic - mz matching {{{2
 ################################################################
 
 function test_generic_match_mz {
@@ -461,7 +449,7 @@ function test_generic_match_mz {
 	expect_success $LCMSMATCHING -g $(get_db_args $db) -g -m pos -i $input_file -o $output_file --mzprec 0.1 --mzshift 0 --mztolunit plain || return 1
 }
 
-# Test generic - mz matching with unused rt {{{1
+# Test generic - mz matching with unused rt {{{2
 ################################################################
 
 function test_generic_match_mz_unused_rt {
@@ -475,7 +463,7 @@ function test_generic_match_mz_unused_rt {
 	! csv_expect_has_columns $output_file $SEP rt || return 1
 }
 
-# Test generic - mzrt matching {{{1
+# Test generic - mzrt matching {{{2
 ################################################################
 
 function test_generic_match_mz_rt {
@@ -490,7 +478,7 @@ function test_generic_match_mz_rt {
 	expect_success $LCMSMATCHING -g $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i  $input_file -o $output_file || return 1
 }
 
-# Test generic - mzrt matching with column numbers {{{1
+# Test generic - mzrt matching with column numbers {{{2
 ################################################################
 
 function test_generic_match_mzrt_col_numbers {   
@@ -507,7 +495,7 @@ function test_generic_match_mzrt_col_numbers {
 	expect_failure $LCMSMATCHING -g $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --input-col-names 'mz=1,rt=4' || return 1
 }
 
-# Test generic - unknown chrom col {{{1
+# Test generic - unknown chrom col {{{2
 ################################################################
 
 function test_generic_unknown_chrom_col {
@@ -525,7 +513,7 @@ function test_generic_unknown_chrom_col {
 	expect_failure $LCMSMATCHING -g $(get_db_args $db) -m pos -c badaboum --rttolx 5 --rttoly 0.8 -i $input_file -o $output_file --check-cols || return 1
 }
 
-# Test generic - check that matching using 2 chrom cols does not output duplicated rows {{{1
+# Test generic - check that matching using 2 chrom cols does not output duplicated rows {{{2
 ################################################################
 
 function test_match_mzrt_2cols {
@@ -543,7 +531,7 @@ function test_match_mzrt_2cols {
 	expect_no_duplicated_row $output_file || return 1
 }
 
-# Test generic - list of precursors {{{1
+# Test generic - list of precursors {{{2
 ################################################################
 
 function test_generic_precursors_lists {
@@ -559,7 +547,7 @@ function test_generic_precursors_lists {
 	expect_success $LCMSMATCHING -g $(get_db_args $db) -m pos -c $chromcols --rttolx 5 --rttoly 0.8 --precursor-match -i $input_file -o $output_file --pos-prec '[(M+H)]+,[M+H]+,[(M+Na)]+,[M+Na]+,[(M+K)]+,[M+K]+' --neg-prec '[(M-H)]-,[M-H]-,[(M+Cl)]-,[M+Cl]-' -g || return 1
 }
 
-# Test generic - same cols {{{1
+# Test generic - same cols {{{2
 ################################################################
 
 function test_generic_same_cols {
@@ -584,7 +572,7 @@ function test_generic_same_cols {
 	csv_expect_has_columns $output_file $SEP "$input_cols" || return 1
 }
 
-# Test generic - same rows {{{1
+# Test generic - same rows {{{2
 ################################################################
 
 function test_generic_same_rows {
@@ -599,7 +587,7 @@ function test_generic_same_rows {
 	expect_same_number_of_rows $input_file $output_file || return 1
 }
 
-# Test generic - same rows with peaks output {{{1
+# Test generic - same rows with peaks output {{{2
 ################################################################
 
 function test_generic_same_rows_with_peaks_output {
@@ -614,7 +602,7 @@ function test_generic_same_rows_with_peaks_output {
 	expect_num_le $(get_nb_rows $input_file) $(get_nb_rows $peak_output_file) || return 1
 }
 
-# Test generic - peak output {{{1
+# Test generic - peak output {{{2
 ################################################################
 
 function test_generic_peak_output_file {
@@ -632,20 +620,64 @@ function test_generic_peak_output_file {
 	csv_expect_has_columns $peak_output_file $SEP "mz rt" || return 1
 }
 
-# Test generic - html output {{{1
+# Test generic - html output {{{2
 ################################################################
 
 function test_generic_html_output_file {
 
 	local db=$1
 	local input_file=$TEST_DATA_DIR/mzrt-input-small.tsv
-	local output_file=$OUTPUT_PATH/test_generic_html_output_file-output.tsv
-	local peak_output_file=$OUTPUT_PATH/test_generic_html_output_file-peak-output.tsv
-	local html_output_file=$OUTPUT_PATH/test_generic_html_output_file-html-output.html
+	local output_file=$OUTPUT_DIR/test_generic_html_output_file-output.tsv
+	local peak_output_file=$OUTPUT_DIR/test_generic_html_output_file-peak-output.tsv
+	local html_output_file=$OUTPUT_DIR/test_generic_html_output_file-html-output.html
 
 	expect_success $LCMSMATCHING -g $(get_db_args $db) -m pos -i $input_file -o $output_file --peak-output-file $peak_output_file --html-output-file $html_output_file || return 1
 	expect_file_exists $html_output_file || return 1
 }
+
+# Deprecated tests {{{1
+################################################################
+
+# Test Peakforest Estelle 16/03/2017 {{{2
+# DEPRECATED This type of test is now handled by biodb. It has been disabled because the searched M/Z value is not found anymore inside Peakforest.
+################################################################
+
+#function test_peakforest_estelle_20170316_rtunit {
+#
+#	local res_name=2017-03-16-estelle-rtunit
+#	local res_dir=$RES_DIR/$res_name
+#	local min_input=$res_dir/min-input.tsv
+#	local min_main_output=$SCRIPT_PATH/$res_name-min-main.tsv
+#	local min_peak_output=$SCRIPT_PATH/$res_name-min-peak.tsv
+#	local min_html_output=$SCRIPT_PATH/$res_name-min-peak.html
+#	local sec_input=$res_dir/sec-input.tsv
+#	local sec_main_output=$SCRIPT_PATH/$res_name-sec-main.tsv
+#	local sec_peak_output=$SCRIPT_PATH/$res_name-sec-peak.tsv
+#	local sec_html_output=$SCRIPT_PATH/$res_name-sec-peak.html
+#
+#	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $min_input --input-col-names mz=mzmed,rt=rtmed -o $min_main_output --peak-output-file $min_peak_output --html-output-file $min_html_output --rtunit min --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output || return 1
+#
+#	expect_success $LCMSMATCHING -d peakforest --url $PEAKFOREST_URL --db-token $RMSBD_PEAKFOREST_TOKEN -m pos -p 5 -s 0 -i $sec_input --input-col-names mz=mzmed,rt=rtmed -o $sec_main_output --peak-output-file $sec_peak_output --html-output-file $sec_html_output --rtunit sec --all-cols --rttolx 5 --rttoly 0.8 --check-cols --same-rows --same-cols --no-main-table-in-html-output || return 1
+#
+#	# Check that output file contains at least same matches
+#	local nb_sec_peak_compids=$(csv_count_values "$sec_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
+#	expect_num_gt "$nb_sec_peak_compids" 0 || return 1
+#	local nb_min_peak_compids=$(csv_count_values "$min_peak_output" "$SEP" lcmsmatching.peakforest.mass.id)
+#	expect_num_gt "$nb_min_peak_compids" 0 || return 1
+#	expect_same_number_of_rows "$sec_peak_output" "$min_peak_output" || return 1
+#	csv_expect_identical_col_values lcmsmatching.peakforest.mass.id "$sec_peak_output" "$min_peak_output" "$SEP" || return 1
+#
+#	# Checkout RT output values
+#	local err=1e-10
+#	expect_num_eq $(get_nb_rows "$min_input" 1) 1 || return 1
+#	local min_rtmed=$(csv_get_val "$min_input" "$SEP" rtmed 1)
+#	expect_num_eq $(get_nb_rows "$sec_input" 1) 1 || return 1
+#	local sec_rtmed=$(csv_get_val "$sec_input" "$SEP" rtmed 1)
+#	csv_expect_float_col_equals "$min_peak_output" "$SEP" rtmed "$min_rtmed" "$err" || return 1
+#	csv_expect_float_col_equals "$sec_peak_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 1
+#	csv_expect_float_col_equals "$min_main_output" "$SEP" rtmed "$min_rtmed" "$err" || return 10
+#	csv_expect_float_col_equals "$sec_main_output" "$SEP" rtmed "$sec_rtmed" "$err" || return 11
+#}
 
 # Main {{{1
 ################################################################
@@ -654,7 +686,7 @@ function test_generic_html_output_file {
 [[ -n $DATABASES ]] || DATABASES="file,peakforest"
 
 # Create output dir
-[[ -d $OUTPUT_PATH ]] || mkdir "$OUTPUT_PATH"
+[[ -d $OUTPUT_DIR ]] || mkdir "$OUTPUT_DIR"
 
 # Test peakforest token
 if [[ ",$DATABASES," == *",peakforest,"* && -z $RMSBD_PEAKFOREST_TOKEN ]] ; then
@@ -706,6 +738,7 @@ for db in $DATABASES ; do
 		test_that "Galaxy test 1 passes." test_filedb_galaxy_test_1
 		test_that "Galaxy test 2 passes." test_filedb_galaxy_test_2
 		test_that "Galaxy test 3 passes." test_filedb_galaxy_test_3
+		test_that "NA values in M/Z input does not give multiple matches in output." test_001_filedb_na_in_input
 	fi
 
 	# Run Peakforest tests

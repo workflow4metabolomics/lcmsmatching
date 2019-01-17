@@ -801,6 +801,10 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 	mz <- as.numeric(input[[input.colnames$mz]])
 	results.df <- conn$searchMsPeaks(mz = mz, mz.shift = mz.shift, mz.tol = mz.tol, mz.tol.unit = mz.tol.unit, ms.mode = ms.mode, chrom.col.ids = chrom.cols, rt = rt, rt.unit = rt.unit, rt.tol = rt.tol, rt.tol.exp = rt.tol.exp, precursor = precursor, precursor.rt.tol = precursor.rt.tol, insert.mz.rt.values = TRUE, compute = FALSE)
 
+	print('-------------------------------- RESULTS')
+	print(results.df)
+	print('--------------------------------')
+
 	# Build outputs
 	main <- NULL
 	peaks <- NULL
@@ -811,6 +815,9 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 
 		# Build main table
 		results.df.collapsed <- conn$collapseResultsDataFrame(results.df = results.df, output.mz = input[[input.colnames$mz]], output.rt = if (rt.search) input[[input.colnames$rt]] else NULL, sep = results.sep)
+	print('-------------------------------- RESULTS COLLAPSED')
+	print(results.df)
+	print('--------------------------------')
 
 		# Rename columns of results data frame
 		names(results.df) <- paste('lcmsmatching', names(results.df), sep = '.')
@@ -835,6 +842,13 @@ search <- function(conn, input.file, input.colnames, same.cols, mz.tol, mz.tol.u
 		peaks <- peaks[, output.cols]
 		main <- main[, output.cols]
 	}
+
+	print('-------------------------------- main')
+	print(main)
+	print('--------------------------------')
+	print('-------------------------------- peaks')
+	print(peaks)
+	print('--------------------------------')
 
 	# Write main output
 	if ( ! is.null(main.output))
