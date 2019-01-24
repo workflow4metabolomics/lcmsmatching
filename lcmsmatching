@@ -113,7 +113,7 @@ HtmlWriter$methods( writeTable = function(x, indent = NA_integer_, newline = TRU
 		for (i in 1:nrow(x)) {
 			.self$writeBegTag('tr', indent = indent + 1, newline = newline)
 			for (j in 1:ncol(x))
-				.self$writeTag('td', text = x[i, j], indent = indent + 2, newline = newline)
+				.self$writeTag('td', text = (if (j == 1 && is.na(x[i, j])) 'NA' else x[i, j]), indent = indent + 2, newline = newline)
 			.self$writeEndTag('tr', indent = indent + 1, newline = newline)
 		}
 	.self$writeEndTag('table', indent = indent, newline = newline)
