@@ -363,13 +363,15 @@ test_001_filedb_na_in_input() {
 	local input_file=$res_dir/mz-input-small_with_nas.tsv
 	local main_output_file=$OUTPUT_DIR/test_${n_test}_main.tsv
 	local peak_output_file=$OUTPUT_DIR/test_${n_test}_peak.tsv
+	local expected_main_output=$res_dir/expected_main_output.tsv
 	local expected_peak_output=$res_dir/expected_peak_output.tsv
 
 	# Run matching
 	expect_success $LCMSMATCHING -g -d file --url "$db_file" -m pos -p 5 -s 0 -i "$input_file" -o "$main_output_file" --same-rows --peak-output-file "$peak_output_file" || return 1
 
 	# Compare with expected output
-	expect_same_files "$peak_output_file" "$expected_peak_output" || return 1
+	expect_same_files "$main_output_file" "$expected_main_output" || return 2
+	expect_same_files "$peak_output_file" "$expected_peak_output" || return 3
 }
 
 # Generic tests {{{1
