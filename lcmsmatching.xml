@@ -6,7 +6,7 @@
 	<!-- Requirements {{{1 -->
 	<!-- **************************************************************** -->
 	<requirements>
-		<requirement type="package" version="1.2.1">r-biodb</requirement>
+		<requirement type="package" version="1.2.2">r-biodb</requirement>
 		<requirement type="package" version="1.20.0">r-getopt</requirement>
 		<requirement type="package" version="0.2_15">r-codetools</requirement> <!-- R_VERSION="0.2-15" IMPORTANT Do not remove, used by travis_install_deps.sh script. --> <!-- codetools package is needed because of the following error when running Galaxy on Travis-CI in planemo tests: "code for methods in class “HtmlWriter” was not checked for suspicious field assignments (recommended package ‘codetools’ not available?)". -->
 		
