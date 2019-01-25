@@ -20,20 +20,20 @@ planemotest: R_LIBS_USER=
 planemotest: planemo-venv/bin/planemo
 	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --conda_prefix "$(CONDA_PREFIX)" --galaxy_branch release_18.09
 
-planemo-testtoolshed-diff: dist planemo-venv/bin/planemo
+planemo-testtoolshed-diff: dist/lcmsmatching/ planemo-venv/bin/planemo
 	. planemo-venv/bin/activate && cd $< && planemo shed_diff --shed_target testtoolshed
 
-planemo-testtoolshed-update: dist planemo-venv/bin/planemo
+planemo-testtoolshed-update: dist/lcmsmatching/ planemo-venv/bin/planemo
 	. planemo-venv/bin/activate && cd $< && planemo shed_update --check_diff --shed_target testtoolshed
 
-planemo-toolshed-diff: dist planemo-venv/bin/planemo
+planemo-toolshed-diff: dist/lcmsmatching/ planemo-venv/bin/planemo
 	. planemo-venv/bin/activate && cd $< && planemo shed_diff --shed_target toolshed
 
-planemo-toolshed-update: dist planemo-venv/bin/planemo
+planemo-toolshed-update: dist/lcmsmatching/ planemo-venv/bin/planemo
 	. planemo-venv/bin/activate && cd $< && planemo shed_update --check_diff --shed_target toolshed
 
-dist:
-	mkdir $@
+dist/lcmsmatching/:
+	mkdir -p $@
 	cp -r README.md lcmsmatching lcmsmatching.xml test-data $@
 
 clean:
