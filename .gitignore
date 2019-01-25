@@ -10,3 +10,4 @@ planemo-venv
 !test-data/*
 .swp
 .*.swp
+*.zip
