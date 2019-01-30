@@ -1,5 +1,8 @@
 export BIODB_CACHE_DIRECTORY=$(CURDIR)/lcms.biodb.cache
 CONDA_PREFIX=$(HOME)/.plncnd
+ifndef GALAXY_VERSION
+	GALAXY_VERSION=18.09
+endif
 
 all:
 
@@ -18,7 +21,7 @@ planemolint: planemo-venv/bin/planemo
 
 planemotest: R_LIBS_USER=
 planemotest: planemo-venv/bin/planemo
-	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --conda_prefix "$(CONDA_PREFIX)" --galaxy_branch release_18.09
+	. planemo-venv/bin/activate && planemo test --conda_dependency_resolution --conda_prefix "$(CONDA_PREFIX)" --galaxy_branch release_$(GALAXY_VERSION)
 
 planemo-testtoolshed-diff: dist/lcmsmatching/ planemo-venv/bin/planemo
 	. planemo-venv/bin/activate && cd $< && planemo shed_diff --shed_target testtoolshed
