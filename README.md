@@ -24,6 +24,14 @@ Please run `lcmsmatching -h` for a help page listing all options and presenting 
 
 ## Changelog
 
+### 4.0.2
+
+   * Increase getopt version to 1.20.2.
+
+### 4.0.1
+
+   * Downgrade to Galaxy 18.05. Test in both 18.05 and 18.09.
+
 ### 4.0.0
 
    * Switch to biodb R library (<http://github.com/pkrog/biodb>).
