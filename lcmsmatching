@@ -650,14 +650,10 @@ create.biodb.instance <- function(quiet = FALSE, ms.modes = NULL) {
         quiet <- FALSE
 
     # Create biodb instance
-    if (quiet)
-        biodb <- biodb::Biodb$new(logger = FALSE)
-    else {
-        log.stream = (if (is.null(opt[['log-to-stdout']])) stderr() else stdout())
-        logger = biodb::BiodbLogger$new(file = log.stream)
-        if ( ! is.null(opt$debug))
-            logger$includeMsgType('debug')
-        biodb <- biodb::Biodb$new(logger = FALSE, observers = logger)
+    biodb <- biodb::newInst()
+    if (quiet) {
+        #log.stream = (if (is.null(opt[['log-to-stdout']])) stderr() else stdout())
+        lgr::lgr$remove_appender(1)
     }
 
     # Configure cache
